@@ -1,4 +1,3 @@
-
 /**
  * Try to render all Latex Math in the ANKI card
  * @throws Error if window.renderMathInElement wasn't found!

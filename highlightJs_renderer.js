@@ -18,15 +18,6 @@ function md2ankiRenderSourceCode() {
     }
 }
 
-// const HLJS_VERSION = '10.0.1'
-// const HLJS_URL = `https://cdnjs.cloudflare.com/ajax/libs/highlight.js/${HLJS_VERSION}/highlight.min.js`
-// const HLJS_FILE_NAME = `highlight_${HLJS_VERSION}.min.js`
-//
-// const hljs = document.querySelector(`script[src="${HLJS_URL}"]`)
-// console.log("--------------")
-// console.log(hljs)
-// console.log("--------------")
-
 try {
     const scriptsToWaitFor = []
     for (let script of document.getElementsByTagName('script')) {
