@@ -25,12 +25,14 @@ KATEXT_FILE_SCRIPT_PATH = os.path.join(CURRENT_DIR, 'kaTex_renderer.js')
 
 def cli_help():
     print("$ python3 md2anki.py MD_FILE [OPTIONS]\n\n" +
-          "Create an anki deck from a markdown document.\n\n" +
+          "Create an anki deck file (.apkg) from a markdown document.\n" +
+          "If no custom output path is given the file name of the document\n" +
+          "(+ .apkg) is used.\n\n" +
           "Options:\n" +
-          "\t-d\t\t\t\tActivate debugging output\n" +
-          "\t-o-anki FILE_PATH\t\tCustom anki deck output file path\n" +
-          "\t-o-md FILE_PATH\t\t\tCustom markdown output file path\n" +
-          "\t-additional-res-dir DIR_PATH\tCustom resource directory\n\n" +
+          "\t-d\t\t\tActivate debugging output\n" +
+          "\t-o-anki FILE_PATH\tCustom anki deck output file path\n" +
+          "\t-o-md FILE_PATH\t\tCustom markdown output file path\n" +
+          "\t-file-dir DIR_PATH\tAdditional file directory\n\n" +
           "Also supported are:\n" +
           "\t--help\n" +
           "\t--version")
@@ -215,7 +217,25 @@ class AnkiDeck:
         files = set()
         for note in self.notes:
             files.update(note.get_used_files())
-        temp_genanki_anki_deck_package.media_files = list(files)
+        file_list = list()
+        print("additional file dirs:", self.additional_file_dirs)
+        for file in files:
+            # Check if ever file can be found
+            if os.path.isfile(file):
+                file_list.append(file)
+            else:
+                file_found = False
+                # Check if file is located in one of the additional file dirs
+                for additional_file_dir in self.additional_file_dirs:
+                    new_file_path = os.path.join(additional_file_dir, file)
+                    if os.path.isfile(new_file_path):
+                        file_list.append(new_file_path)
+                        file_found = True
+                        break
+                if not file_found:
+                    raise Exception(f"File was not found: {file}")
+
+        temp_genanki_anki_deck_package.media_files = file_list
         temp_genanki_anki_deck_package.write_to_file(output_file_path)
 
     def md_write_deck_to_file(self, output_file_path: str):
@@ -449,7 +469,7 @@ if __name__ == '__main__':
         sys.argv.pop(sys.argv.index(rmArg))
     argsToRemove = []
 
-    additional_res_dirs: List[str] = []
+    additional_file_dirs: List[str] = []
 
     for x in sys.argv:
         if x == "-d":
@@ -466,7 +486,7 @@ if __name__ == '__main__':
             argsToRemove.append(x)
         elif nextRmResPrefix:
             nextRmResPrefix = False
-            additional_res_dirs.append(x)
+            additional_file_dirs.append(x)
             argsToRemove.append(x)
         elif x == "-o-anki":
             nextAnkiOutFilePath = True
@@ -474,7 +494,7 @@ if __name__ == '__main__':
         elif x == "-o-md":
             nextMdOutFilePath = True
             argsToRemove.append(x)
-        elif x == "-additional-res-dir":
+        elif x == "-file-dir":
             nextRmResPrefix = True
             argsToRemove.append(x)
         else:
@@ -485,7 +505,7 @@ if __name__ == '__main__':
     with open(md_input_file_path, "r", encoding="utf-8") as md_file:
         anki_deck = parse_md_file_to_anki_deck(md_file, debug=debug_flag_found)
 
-    anki_deck.additional_file_dirs = additional_res_dirs
+    anki_deck.additional_file_dirs = additional_file_dirs
     anki_deck.model = create_katex_highlightjs_anki_deck_model()
 
     if debug_flag_found:
