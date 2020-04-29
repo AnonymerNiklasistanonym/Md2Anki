@@ -17,8 +17,10 @@ VERSION_PATCH: int = 1
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 CSS_GENERAL_FILE_PATH = os.path.join(CURRENT_DIR, 'stylesheet.css')
-HIGHLIGHTJS_FILE_PATH = os.path.join(CURRENT_DIR, 'highlightJs_renderer.html')
-KATEXT_FILE_PATH = os.path.join(CURRENT_DIR, 'kaTex_renderer.html')
+HIGHLIGHTJS_HTML_FILE_PATH = os.path.join(CURRENT_DIR, 'highlightJs_renderer.html')
+HIGHLIGHTJS_SCRIPT_FILE_PATH = os.path.join(CURRENT_DIR, 'highlightJs_renderer.js')
+KATEXT_FILE_HTML_PATH = os.path.join(CURRENT_DIR, 'kaTex_renderer.html')
+KATEXT_FILE_SCRIPT_PATH = os.path.join(CURRENT_DIR, 'kaTex_renderer.js')
 
 
 def cli_help():
@@ -70,18 +72,24 @@ class AnkiDeckNote:
         temp_question = self.question
         temp_answer = self.answer
 
-        if markdown_to_anki_html:
-            temp_question = temp_question.replace('\n', '<br>').replace('\r', '')
-            temp_answer = temp_answer.replace('\n', '<br>').replace('\r', '')
-
         for file_dir_to_escape in additional_file_dirs_to_escape:
             temp_question = temp_question.replace(f'"{file_dir_to_escape}{os.path.sep}', '"')
             temp_answer = temp_answer.replace(f'"{file_dir_to_escape}{os.path.sep}', '"')
 
         # TODO Fix source code blocks??
-        # TODO ```xyz ...``` to <pre>....</pre>
+        regex_code_block = re.compile(r'```(.*?)\n([\S\s\n]+?)```', flags=re.MULTILINE)
+        regex_code_block_replace = r'<pre><code class="\1">\2</code></pre>'
+
+        temp_question = re.sub(regex_code_block, regex_code_block_replace, temp_question)
+        temp_answer = re.sub(regex_code_block, regex_code_block_replace, temp_answer)
+
+        print({temp_question, temp_answer})
 
         # TODO Extract files that this card requests
+
+        if markdown_to_anki_html:
+            temp_question = temp_question.replace('\n', '<br>').replace('\r', '')
+            temp_answer = temp_answer.replace('\n', '<br>').replace('\r', '')
 
         if escape_unicode:
             temp_question = temp_question.encode('utf-8', 'xmlcharrefreplace') \
@@ -116,6 +124,8 @@ class AnkiModel:
     """
     Contains all information of an anki model (for anki notes of an anki deck)
     """
+    name: str = ""
+    """Model name"""
     description: str = ""
     """Model description"""
     css: str = ""
@@ -136,7 +146,7 @@ class AnkiModel:
                              fields=[{'name': 'Question'}, {'name': 'Answer'}],
                              css=self.css,
                              templates=[{
-                                 'name': 'Card Template',
+                                 'name': self.name,
                                  'qfmt': self.js + self.template_card_question,
                                  'afmt': self.template_card_separator + self.template_card_answer,
                              }])
@@ -186,13 +196,18 @@ def create_katex_highlightjs_anki_deck_model() -> AnkiModel:
     with open(CSS_GENERAL_FILE_PATH, 'r') as cssFile:
         css_code = cssFile.read()
     # Get source code HTML/JS highlighting code
-    with open(HIGHLIGHTJS_FILE_PATH, 'r') as highlightF:
-        highlightjs_template_code = highlightF.read()
+    with open(HIGHLIGHTJS_HTML_FILE_PATH, 'r') as highlightjsHtmlFile:
+        highlightjs_template_code = highlightjsHtmlFile.read()
+    with open(HIGHLIGHTJS_SCRIPT_FILE_PATH, 'r') as highlightjsScriptFile:
+        highlightjs_template_code += f"<script>\n{highlightjsScriptFile.read()}</script>"
     # Get LaTeX math code HTML/JS render code
-    with open(KATEXT_FILE_PATH, 'r') as kaTexHtmlFile:
+    with open(KATEXT_FILE_HTML_PATH, 'r') as kaTexHtmlFile:
         katex_template_code = kaTexHtmlFile.read()
+    with open(KATEXT_FILE_SCRIPT_PATH, 'r') as kaTeXScriptFile:
+        katex_template_code += f"<script>\n{kaTeXScriptFile.read()}</script>"
 
     return AnkiModel(guid=999999001,
+                     name='Md2Anki card (KaTeX, HighlightJs)',
                      description='Card with KaTeX and HighlightJs support',
                      css=css_code,
                      js=highlightjs_template_code + katex_template_code)
