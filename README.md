@@ -2,6 +2,12 @@
 
 Convert your markdown notes to an anki deck
 
+---
+
+This is currently in development and many features are missing or errors can occur.
+
+---
+
 ## Usage
 
 ```text
@@ -23,6 +29,10 @@ Also supported are:
 For convenience the scripts `run.sh` (Linux) and `run.ps1` (Windows and Linux) can be called to automatically create a local Python 3 virtual environment so that the dependencies do not pollute the whole system.
 
 ## Example
+
+```sh
+python3 md2anki.py input.md
+```
 
 `input.md`:
 
@@ -51,3 +61,16 @@ $$
 
 Answer2
 ```
+
+The IDs are automatically generated if not manually specified.
+To keep them (which enables updating cards later by reimporting the `.apkg` file) specify an output path:
+
+```sh
+python3 md2anki.py input.md -o-md output.md
+```
+
+## TODOs
+
+- [ ] Images
+- [ ] Source code
+- [ ] Export to zip (collect all files and put them into one `res` directory as backup)
