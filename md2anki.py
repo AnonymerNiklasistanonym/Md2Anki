@@ -6,7 +6,7 @@ import re
 import sys
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, List, TextIO
+from typing import Optional, List, TextIO, Set
 from uuid import uuid4
 
 import genanki
@@ -61,8 +61,17 @@ class AnkiDeckNote:
     """Optional category for note"""
     guid: str = create_unique_id()
     """Unique id of anki deck note"""
-    files: List[str] = field(default_factory=lambda: set())
-    """List of files to package into the deck"""
+
+    def get_used_files(self) -> Set[str]:
+        regex_image_file = re.compile(r'!\[.*?\]\((.*?)\)')
+        files: List[str] = set()
+
+        def extract_image_path(regex_group_match):
+            files.add(regex_group_match.group(1))
+
+        re.sub(regex_image_file, extract_image_path, self.question)
+        re.sub(regex_image_file, extract_image_path, self.answer)
+        return files
 
     def genanki_create_note(self, anki_card_model: genanki.Model,
                             additional_file_dirs_to_escape: Optional[List[str]] = None,
@@ -83,12 +92,32 @@ class AnkiDeckNote:
         temp_question = re.sub(regex_code_block, regex_code_block_replace, temp_question)
         temp_answer = re.sub(regex_code_block, regex_code_block_replace, temp_answer)
 
-        # Fix multiline TeX commands (otherwise broken on Website)
+        # Fix multi line TeX commands (otherwise broken on Website)
         regex_math_block = re.compile(r'\$\$([\S\s\n]+?)\$\$', flags=re.MULTILINE)
-        temp_question = re.sub(regex_math_block, lambda x: ' '.join(x.group().splitlines()), temp_question)
-        temp_answer = re.sub(regex_math_block, lambda x: ' '.join(x.group().splitlines()), temp_answer)
 
-        # TODO Extract files that this card requests
+        def lambda_math_block_to_signle_line(regex_group_match):
+            return ''.join(regex_group_match.group().splitlines())
+
+        temp_question = re.sub(regex_math_block, lambda_math_block_to_signle_line, temp_question)
+        temp_answer = re.sub(regex_math_block, lambda_math_block_to_signle_line, temp_answer)
+
+        # Extract files that this card requests and update paths
+        regex_image_file = re.compile(
+            r'!\[(.*?)\]\((.*?)\)(?:\{(?:\s*?width\s*?=(.+?)\s*?)?(?:\s*?height\s*?=(.+?)\s*?)?\})?'
+        )
+
+        def extract_image_info_and_update_image_path(regex_group_match):
+            filename = os.path.basename(regex_group_match.group(2))
+            file_description = regex_group_match.group(1)
+            style = ""
+            if regex_group_match.group(3) is not None:
+                style += f"width: {regex_group_match.group(3)};"
+            if regex_group_match.group(4) is not None:
+                style += f"height: {regex_group_match.group(4)};"
+            return f'<img src="{filename}" alt="{file_description}" style="{style}">'
+
+        temp_question = re.sub(regex_image_file, extract_image_info_and_update_image_path, temp_question)
+        temp_answer = re.sub(regex_image_file, extract_image_info_and_update_image_path, temp_answer)
 
         if markdown_to_anki_html:
             temp_question = temp_question.replace('\n', '<br>').replace('\r', '')
@@ -182,7 +211,11 @@ class AnkiDeck:
         temp_genanki_anki_deck = self.genanki_create_deck(self.model.genanki_create_model(),
                                                           self.additional_file_dirs)
         temp_genanki_anki_deck_package = genanki.Package(temp_genanki_anki_deck)
-        temp_genanki_anki_deck_package.media_files = []  # TODO Extract from notes
+
+        files = set()
+        for note in self.notes:
+            files.update(note.get_used_files())
+        temp_genanki_anki_deck_package.media_files = list(files)
         temp_genanki_anki_deck_package.write_to_file(output_file_path)
 
     def md_write_deck_to_file(self, output_file_path: str):

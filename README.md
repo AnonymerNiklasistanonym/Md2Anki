@@ -71,6 +71,4 @@ python3 md2anki.py input.md -o-md output.md
 
 ## TODOs
 
-- [ ] Images
-- [ ] Source code
 - [ ] Export to zip (collect all files and put them into one `res` directory as backup)
