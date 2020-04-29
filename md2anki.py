@@ -76,14 +76,17 @@ class AnkiDeckNote:
             temp_question = temp_question.replace(f'"{file_dir_to_escape}{os.path.sep}', '"')
             temp_answer = temp_answer.replace(f'"{file_dir_to_escape}{os.path.sep}', '"')
 
-        # TODO Fix source code blocks??
+        # Fix source code blocks
         regex_code_block = re.compile(r'```(.*?)\n([\S\s\n]+?)```', flags=re.MULTILINE)
         regex_code_block_replace = r'<pre><code class="\1">\2</code></pre>'
 
         temp_question = re.sub(regex_code_block, regex_code_block_replace, temp_question)
         temp_answer = re.sub(regex_code_block, regex_code_block_replace, temp_answer)
 
-        print({temp_question, temp_answer})
+        # Fix multiline TeX commands (otherwise broken on Website)
+        regex_math_block = re.compile(r'\$\$([\S\s\n]+?)\$\$', flags=re.MULTILINE)
+        temp_question = re.sub(regex_math_block, lambda x: ' '.join(x.group().splitlines()), temp_question)
+        temp_answer = re.sub(regex_math_block, lambda x: ' '.join(x.group().splitlines()), temp_answer)
 
         # TODO Extract files that this card requests
 
