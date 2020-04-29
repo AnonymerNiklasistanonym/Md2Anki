@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 
+# Internal packages
 import os.path
 import random
 import re
 import sys
+import urllib.request
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional, List, TextIO, Set
 from uuid import uuid4
 
+# Installed packages
 import genanki
 
 VERSION_MAJOR: int = 0
@@ -17,10 +20,20 @@ VERSION_PATCH: int = 1
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 CSS_GENERAL_FILE_PATH = os.path.join(CURRENT_DIR, 'stylesheet.css')
-HIGHLIGHTJS_HTML_FILE_PATH = os.path.join(CURRENT_DIR, 'highlightJs_renderer.html')
 HIGHLIGHTJS_SCRIPT_FILE_PATH = os.path.join(CURRENT_DIR, 'highlightJs_renderer.js')
-KATEXT_FILE_HTML_PATH = os.path.join(CURRENT_DIR, 'kaTex_renderer.html')
 KATEXT_FILE_SCRIPT_PATH = os.path.join(CURRENT_DIR, 'kaTex_renderer.js')
+
+HLJS_VERSION = '10.0.1'
+HLJS_URL = f'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/{HLJS_VERSION}/highlight.min.js'
+HLJS_FILE_NAME = f'highlight_{HLJS_VERSION}.min.js'
+
+KATEX_VERSION = '0.11.1'
+KATEX_CSS_URL = f'https://cdn.jsdelivr.net/npm/katex@{KATEX_VERSION}/dist/katex.min.css'
+KATEX_CSS_FILE_NAME = f'katex_{KATEX_VERSION}.min.css'
+KATEX_URL = f'https://cdn.jsdelivr.net/npm/katex@{KATEX_VERSION}/dist/katex.min.js'
+KATEX_FILE_NAME = f'katex_{KATEX_VERSION}.min.js'
+KATEX_AUTO_RENDERER_URL = f'https://cdn.jsdelivr.net/npm/katex@{KATEX_VERSION}/dist/contrib/auto-render.min.js'
+KATEX_AUTO_RENDERER_FILE_NAME = f'katex_auto_render_{KATEX_VERSION}.min.js'
 
 
 def cli_help():
@@ -181,7 +194,7 @@ class AnkiModel:
                              css=self.css,
                              templates=[{
                                  'name': self.name,
-                                 'qfmt': self.js + self.template_card_question,
+                                 'qfmt': self.js + '\n' + self.template_card_question,
                                  'afmt': self.template_card_separator + self.template_card_answer,
                              }])
 
@@ -218,7 +231,6 @@ class AnkiDeck:
         for note in self.notes:
             files.update(note.get_used_files())
         file_list = list()
-        print("additional file dirs:", self.additional_file_dirs)
         for file in files:
             # Check if ever file can be found
             if os.path.isfile(file):
@@ -247,26 +259,57 @@ class AnkiDeck:
             file.write('\n')
 
 
-def create_katex_highlightjs_anki_deck_model() -> AnkiModel:
-    # > Get CSS markup code
+def download_script_files(dir_path: str = os.path.join(CURRENT_DIR, "temp"), skip_download_if_existing: bool = True):
+    if not os.path.isdir(dir_path):
+        os.mkdir(dir_path)
+    if not os.path.isfile(os.path.join(dir_path, HLJS_FILE_NAME)) or not skip_download_if_existing:
+        urllib.request.urlretrieve(HLJS_URL, os.path.join(dir_path, HLJS_FILE_NAME))
+    if not os.path.isfile(os.path.join(dir_path, KATEX_CSS_FILE_NAME)) or not skip_download_if_existing:
+        urllib.request.urlretrieve(KATEX_CSS_URL, os.path.join(dir_path, KATEX_CSS_FILE_NAME))
+    if not os.path.isfile(os.path.join(dir_path, KATEX_FILE_NAME)) or not skip_download_if_existing:
+        urllib.request.urlretrieve(KATEX_URL, os.path.join(dir_path, KATEX_FILE_NAME))
+    if not os.path.isfile(os.path.join(dir_path, KATEX_AUTO_RENDERER_FILE_NAME)) or not skip_download_if_existing:
+        urllib.request.urlretrieve(KATEX_AUTO_RENDERER_URL, os.path.join(dir_path, KATEX_AUTO_RENDERER_FILE_NAME))
+
+
+def create_katex_highlightjs_anki_deck_model(dir_path: str = os.path.join(CURRENT_DIR, "temp"),
+                                             skip_download_if_existing: bool = True,
+                                             online: bool = True) -> AnkiModel:
+    katex_css_template_code = ""
+    katex_js_template_code = ""
+    highlightjs_js_template_code = ""
+
+    if online:
+        katex_js_template_code += f'<link rel="stylesheet" href="{KATEX_CSS_URL}" crossorigin="anonymous">\n' \
+                                  f'<script src="{KATEX_URL}" crossorigin="anonymous"></script>\n' \
+                                  f'<script src="{KATEX_AUTO_RENDERER_URL}" ' \
+                                  f'crossorigin="anonymous"></script>\n '
+        highlightjs_js_template_code += f'<script src="{HLJS_URL}" crossorigin="anonymous"></script>'
+    else:
+        download_script_files(dir_path=dir_path, skip_download_if_existing=skip_download_if_existing)
+        # Get source code to highlighting source code
+        with open(os.path.join(dir_path, HLJS_FILE_NAME), 'r') as hljs_script_file:
+            highlightjs_js_template_code += f"\n<script>\n{hljs_script_file.read()}\n</script>"
+        # Get source code to render LaTeX math code
+        with open(os.path.join(dir_path, KATEX_CSS_FILE_NAME), 'r') as katex_css_file:
+            katex_css_template_code += katex_css_file.read()
+        with open(os.path.join(dir_path, KATEX_FILE_NAME), 'r') as katex_file:
+            katex_js_template_code += f"\n<script>\n{katex_file.read()}\n</script>"
+        with open(os.path.join(dir_path, KATEX_AUTO_RENDERER_FILE_NAME), 'r') as katex_auto_renderer_file:
+            katex_js_template_code += f"\n<script>\n{katex_auto_renderer_file.read()}\n</script>"
+
     with open(CSS_GENERAL_FILE_PATH, 'r') as cssFile:
         css_code = cssFile.read()
-    # Get source code HTML/JS highlighting code
-    with open(HIGHLIGHTJS_HTML_FILE_PATH, 'r') as highlightjsHtmlFile:
-        highlightjs_template_code = highlightjsHtmlFile.read()
-    with open(HIGHLIGHTJS_SCRIPT_FILE_PATH, 'r') as highlightjsScriptFile:
-        highlightjs_template_code += f"<script>\n{highlightjsScriptFile.read()}</script>"
-    # Get LaTeX math code HTML/JS render code
-    with open(KATEXT_FILE_HTML_PATH, 'r') as kaTexHtmlFile:
-        katex_template_code = kaTexHtmlFile.read()
-    with open(KATEXT_FILE_SCRIPT_PATH, 'r') as kaTeXScriptFile:
-        katex_template_code += f"<script>\n{kaTeXScriptFile.read()}</script>"
+    with open(HIGHLIGHTJS_SCRIPT_FILE_PATH, 'r') as highlightjs_script_file:
+        highlightjs_js_template_code += f"\n<script>\n{highlightjs_script_file.read()}\n</script>"
+    with open(KATEXT_FILE_SCRIPT_PATH, 'r') as katex_file:
+        katex_js_template_code += f"\n<script>\n{katex_file.read()}\n</script>"
 
-    return AnkiModel(guid=999999001,
+    return AnkiModel(guid=999990001,
                      name='Md2Anki card (KaTeX, HighlightJs)',
                      description='Card with KaTeX and HighlightJs support',
-                     css=css_code,
-                     js=highlightjs_template_code + katex_template_code)
+                     css=katex_css_template_code + css_code,
+                     js=katex_js_template_code + highlightjs_js_template_code)
 
 
 class ParseSectionState(Enum):
@@ -506,10 +549,7 @@ if __name__ == '__main__':
         anki_deck = parse_md_file_to_anki_deck(md_file, debug=debug_flag_found)
 
     anki_deck.additional_file_dirs = additional_file_dirs
-    anki_deck.model = create_katex_highlightjs_anki_deck_model()
-
-    if debug_flag_found:
-        print(anki_deck)
+    anki_deck.model = create_katex_highlightjs_anki_deck_model(online=True)
 
     anki_deck.genanki_write_deck_to_file(anki_output_file_path)
 

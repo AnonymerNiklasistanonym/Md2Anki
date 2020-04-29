@@ -3,10 +3,10 @@
  * Try to render all Latex Math in the ANKI card
  * @throws Error if window.renderMathInElement wasn't found!
  */
-function renderMethodMdTableToAnkiDeck() {
-    console.info("Md2Anki - renderMethodMdTableToAnkiDeck()");
-    if (window.renderMathInElement !== null) {
-        console.info("Md2Anki - renderMethodMdTableToAnkiDeck() window.renderMathInElement() was found");
+function md2ankiRenderLaTeXMath() {
+    console.debug("Md2Anki - LaTeXMath - Render");
+    if (window.renderMathInElement !== undefined) {
+        console.debug("Md2Anki - LaTeXMath - Render: renderMathInElement was found");
         renderMathInElement(document.querySelector('.card'), {
             delimiters: [{
                 left: "$$",
@@ -19,57 +19,34 @@ function renderMethodMdTableToAnkiDeck() {
             }]
         });
     } else {
-        throw Error("Md2Anki Error - Katex renderMathInElement() was not found!");
+        throw Error("Md2Anki - LaTeXMath - Error: katex renderMathInElement was not found!");
     }
-}
-
-/**
- * Get the necessary scripts
- * @param callback {function} Gets called when scripts are loaded
- */
-function getScripts(callback) {
-    console.info("Md2Anki - getScripts()");
-    const katexVersion = '0.11.1'
-    const katexBasePath = `https://cdn.jsdelivr.net/npm/katex@${katexVersion}/dist/`
-    const katexSrc = `${katexBasePath}katex.min.js`
-    const katexAutoRendererSrc = `${katexBasePath}contrib/auto-render.min.js`
-
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = katexSrc;
-    document.body.appendChild(script);
-    script.addEventListener('load', () => {
-        console.info(`script ${script.src} was loaded`);
-        const script2 = document.createElement('script');
-        script2.type = 'text/javascript';
-        script2.src = katexAutoRendererSrc;
-        document.body.appendChild(script2);
-        script2.addEventListener('load', () => {
-            console.info(`script ${script2.src} was loaded`);
-            callback();
-        });
-    });
 }
 
 try {
-    if (window.renderMathInElement !== null) {
-        // If the necessary render method exists run it
-        console.info("Md2Anki - Katex renderMathInElement() was found, execute renderer");
-        renderMethodMdTableToAnkiDeck();
+    const scriptsToWaitFor = []
+    for (let script of document.getElementsByTagName('script')) {
+        if (script.src.startsWith("https://cdn.jsdelivr.net/npm/katex")) {
+            scriptsToWaitFor.push(script)
+        }
+    }
+    if (window.renderMathInElement !== undefined) {
+        console.debug("Md2Anki - LaTeXMath - all scripts already loaded")
+        // Execute the render method when everything is imported
+        md2ankiRenderLaTeXMath()
     } else {
-        // Else get the scripts and run it then
-        console.info("Md2Anki - Katex renderMathInElement() wasn't found, get scripts");
-        getScripts(() => {
-            console.info("Md2Anki - Katex scripts loaded, execute renderer");
-            renderMethodMdTableToAnkiDeck();
+        Promise.all(scriptsToWaitFor.map(script => new Promise((resolve) => {
+            console.debug("Md2Anki - LaTeXMath - wait for load:", script.src)
+            script.addEventListener("load", () => {
+                console.debug("Md2Anki - LaTeXMath - reached load:", script.src,
+                    (window.renderMathInElement !== undefined) ? "(already ready to run)" : "")
+                resolve()
+            }, false)
+        }))).then(() => {
+            // Execute the render method when all connected scripts were loaded
+            md2ankiRenderLaTeXMath()
         })
     }
 } catch (e) {
-    console.error(e);
-    // If any error comes up get the scripts and run it then
-    console.info("Md2Anki Error get scripts and then render");
-    getScripts(() => {
-        console.info("Md2Anki - Katex scripts loaded, execute renderer");
-        renderMethodMdTableToAnkiDeck();
-    })
+    console.error(e)
 }
