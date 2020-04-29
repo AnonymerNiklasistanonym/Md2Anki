@@ -1,0 +1,86 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/katex.min.css"
+    integrity="sha384-dbVIfZGuN1Yq7/1Ocstc1lUEm+AT+/rCkibIcC/OmWo5f0EA48Vf8CytHzGrSwbQ" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/katex.min.js"
+    integrity="sha384-2BKqo+exmr9su6dir+qCw08N2ZKRucY4PrGQPPWU1A7FtlCGjmEGFqXCv5nyM5Ij"
+    crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.1/dist/contrib/auto-render.min.js"
+    integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI"
+    crossorigin="anonymous"></script>
+<script>
+    /**
+     * Try to render all Latex Math in the ANKI card
+     * @throws Error if window.renderMathInElement wasn't found!
+     */
+    function renderMethodMdTableToAnkiDeck() {
+        console.info("MdTableToAnkiDeck > renderMethodMdTableToAnkiDeck()");
+        if (window.renderMathInElement !== null) {
+            console.info("renderMethodMdTableToAnkiDeck() window.renderMathInElement() was found");
+            renderMathInElement(document.querySelector('.card'), {
+                delimiters: [{
+                    left: "$$",
+                    right: "$$",
+                    display: true
+                },
+                {
+                    left: "$",
+                    right: "$",
+                    display: false
+                }
+                ]
+            });
+        } else {
+            throw Error("MdTableToAnkiDeck Error - Katex renderMathInElement() was not found!");
+        }
+    }
+
+    /**
+     * Get the necessary scripts
+     * @param callback {function} Gets called when scripts are loaded
+     */
+    function getScripts(callback) {
+        console.info("MdTableToAnkiDeck > getScripts()");
+        const katexVersion = '0.10.1'
+        const katexBasePath = `https://cdn.jsdelivr.net/npm/katex@${katexVersion}/dist/`
+        const katexSrc = `${katexBasePath}katex.min.js`
+        const katexAutoRendererSrc = `${katexBasePath}contrib/auto-render.min.js`
+
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = katexSrc;
+        document.body.appendChild(script);
+        script.addEventListener('load', function () {
+            console.info("script " + script.src + " was loaded");
+            const script2 = document.createElement('script');
+            script2.type = 'text/javascript';
+            script2.src = katexAutoRendererSrc;
+            document.body.appendChild(script2);
+            script2.addEventListener('load', function () {
+                console.info("script " + script2.src + " was loaded");
+                callback();
+            });
+        });
+    }
+
+    try {
+        if (window.renderMathInElement !== null) {
+            // If the necessary render method exists run it
+            console.info("Katex renderMathInElement() was found, execute renderer");
+            renderMethodMdTableToAnkiDeck();
+        } else {
+            // Else get the scripts and run it then
+            console.info("Katex renderMathInElement() wasn't found, get scripts");
+            getScripts(() => {
+                console.info("Katex scripts loaded, execute renderer");
+                renderMethodMdTableToAnkiDeck();
+            })
+        }
+    } catch (e) {
+        console.error(e);
+        // If any error comes up get the scripts and run it then
+        console.info("MdTableToAnkiDeck Error get scripts and then render");
+        getScripts(() => {
+            console.info("Katex scripts loaded, execute renderer");
+            renderMethodMdTableToAnkiDeck();
+        })
+    }
+</script>

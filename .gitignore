@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Demo files in root dir
+demo*
+
+# IDEs
+.idea
+
+# Virtual ENVs
+venv_*
