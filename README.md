@@ -4,7 +4,7 @@ Convert your markdown notes to an anki deck
 
 ---
 
-This is currently in development and many features are missing or errors can occur.
+This does not work with the desktop client, but with the anki web client.
 
 ---
 
@@ -28,6 +28,13 @@ Also supported are:
 
 For convenience the scripts `run.sh` (Linux) and `run.ps1` (Windows and Linux) can be called to automatically create a local Python 3 virtual environment so that the dependencies do not pollute the whole system.
 
+## Editor
+
+A list of editors which support WYSIWYG editing of such markdown documents (source code and math blocks):
+
+- [Typora](https://typora.io/) (free to use)
+- [Visual Studio Code](https://code.visualstudio.com/) (open source - some problems with math blocks...)
+
 ## Example
 
 ```sh
@@ -45,10 +52,9 @@ Answer1
 
 $100$
 
-## ID2 (44f2549a-e812-4ebc-807b-95d46fd43578)
+## Question 2 (44f2549a-e812-4ebc-807b-95d46fd43578)
 
-Question 2 more
-
+more text of question 2
 
 $$
 a = 10 * \begin{cases}
