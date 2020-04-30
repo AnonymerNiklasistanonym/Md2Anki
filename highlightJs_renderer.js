@@ -30,15 +30,23 @@ try {
         // Execute the render method when everything is imported
         md2ankiRenderSourceCode()
     } else {
-        Promise.all(scriptsToWaitFor.map(script => new Promise((resolve) => {
+        Promise.all(scriptsToWaitFor.map(script => new Promise((resolve, reject) => {
             console.debug("Md2Anki - SourceCode - wait for load:", script.src)
             script.addEventListener("load", () => {
-                console.debug("Md2Anki - SourceCode - reached load:", script.src,
-                    (window.hljs !== undefined && hljs.highlightBlock !== undefined) ? "(already ready to run)" : "")
-                resolve()
+                console.debug("Md2Anki - SourceCode - reached load:", script.src)
+                if (window.hljs !== undefined && hljs.highlightBlock !== undefined) {
+                    reject("Md2Anki - SourceCode - some sources were loaded but already ready to run")
+                } else {
+                    resolve()
+                }
             }, false)
-        }))).then(() => {
-            // Execute the render method when all connected scripts were loaded
+        })))
+        .then(() => {
+            console.debug("Md2Anki - SourceCode - all sources were loaded")
+            md2ankiRenderSourceCode()
+        })
+        .catch(err => {
+            console.debug(err)
             md2ankiRenderSourceCode()
         })
     }

@@ -34,15 +34,23 @@ try {
         // Execute the render method when everything is imported
         md2ankiRenderLaTeXMath()
     } else {
-        Promise.all(scriptsToWaitFor.map(script => new Promise((resolve) => {
+        Promise.all(scriptsToWaitFor.map(script => new Promise((resolve, reject) => {
             console.debug("Md2Anki - LaTeXMath - wait for load:", script.src)
             script.addEventListener("load", () => {
-                console.debug("Md2Anki - LaTeXMath - reached load:", script.src,
-                    (window.renderMathInElement !== undefined) ? "(already ready to run)" : "")
-                resolve()
+                console.debug("Md2Anki - LaTeXMath - reached load:", script.src)
+                if (window.renderMathInElement !== undefined) {
+                    reject("Md2Anki - LaTeXMath - some sources were loaded but already ready to run")
+                } else {
+                    resolve()
+                }
             }, false)
-        }))).then(() => {
-            // Execute the render method when all connected scripts were loaded
+        })))
+        .then(() => {
+            console.debug("Md2Anki - LaTeXMath - all sources were loaded")
+            md2ankiRenderLaTeXMath()
+        })
+        .catch(err => {
+            console.debug(err)
             md2ankiRenderLaTeXMath()
         })
     }
