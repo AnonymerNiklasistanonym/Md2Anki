@@ -121,7 +121,7 @@ class AnkiDeckNote:
             r'!\[(.*?)\]\((.*?)\)(?:\{(?:\s*?width\s*?=(.+?)\s*?)?(?:\s*?height\s*?=(.+?)\s*?)?\})?'
         )
 
-        def extract_image_info_and_update_image_path(regex_group_match):
+        def extract_image_info_and_update_image_path(regex_group_match) -> str:
             filename = os.path.basename(regex_group_match.group(2))
             file_description = regex_group_match.group(1)
             style = ""
@@ -137,6 +137,21 @@ class AnkiDeckNote:
         if markdown_to_anki_html:
             temp_question = temp_question.replace('\n', '<br>').replace('\r', '')
             temp_answer = temp_answer.replace('\n', '<br>').replace('\r', '')
+
+        # Fix inline math sections
+        regex_math_part = re.compile(r'(\${1,2})((?:.|\r?\n)+?)\1', flags=re.MULTILINE)
+
+        def update_math_section(regex_group_match) -> str:
+            math_section_tag = regex_group_match.group(1)
+            math_section_content = regex_group_match.group(2)
+            print(math_section_tag, math_section_content)
+            if math_section_tag == '$':
+                return f'<span class="math math-inline">${math_section_content}$</span>'
+            else:
+                return f'<span class="math math-display">$${math_section_content}$$</span>'
+
+        temp_question = re.sub(regex_math_part, update_math_section, temp_question)
+        temp_answer = re.sub(regex_math_part, update_math_section, temp_answer)
 
         if escape_unicode:
             temp_question = temp_question.encode('utf-8', 'xmlcharrefreplace') \
