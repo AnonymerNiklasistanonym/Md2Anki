@@ -144,7 +144,6 @@ class AnkiDeckNote:
         def update_math_section(regex_group_match) -> str:
             math_section_tag = regex_group_match.group(1)
             math_section_content = regex_group_match.group(2)
-            print(math_section_tag, math_section_content)
             if math_section_tag == '$':
                 return f'<span class="math math-inline">${math_section_content}$</span>'
             else:
