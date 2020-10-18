@@ -75,6 +75,8 @@ To keep them (which enables updating cards later by reimporting the `.apkg` file
 python3 md2anki.py input.md -o-md output.md
 ```
 
+For more examples checkout the [`examples`](examples) directory where you can also run [`create_example_apkgs.sh`](examples/create_example_apkgs.sh) to quickly create all corresponding anki decks and check them out in anki.
+
 ## TODOs
 
 - [ ] Export to zip (collect all files and put them into one `res` directory as backup)
