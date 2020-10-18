@@ -1,12 +1,20 @@
 # Md2Anki
 
-Convert your markdown notes to an anki deck
+Convert your markdown notes to an anki deck.
 
----
+This was tested on the anki Desktop client and the anki web client.
 
-This does not work with the desktop client, but with the anki web client.
+Supported features (and planned ones if not checked):
 
----
+- [x] Pleasant creation of cards using a markdown editor and then exporting them to an anki deck
+- [x] Works on the anki Desktop client
+- [x] Works on the anki Web client
+- [x] Automatically indexes cards so that they can be updated without loosing their learning progress (just import the updated anki deck)
+- [x] LaTeX math (inline and blocks)
+- [x] Images (local and URL)
+- [ ] Code (code blocks and inline)
+- [ ] Text formatting (bold, italics, underline, ...)
+- [ ] Export `.zip` file that contains all local assets and the markdown file for easy sharing
 
 ## Usage
 
@@ -69,14 +77,10 @@ Answer2
 ```
 
 The IDs are automatically generated if not manually specified.
-To keep them (which enables updating cards later by reimporting the `.apkg` file) specify an output path:
+To not update the markdown file but create a new one specify a custom output path:
 
 ```sh
 python3 md2anki.py input.md -o-md output.md
 ```
 
 For more examples checkout the [`examples`](examples) directory where you can also run [`create_example_apkgs.sh`](examples/create_example_apkgs.sh) to quickly create all corresponding anki decks and check them out in anki.
-
-## TODOs
-
-- [ ] Export to zip (collect all files and put them into one `res` directory as backup)
