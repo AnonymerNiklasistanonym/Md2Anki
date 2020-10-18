@@ -11,9 +11,11 @@ Supported features (and planned ones if not checked):
 - [x] Works on the anki Web client
 - [x] Automatically indexes cards so that they can be updated without loosing their learning progress (just import the updated anki deck)
 - [x] LaTeX math (inline and blocks)
-- [x] Images (local and URL)
-- [ ] Code (code blocks and inline)
+- [x] Images (local and URL, vector and raster)
+- [x] Code (code blocks and inline)
+  - [x] Syntax highlighting for code blocks
 - [ ] Text formatting (bold, italics, underline, ...)
+- [ ] Tables
 - [ ] Export `.zip` file that contains all local assets and the markdown file for easy sharing
 
 ## Usage

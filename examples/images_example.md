@@ -27,3 +27,13 @@ Answer to that question
 ---
 
 Answer to that question
+
+## Question with online SVG image (3b100ad7-1a75-46bb-85c7-2d0bf1bd3345)
+
+![Online SVG image](https://upload.wikimedia.org/wikipedia/commons/6/6b/Bitmap_VS_SVG.svg)
+
+---
+
+Answer that has an image that is linked through a local SVG file path:
+
+![Local SVG image](wikipedia_svg_demo.svg)

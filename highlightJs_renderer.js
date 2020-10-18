@@ -6,9 +6,10 @@ function md2ankiRenderSourceCode() {
     console.debug("Md2Anki - SourceCode - Render");
     if (window.hljs !== undefined) {
         if (hljs.highlightBlock !== undefined) {
-            console.debug("Md2Anki -  SourceCode - Render: hljs was found")
-            document.querySelectorAll('.card pre code').forEach(block => {
-                hljs.highlightBlock(block)
+            console.debug("Md2Anki - SourceCode - Render: hljs was found")
+            document.querySelectorAll('.card pre code').forEach(element => {
+                console.debug("Md2Anki - SourceCode - update code block element", element)
+                hljs.highlightBlock(element)
             })
         } else {
             throw Error("Md2Anki - SourceCode - Error: hljs.highlightBlock was not found!")
