@@ -6,6 +6,7 @@ import random
 import re
 import sys
 import urllib.request
+import html
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional, List, TextIO, Set
@@ -105,12 +106,23 @@ class AnkiDeckNote:
             temp_question = temp_question.replace(f'"{file_dir_to_escape}{os.path.sep}', '"')
             temp_answer = temp_answer.replace(f'"{file_dir_to_escape}{os.path.sep}', '"')
 
+        def code_block_replace(regex_group_match):
+            language = regex_group_match.group(1)
+            code = html.escape(regex_group_match.group(2))
+            return f"<pre><code class=\"{language}\">{code}</code></pre>"
+
+        def inline_code_replace(regex_group_match):
+            code = html.escape(regex_group_match.group(1))
+            return f" <pre style=\"display: inline\"><code>{code}</code></pre> "
+
         # Fix source code blocks
         regex_code_block = re.compile(r'```(.*?)\n([\S\s\n]+?)```', flags=re.MULTILINE)
-        regex_code_block_replace = r'<pre><code class="\1">\2</code></pre>'
+        regex_inline_code = re.compile(r'(?:^|\s)`(.*?)`(?:$|\s)')
 
-        temp_question = re.sub(regex_code_block, regex_code_block_replace, temp_question)
-        temp_answer = re.sub(regex_code_block, regex_code_block_replace, temp_answer)
+        temp_question = re.sub(regex_code_block, code_block_replace, temp_question)
+        temp_answer = re.sub(regex_code_block, code_block_replace, temp_answer)
+        temp_question = re.sub(regex_inline_code, inline_code_replace, temp_question)
+        temp_answer = re.sub(regex_inline_code, inline_code_replace, temp_answer)
 
         # Fix multi line TeX commands (otherwise broken on Website)
         regex_math_block = re.compile(r'\$\$([\S\s\n]+?)\$\$', flags=re.MULTILINE)
