@@ -19,7 +19,7 @@ if ! [ -d "$PYTHON_VENV_DIR" ]; then
         echo "Requirements file was not found: '$PYTHON_VENV_REQUIREMENTS_FILE'"
         exit 1
         #Uncomment for fresh install of latest versions of used 3rd party packages
-        #pip3 install genanki
+        #pip3 install genanki markdown
         #pip3 freeze > "$PYTHON_VENV_REQUIREMENTS_FILE"
     else
         pip3 install -r "$PYTHON_VENV_REQUIREMENTS_FILE"

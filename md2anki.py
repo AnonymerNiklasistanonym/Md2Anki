@@ -7,6 +7,7 @@ import re
 import sys
 import urllib.request
 import html
+import markdown
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional, List, TextIO, Set
@@ -104,6 +105,10 @@ class AnkiDeckNote:
         temp_question = self.question
         temp_answer = self.answer
 
+        if debug:
+            print(f">> Input question text: '{temp_question}'")
+            print(f">> Input answer text: '{temp_answer}'")
+
         for file_dir_to_escape in additional_file_dirs_to_escape:
             temp_question = temp_question.replace(f'"{file_dir_to_escape}{os.path.sep}', '"')
             temp_answer = temp_answer.replace(f'"{file_dir_to_escape}{os.path.sep}', '"')
@@ -129,11 +134,11 @@ class AnkiDeckNote:
         # Fix multi line TeX commands (otherwise broken on Website)
         regex_math_block = re.compile(r'\$\$([\S\s\n]+?)\$\$', flags=re.MULTILINE)
 
-        def lambda_math_block_to_signle_line(regex_group_match):
+        def lambda_math_block_to_single_line(regex_group_match):
             return ''.join(regex_group_match.group().splitlines())
 
-        temp_question = re.sub(regex_math_block, lambda_math_block_to_signle_line, temp_question)
-        temp_answer = re.sub(regex_math_block, lambda_math_block_to_signle_line, temp_answer)
+        temp_question = re.sub(regex_math_block, lambda_math_block_to_single_line, temp_question)
+        temp_answer = re.sub(regex_math_block, lambda_math_block_to_single_line, temp_answer)
 
         # Extract files that this card requests and update paths
         regex_image_file = re.compile(
@@ -158,9 +163,14 @@ class AnkiDeckNote:
         temp_question = re.sub(regex_image_file, extract_image_info_and_update_image_path, temp_question)
         temp_answer = re.sub(regex_image_file, extract_image_info_and_update_image_path, temp_answer)
 
+        # Render tables
+        temp_question = markdown.markdown(temp_question, extensions=['markdown.extensions.tables'])
+        temp_answer = markdown.markdown(temp_answer, extensions=['markdown.extensions.tables'])
+
+        # Explicitly render line breaks
         if markdown_to_anki_html:
-            temp_question = temp_question.replace('\n', '<br>').replace('\r', '')
-            temp_answer = temp_answer.replace('\n', '<br>').replace('\r', '')
+            temp_question = temp_question.replace(r'(?!>)\n', '<br>').replace('\r', '')
+            temp_answer = temp_answer.replace(r'(?!>)\n', '<br>').replace('\r', '')
 
         # Fix inline math sections
         regex_math_part = re.compile(r'(\${1,2})((?:.|\r?\n)+?)\1', flags=re.MULTILINE)
@@ -176,6 +186,7 @@ class AnkiDeckNote:
         temp_question = re.sub(regex_math_part, update_math_section, temp_question)
         temp_answer = re.sub(regex_math_part, update_math_section, temp_answer)
 
+        # Escape special symbols
         if escape_unicode:
             temp_question = temp_question.encode('utf-8', 'xmlcharrefreplace') \
                 .decode('utf-8') \
@@ -203,7 +214,7 @@ class AnkiDeckNote:
         if newline_count_question <= 1:
             question_body = ""
         else:
-            question_body = f"\n\n{''.join(self.question.splitlines(keepends=True)[1:])}\n\n---"
+            question_body = f"\n{''.join(self.question.splitlines(keepends=True)[1:])}\n\n---"
 
         return f"{'#' * heading_level} {question_header} ({self.guid}){question_body}\n\n{self.answer}"
 
@@ -466,7 +477,7 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
             # Question header was read -> expect question block or answer block
             # (if separator is found move content from answer to question)
             if line_stripped == "---":
-                temp_anki_note.question += f"\n{temp_anki_note.answer}"
+                temp_anki_note.question += f"\n\n{temp_anki_note.answer}"
                 temp_anki_note.answer = ""
                 parse_state = ParseSectionState.QUESTION_ANSWER_SEPERATOR
                 empty_lines = 0
@@ -483,7 +494,7 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
         elif parse_state == ParseSectionState.ANSWER:
             # Question answer was read -> expect more answer lines or answer/question/separator or next question header
             if line_stripped == "---":
-                temp_anki_note.question += f"\n{temp_anki_note.answer}"
+                temp_anki_note.question += f"\n\n{temp_anki_note.answer}"
                 temp_anki_note.answer = ""
                 parse_state = ParseSectionState.QUESTION_ANSWER_SEPERATOR
                 empty_lines = 0

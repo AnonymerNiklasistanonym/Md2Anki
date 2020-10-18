@@ -14,8 +14,8 @@ Supported features (and planned ones if not checked):
 - [x] Images (local and URL, vector and raster)
 - [x] Code (code blocks and inline)
   - [x] Syntax highlighting for code blocks
+- [x] Tables
 - [ ] Text formatting (bold, italics, underline, ...)
-- [ ] Tables
 - [ ] Export `.zip` file that contains all local assets and the markdown file for easy sharing
 
 ## Usage
