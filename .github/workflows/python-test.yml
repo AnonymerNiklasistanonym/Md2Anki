@@ -46,4 +46,6 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Check if examples can be created without errors
       run: |
+        ls -lt
         ./examples/create_example_apkgs.sh
+        ls -lt
