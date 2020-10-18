@@ -79,10 +79,15 @@ class AnkiDeckNote:
 
     def get_used_files(self) -> Set[str]:
         regex_image_file = re.compile(r'!\[.*?\]\((.*?)\)')
-        files: List[str] = set()
+        files: Set[str] = set()
 
         def extract_image_path(regex_group_match):
-            files.add(regex_group_match.group(1))
+            filepath = regex_group_match.group(1)
+            # Only add file if it is not an URL
+            if not filepath.startswith("https://") and not filepath.startswith("http://"):
+                files.add(filepath)
+            # Only return string for correct type checking
+            return ""
 
         re.sub(regex_image_file, extract_image_path, self.question)
         re.sub(regex_image_file, extract_image_path, self.answer)
@@ -90,7 +95,7 @@ class AnkiDeckNote:
 
     def genanki_create_note(self, anki_card_model: genanki.Model,
                             additional_file_dirs_to_escape: Optional[List[str]] = None,
-                            escape_unicode=True, markdown_to_anki_html=True) -> genanki.Note:
+                            escape_unicode=True, markdown_to_anki_html=True, debug=False) -> genanki.Note:
         if additional_file_dirs_to_escape is None:
             additional_file_dirs_to_escape = []
         temp_question = self.question
@@ -122,7 +127,12 @@ class AnkiDeckNote:
         )
 
         def extract_image_info_and_update_image_path(regex_group_match) -> str:
-            filename = os.path.basename(regex_group_match.group(2))
+            filepath = regex_group_match.group(2)
+            # Check if file path is a URL
+            if not filepath.startswith("https://") and not filepath.startswith("http://"):
+                filename = os.path.basename(filepath)
+            else:
+                filename = filepath
             file_description = regex_group_match.group(1)
             style = ""
             if regex_group_match.group(3) is not None:
@@ -165,6 +175,10 @@ class AnkiDeckNote:
                 .replace("Ö", "&Ouml;").replace("ö", "&ouml;") \
                 .replace("Ü", "&Uuml;").replace("ü", "&uuml;") \
                 .replace("ß", "&szlig;")
+
+        if debug:
+            print(f">> Final card text for question: '{temp_question}'")
+            print(f">> Final card text for answer: '{temp_answer}'")
 
         return genanki.Note(guid=self.guid, model=anki_card_model, fields=[temp_question, temp_answer])
 
@@ -230,15 +244,16 @@ class AnkiDeck:
     """List of additional file dirs that should be searched for missing files used in notes"""
 
     def genanki_create_deck(self, anki_card_model: genanki.Model,
-                            additional_file_dirs_to_escape: Optional[List[str]] = None) -> genanki.Deck:
+                            additional_file_dirs_to_escape: Optional[List[str]] = None, debug=False) -> genanki.Deck:
         temp_anki_deck = genanki.Deck(self.guid, self.name)
         for note in self.notes:
-            temp_anki_deck.add_note(note.genanki_create_note(anki_card_model, additional_file_dirs_to_escape))
+            temp_anki_deck.add_note(note.genanki_create_note(anki_card_model, additional_file_dirs_to_escape,
+                                                             debug=debug))
         return temp_anki_deck
 
-    def genanki_write_deck_to_file(self, output_file_path: str):
+    def genanki_write_deck_to_file(self, output_file_path: str, debug=False):
         temp_genanki_anki_deck = self.genanki_create_deck(self.model.genanki_create_model(),
-                                                          self.additional_file_dirs)
+                                                          self.additional_file_dirs, debug=debug)
         temp_genanki_anki_deck_package = genanki.Package(temp_genanki_anki_deck)
 
         files = set()
@@ -565,7 +580,7 @@ if __name__ == '__main__':
     anki_deck.additional_file_dirs = additional_file_dirs
     anki_deck.model = create_katex_highlightjs_anki_deck_model(online=True)
 
-    anki_deck.genanki_write_deck_to_file(anki_output_file_path)
+    anki_deck.genanki_write_deck_to_file(anki_output_file_path, debug=debug_flag_found)
 
     if md_output_file_path is not None:
         anki_deck.md_write_deck_to_file(md_output_file_path)
