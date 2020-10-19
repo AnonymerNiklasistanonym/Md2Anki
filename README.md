@@ -9,6 +9,8 @@ Supported features (and planned ones if not checked):
 - [x] Pleasant creation of cards using a markdown editor and then exporting them to an anki deck
 - [x] Works on the anki Desktop client
 - [x] Works on the anki Web client
+- [x] Works on the anki Android client
+  - [ ] Fix problem with syntax highlighting of code blocks 
 - [x] Automatically indexes cards so that they can be updated without loosing their learning progress (just import the updated anki deck)
 - [x] LaTeX math (inline and blocks)
 - [x] Images (local and URL, vector and raster)
