@@ -17,9 +17,9 @@ from uuid import uuid4
 # Installed packages
 import genanki
 
-VERSION_MAJOR: int = 0
+VERSION_MAJOR: int = 1
 VERSION_MINOR: int = 0
-VERSION_PATCH: int = 1
+VERSION_PATCH: int = 0
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 CSS_GENERAL_FILE_PATH = os.path.join(CURRENT_DIR, 'stylesheet.css')
