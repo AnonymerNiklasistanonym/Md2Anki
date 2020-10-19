@@ -47,7 +47,5 @@ jobs:
     - name: Check if examples can be created without errors
       run: |
         ls -lt examples
-        find examples -maxdepth 1 -type d -name "backup_*" -exec ls -lt {} \;
         ./examples/run_examples.sh
         ls -lt examples
-        find examples -maxdepth 1 -type d -name "backup_*" -exec ls -lt {} \;
