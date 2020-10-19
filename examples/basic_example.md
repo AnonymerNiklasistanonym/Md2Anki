@@ -15,3 +15,7 @@ question
 Answer that can be one line or
 
 even multiple lines
+
+## Question with **bold text** (b1150a97-e2d2-466a-8bb6-92c5b2a28816)
+
+Answer with *italic text*

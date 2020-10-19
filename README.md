@@ -15,7 +15,7 @@ Supported features (and planned ones if not checked):
 - [x] Code (code blocks and inline)
   - [x] Syntax highlighting for code blocks
 - [x] Tables
-- [ ] Text formatting (bold, italics, underline, ...)
+- [x] Text formatting (bold, italics)
 - [ ] Export `.zip` file that contains all local assets and the markdown file for easy sharing
 
 ## Usage
