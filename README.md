@@ -16,20 +16,23 @@ Supported features (and planned ones if not checked):
   - [x] Syntax highlighting for code blocks
 - [x] Tables
 - [x] Text formatting (bold, italics)
-- [ ] Export `.zip` file that contains all local assets and the markdown file for easy sharing
+- [x] Export document and local assets to a custom directory that can easily be shared or used as backup
 
 ## Usage
 
 ```text
 $ python3 md2anki.py MD_FILE [OPTIONS]
 
-Create an anki deck from a markdown document.
+Create an anki deck file (.apkg) from a markdown document.
+If no custom output path is given the file name of the document
+(+ .apkg) is used.
 
 Options:
-        -d                              Activate debugging output
-        -o-anki FILE_PATH               Custom anki deck output file path
-        -o-md FILE_PATH                 Custom markdown output file path
-        -additional-res-dir DIR_PATH    Custom resource directory
+        -d                      Activate debugging output
+        -o-anki FILE_PATH       Custom anki deck output file path
+        -o-md FILE_PATH         Custom markdown output file path
+        -o-backup-dir DIR_PATH  Backup the input and its local assets
+        -file-dir DIR_PATH      Additional file directory
 
 Also supported are:
         --help
@@ -85,4 +88,4 @@ To not update the markdown file but create a new one specify a custom output pat
 python3 md2anki.py input.md -o-md output.md
 ```
 
-For more examples checkout the [`examples`](examples) directory where you can also run [`create_example_apkgs.sh`](examples/create_example_apkgs.sh) to quickly create all corresponding anki decks and check them out in anki.
+For more examples checkout the [`examples`](examples) directory where you can also run [`run_examples.sh`](examples/run_examples.sh) to quickly create all corresponding anki decks and check them out in anki.

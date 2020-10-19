@@ -136,3 +136,4 @@ venv_*
 
 # Anki deck files
 *.apkg
+backup_*

@@ -8,6 +8,7 @@ import sys
 import urllib.request
 import html
 import markdown
+import shutil
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional, List, TextIO, Set
@@ -49,6 +50,7 @@ def cli_help():
           "\t-d\t\t\tActivate debugging output\n" +
           "\t-o-anki FILE_PATH\tCustom anki deck output file path\n" +
           "\t-o-md FILE_PATH\t\tCustom markdown output file path\n" +
+          "\t-o-backup-dir DIR_PATH\tBackup the input and its local assets\n" +
           "\t-file-dir DIR_PATH\tAdditional file directory\n\n" +
           "Also supported are:\n" +
           "\t--help\n" +
@@ -80,6 +82,10 @@ class AnkiDeckNote:
     """Optional category for note"""
     guid: str = create_unique_id()
     """Unique id of anki deck note"""
+
+    regex_image_file = re.compile(
+        r'!\[(.*?)\]\((.*?)\)(?:\{(?:\s*?width\s*?=(.+?)\s*?)?(?:\s*?height\s*?=(.+?)\s*?)?\})?'
+    )
 
     def get_used_files(self) -> Set[str]:
         regex_image_file = re.compile(r'!\[.*?\]\((.*?)\)')
@@ -141,10 +147,6 @@ class AnkiDeckNote:
         temp_answer = re.sub(regex_math_block, lambda_math_block_to_single_line, temp_answer)
 
         # Extract files that this card requests and update paths
-        regex_image_file = re.compile(
-            r'!\[(.*?)\]\((.*?)\)(?:\{(?:\s*?width\s*?=(.+?)\s*?)?(?:\s*?height\s*?=(.+?)\s*?)?\})?'
-        )
-
         def extract_image_info_and_update_image_path(regex_group_match) -> str:
             filepath = regex_group_match.group(2)
             # Check if file path is a URL
@@ -160,8 +162,8 @@ class AnkiDeckNote:
                 style += f"height: {regex_group_match.group(4)};"
             return f'<img src="{filename}" alt="{file_description}" style="{style}">'
 
-        temp_question = re.sub(regex_image_file, extract_image_info_and_update_image_path, temp_question)
-        temp_answer = re.sub(regex_image_file, extract_image_info_and_update_image_path, temp_answer)
+        temp_question = re.sub(self.regex_image_file, extract_image_info_and_update_image_path, temp_question)
+        temp_answer = re.sub(self.regex_image_file, extract_image_info_and_update_image_path, temp_answer)
 
         # Render tables
         temp_question = markdown.markdown(temp_question, extensions=['markdown.extensions.tables'])
@@ -207,7 +209,24 @@ class AnkiDeckNote:
 
         return genanki.Note(guid=self.guid, model=anki_card_model, fields=[temp_question, temp_answer])
 
-    def md_create_string(self, heading_level=2) -> str:
+    def update_local_file_paths(self, text_input: str, local_asset_dir_path: Optional[str] = None) -> str:
+
+        if local_asset_dir_path is None:
+            return text_input
+
+        # Extract files that this card requests and update paths
+        def extract_image_info_and_update_image_path(regex_group_match) -> str:
+            filepath = regex_group_match.group(2)
+            # Check if file path is a URL
+            if not filepath.startswith("https://") and not filepath.startswith("http://"):
+                new_file_path = os.path.join(local_asset_dir_path, os.path.basename(filepath))
+                return regex_group_match.group(0).replace(f"]({filepath})", f"]({new_file_path})")
+            else:
+                return regex_group_match.group(0)
+
+        return re.sub(self.regex_image_file, extract_image_info_and_update_image_path, text_input)
+
+    def md_create_string(self, heading_level=2, local_asset_dir_path: Optional[str] = None) -> str:
         newline_count_question = len(self.question.splitlines())
         question_header: str = self.question.splitlines()[0].rstrip()
         question_body: str
@@ -215,8 +234,10 @@ class AnkiDeckNote:
             question_body = ""
         else:
             question_body = f"\n{''.join(self.question.splitlines(keepends=True)[1:])}\n\n---"
-
-        return f"{'#' * heading_level} {question_header} ({self.guid}){question_body}\n\n{self.answer}"
+        question_header = self.update_local_file_paths(question_header, local_asset_dir_path=local_asset_dir_path)
+        question_body = self.update_local_file_paths(question_body, local_asset_dir_path=local_asset_dir_path)
+        answer = self.update_local_file_paths(self.answer, local_asset_dir_path=local_asset_dir_path)
+        return f"{'#' * heading_level} {question_header} ({self.guid}){question_body}\n\n{answer}"
 
 
 @dataclass
@@ -276,17 +297,13 @@ class AnkiDeck:
                                                              debug=debug))
         return temp_anki_deck
 
-    def genanki_write_deck_to_file(self, output_file_path: str, debug=False):
-        temp_genanki_anki_deck = self.genanki_create_deck(self.model.genanki_create_model(),
-                                                          self.additional_file_dirs, debug=debug)
-        temp_genanki_anki_deck_package = genanki.Package(temp_genanki_anki_deck)
-
-        files = set()
+    def get_local_files_from_notes(self, debug=False) -> List[str]:
+        files: Set[str] = set()
         for note in self.notes:
             files.update(note.get_used_files())
-        file_list = list()
+        file_list: List[str] = list()
         for file in files:
-            # Check if ever file can be found
+            # Check if every file can be found
             if os.path.isfile(file):
                 file_list.append(file)
             else:
@@ -294,23 +311,41 @@ class AnkiDeck:
                 # Check if file is located in one of the additional file dirs
                 for additional_file_dir in self.additional_file_dirs:
                     new_file_path = os.path.join(additional_file_dir, file)
+                    if debug:
+                        print(f"file not found check in additional file dirs: '{new_file_path}'")
                     if os.path.isfile(new_file_path):
                         file_list.append(new_file_path)
                         file_found = True
                         break
                 if not file_found:
                     raise Exception(f"File was not found: {file}")
+        return file_list
 
-        temp_genanki_anki_deck_package.media_files = file_list
+    def genanki_write_deck_to_file(self, output_file_path: str, debug=False):
+        temp_genanki_anki_deck = self.genanki_create_deck(self.model.genanki_create_model(),
+                                                          self.additional_file_dirs, debug=debug)
+        temp_genanki_anki_deck_package = genanki.Package(temp_genanki_anki_deck)
+        temp_genanki_anki_deck_package.media_files = self.get_local_files_from_notes(debug=debug)
         temp_genanki_anki_deck_package.write_to_file(output_file_path)
 
-    def md_write_deck_to_file(self, output_file_path: str):
+    def md_write_deck_to_file(self, output_file_path: str, local_asset_dir_path: Optional[str] = None, debug=False):
         with open(output_file_path, 'w', encoding="utf-8") as file:
             file.write(f"# {self.name} ({self.guid})")
             for note in self.notes:
                 file.write('\n\n')
-                file.write(note.md_create_string())
+                file.write(note.md_create_string(local_asset_dir_path=local_asset_dir_path))
             file.write('\n')
+
+    def md_backup_deck_to_directory(self, output_dir_path: str, debug=False):
+        if not os.path.isdir(output_dir_path):
+            os.mkdir(output_dir_path)
+        asset_dir_path = os.path.join(output_dir_path, "assets")
+        if not os.path.isdir(asset_dir_path):
+            os.mkdir(asset_dir_path)
+        local_asset_dir_path = os.path.relpath(asset_dir_path, output_dir_path)
+        self.md_write_deck_to_file(os.path.join(output_dir_path, "document.md"), local_asset_dir_path=local_asset_dir_path)
+        for file in self.get_local_files_from_notes(debug=debug):
+            shutil.copyfile(file, os.path.join(asset_dir_path, os.path.basename(file)))
 
 
 def download_script_files(dir_path: str = os.path.join(CURRENT_DIR, "temp"), skip_download_if_existing: bool = True):
@@ -552,6 +587,7 @@ if __name__ == '__main__':
     nextAnkiOutFilePath: bool = False
     nextMdOutFilePath: bool = False
     nextRmResPrefix: bool = False
+    nextBackupDirFilePath: bool = False
 
     argsToRemove: List[str] = [sys.argv[0]]
 
@@ -576,6 +612,7 @@ if __name__ == '__main__':
     md_output_file_path = sys.argv[0]
     argsToRemove.append(sys.argv[0])
     anki_output_file_path = f"{os.path.basename(md_input_file_path)}.apkg"
+    backup_dir_output_file_path = None
 
     if not os.path.isfile(md_input_file_path):
         print(f"Input file was not found: '{md_input_file_path}'")
@@ -604,6 +641,10 @@ if __name__ == '__main__':
             nextRmResPrefix = False
             additional_file_dirs.append(x)
             argsToRemove.append(x)
+        elif nextBackupDirFilePath:
+            nextBackupDirFilePath = False
+            backup_dir_output_file_path = x
+            argsToRemove.append(x)
         elif x == "-o-anki":
             nextAnkiOutFilePath = True
             argsToRemove.append(x)
@@ -612,6 +653,9 @@ if __name__ == '__main__':
             argsToRemove.append(x)
         elif x == "-file-dir":
             nextRmResPrefix = True
+            argsToRemove.append(x)
+        elif x == "-o-backup-dir":
+            nextBackupDirFilePath = True
             argsToRemove.append(x)
         else:
             print(f"Unknown option found: '{x}'")
@@ -627,4 +671,6 @@ if __name__ == '__main__':
     anki_deck.genanki_write_deck_to_file(anki_output_file_path, debug=debug_flag_found)
 
     if md_output_file_path is not None:
-        anki_deck.md_write_deck_to_file(md_output_file_path)
+        anki_deck.md_write_deck_to_file(md_output_file_path, debug=debug_flag_found)
+    if backup_dir_output_file_path is not None:
+        anki_deck.md_backup_deck_to_directory(backup_dir_output_file_path, debug=debug_flag_found)
