@@ -1,6 +1,7 @@
 cached-property==1.5.2
 frozendict==1.2
 genanki==0.8.1
-Markdown==3.3.1
+Markdown==3.3.3
+pymdown-extensions==8.0.1
 pystache==0.5.4
 PyYAML==5.3.1

@@ -16,8 +16,9 @@ from uuid import uuid4
 
 # Installed packages
 import genanki
+import pymdownx.arithmatex as arithmatex
 
-VERSION_MAJOR: int = 1
+VERSION_MAJOR: int = 2
 VERSION_MINOR: int = 0
 VERSION_PATCH: int = 0
 
@@ -89,14 +90,21 @@ class AnkiDeckNote:
     regex_image_file = re.compile(
         r"!\[(.*?)\]\((.*?)\)(?:\{(?:\s*?width\s*?=(.+?)\s*?)?(?:\s*?height\s*?=(.+?)\s*?)?\})?"
     )
+    """
+    Regex expression to parse a markdown image notation: '[alt text](source path){ width=100px, height=200px)'
+    The first group is the 'alt text' and the second one the 'source path' while optionally there is a third and fourth
+    group for the width and height if found.
+    """
 
     def get_used_files(self) -> Set[str]:
+        """Get the used local files of the note"""
         regex_image_file = re.compile(r"!\[.*?\]\((.*?)\)")
         files: Set[str] = set()
 
-        def extract_image_path(regex_group_match):
+        def add_image_path(regex_group_match):
+            """Detect and add all local image path to the created set"""
             filepath = regex_group_match.group(1)
-            # Only add file if it is not an URL
+            # Only add file path if it is not an URL
             if not filepath.startswith("https://") and not filepath.startswith(
                 "http://"
             ):
@@ -104,8 +112,8 @@ class AnkiDeckNote:
             # Only return string for correct type checking
             return ""
 
-        re.sub(regex_image_file, extract_image_path, self.question)
-        re.sub(regex_image_file, extract_image_path, self.answer)
+        re.sub(regex_image_file, add_image_path, self.question)
+        re.sub(regex_image_file, add_image_path, self.answer)
         return files
 
     def genanki_create_note(
@@ -116,6 +124,16 @@ class AnkiDeckNote:
         markdown_to_anki_html=True,
         debug=False,
     ) -> genanki.Note:
+        """
+        Args:
+            anki_card_model: The card model
+            additional_file_dirs_to_escape: File directories that contain (image) resources and should be escaped
+            escape_unicode: Escape unicode symbols
+            markdown_to_anki_html: Create html <br> tags for newlines
+            debug: Output debug information
+        Returns:
+            An anki note for genanki
+        """
         if additional_file_dirs_to_escape is None:
             additional_file_dirs_to_escape = []
         temp_question = self.question
@@ -191,13 +209,56 @@ class AnkiDeckNote:
             self.regex_image_file, extract_image_info_and_update_image_path, temp_answer
         )
 
+        if debug:
+            print(
+                f">> Card text for question before markdown module parsing: '{temp_question}'"
+            )
+            print(
+                f">> Card text for question before markdown module parsing: '{temp_answer}'"
+            )
+
+        # # Dumb fix because arithmatex and markdown are shit
+        regex_dumb = r"(\${2}(?:[^\$]|\n)+?\${2}|\${1}.+?\${1})"
+
+        def dumb_backslash_fix(regex_group_match):
+            return regex_group_match.group(0).replace("\\", "\\\\")
+
+        temp_question = re.sub(regex_dumb, dumb_backslash_fix, temp_question)
+        temp_answer = re.sub(regex_dumb, dumb_backslash_fix, temp_answer)
+
         # Render tables
         temp_question = markdown.markdown(
-            temp_question, extensions=["markdown.extensions.tables"]
+            temp_question,
+            extensions=[
+                "markdown.extensions.tables",
+                arithmatex.ArithmatexExtension(
+                    generic=True,
+                    inline_syntax="dollar",
+                    block_syntax="dollar",
+                    preview=False,
+                ),
+            ],
         )
         temp_answer = markdown.markdown(
-            temp_answer, extensions=["markdown.extensions.tables"]
+            temp_answer,
+            extensions=[
+                "markdown.extensions.tables",
+                arithmatex.ArithmatexExtension(
+                    generic=True,
+                    inline_syntax="dollar",
+                    block_syntax="dollar",
+                    preview=False,
+                ),
+            ],
         )
+
+        if debug:
+            print(
+                f">> Card text for question after markdown module parsing: '{temp_question}'"
+            )
+            print(
+                f">> Card text for question after markdown module parsing: '{temp_answer}'"
+            )
 
         # Explicitly render line breaks
         if markdown_to_anki_html:
@@ -219,31 +280,6 @@ class AnkiDeckNote:
 
         temp_question = re.sub(regex_math_part, update_math_section, temp_question)
         temp_answer = re.sub(regex_math_part, update_math_section, temp_answer)
-
-        # Escape special symbols
-        if escape_unicode:
-            temp_question = (
-                temp_question.encode("utf-8", "xmlcharrefreplace")
-                .decode("utf-8")
-                .replace("Ä", "&Auml;")
-                .replace("ä", "&auml;")
-                .replace("Ö", "&Ouml;")
-                .replace("ö", "&ouml;")
-                .replace("Ü", "&Uuml;")
-                .replace("ü", "&uuml;")
-                .replace("ß", "&szlig;")
-            )
-            temp_answer = (
-                temp_answer.encode("utf-8", "xmlcharrefreplace")
-                .decode("utf-8")
-                .replace("Ä", "&Auml;")
-                .replace("ä", "&auml;")
-                .replace("Ö", "&Ouml;")
-                .replace("ö", "&ouml;")
-                .replace("Ü", "&Uuml;")
-                .replace("ü", "&uuml;")
-                .replace("ß", "&szlig;")
-            )
 
         if debug:
             print(f">> Final card text for question: '{temp_question}'")
