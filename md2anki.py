@@ -7,7 +7,6 @@ import re
 import sys
 import urllib.request
 import html
-import markdown
 import shutil
 from dataclasses import dataclass, field
 from enum import Enum
@@ -16,11 +15,11 @@ from uuid import uuid4
 
 # Installed packages
 import genanki
-import pymdownx.arithmatex as arithmatex
+import markdown
 
 VERSION_MAJOR: int = 2
 VERSION_MINOR: int = 1
-VERSION_PATCH: int = 0
+VERSION_PATCH: int = 1
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 CSS_GENERAL_FILE_PATH = os.path.join(CURRENT_DIR, "stylesheet.css")
@@ -221,34 +220,18 @@ class AnkiDeckNote:
         regex_dumb = r"(\${2}(?:[^\$]|\n)+?\${2}|\${1}.+?\${1})"
         all_math_sections_question = re.findall(regex_dumb, temp_question)
         all_math_sections_answer = re.findall(regex_dumb, temp_answer)
+        temp_question = re.sub(regex_dumb, "$placeholder$", temp_question)
+        temp_answer = re.sub(regex_dumb, "$placeholder$", temp_answer)
         if debug:
             print(f"all_math_sections_question={all_math_sections_question}")
             print(f"all_math_sections_answer={all_math_sections_answer}")
 
         # Render tables
         temp_question = markdown.markdown(
-            temp_question,
-            extensions=[
-                "markdown.extensions.tables",
-                arithmatex.ArithmatexExtension(
-                    generic=True,
-                    inline_syntax="dollar",
-                    block_syntax="dollar",
-                    preview=False,
-                ),
-            ],
+            temp_question, extensions=["markdown.extensions.tables"]
         )
         temp_answer = markdown.markdown(
-            temp_answer,
-            extensions=[
-                "markdown.extensions.tables",
-                arithmatex.ArithmatexExtension(
-                    generic=True,
-                    inline_syntax="dollar",
-                    block_syntax="dollar",
-                    preview=False,
-                ),
-            ],
+            temp_answer, extensions=["markdown.extensions.tables"]
         )
 
         if debug:
@@ -262,12 +245,12 @@ class AnkiDeckNote:
         # Dumb fix (2): Collect all math sections to later overwrite the from python markdown updated sections
         temp_question = re.sub(
             regex_dumb,
-            lambda regex_group_match: all_math_sections_question.pop(0),
+            lambda regex_group_match: html.escape(all_math_sections_question.pop(0)),
             temp_question,
         )
         temp_answer = re.sub(
             regex_dumb,
-            lambda regex_group_match: all_math_sections_answer.pop(0),
+            lambda regex_group_match: html.escape(all_math_sections_answer.pop(0)),
             temp_answer,
         )
         if debug:
