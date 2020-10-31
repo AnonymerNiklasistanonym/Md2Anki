@@ -261,10 +261,14 @@ class AnkiDeckNote:
 
         # Dumb fix (2): Collect all math sections to later overwrite the from python markdown updated sections
         temp_question = re.sub(
-            regex_dumb, lambda regex_group_match : all_math_sections_question.pop(0), temp_question
+            regex_dumb,
+            lambda regex_group_match: all_math_sections_question.pop(0),
+            temp_question,
         )
         temp_answer = re.sub(
-            regex_dumb, lambda regex_group_match : all_math_sections_answer.pop(0), temp_answer
+            regex_dumb,
+            lambda regex_group_match: all_math_sections_answer.pop(0),
+            temp_answer,
         )
         if debug:
             print(f"temp_question_math_fix={temp_question}")
