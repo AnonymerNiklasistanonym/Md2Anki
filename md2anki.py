@@ -19,7 +19,7 @@ import genanki
 import pymdownx.arithmatex as arithmatex
 
 VERSION_MAJOR: int = 2
-VERSION_MINOR: int = 0
+VERSION_MINOR: int = 1
 VERSION_PATCH: int = 0
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -217,14 +217,13 @@ class AnkiDeckNote:
                 f">> Card text for question before markdown module parsing: '{temp_answer}'"
             )
 
-        # # Dumb fix because arithmatex and markdown are shit
+        # Dumb fix (1): Collect all math sections to later overwrite the from python markdown updated sections
         regex_dumb = r"(\${2}(?:[^\$]|\n)+?\${2}|\${1}.+?\${1})"
-
-        def dumb_backslash_fix(regex_group_match):
-            return regex_group_match.group(0).replace("\\", "\\\\")
-
-        temp_question = re.sub(regex_dumb, dumb_backslash_fix, temp_question)
-        temp_answer = re.sub(regex_dumb, dumb_backslash_fix, temp_answer)
+        all_math_sections_question = re.findall(regex_dumb, temp_question)
+        all_math_sections_answer = re.findall(regex_dumb, temp_answer)
+        if debug:
+            print(f"all_math_sections_question={all_math_sections_question}")
+            print(f"all_math_sections_answer={all_math_sections_answer}")
 
         # Render tables
         temp_question = markdown.markdown(
@@ -259,6 +258,17 @@ class AnkiDeckNote:
             print(
                 f">> Card text for question after markdown module parsing: '{temp_answer}'"
             )
+
+        # Dumb fix (2): Collect all math sections to later overwrite the from python markdown updated sections
+        temp_question = re.sub(
+            regex_dumb, lambda regex_group_match : all_math_sections_question.pop(0), temp_question
+        )
+        temp_answer = re.sub(
+            regex_dumb, lambda regex_group_match : all_math_sections_answer.pop(0), temp_answer
+        )
+        if debug:
+            print(f"temp_question_math_fix={temp_question}")
+            print(f"temp_answer_math_fix={temp_answer}")
 
         # Explicitly render line breaks
         if markdown_to_anki_html:
