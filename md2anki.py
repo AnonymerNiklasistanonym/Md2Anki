@@ -228,10 +228,10 @@ class AnkiDeckNote:
 
         # Render tables
         temp_question = markdown.markdown(
-            temp_question, extensions=["markdown.extensions.tables"]
+            temp_question, extensions=["markdown.extensions.tables"], tab_length=2
         )
         temp_answer = markdown.markdown(
-            temp_answer, extensions=["markdown.extensions.tables"]
+            temp_answer, extensions=["markdown.extensions.tables"], tab_length=2
         )
 
         if debug:
