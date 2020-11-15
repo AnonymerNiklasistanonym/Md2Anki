@@ -630,7 +630,7 @@ def parse_header(md_file_line: str, debug_this=False) -> Optional[AnkiDeck]:
 def parse_question_header(
     md_file_line: str, debug_this=False
 ) -> Optional[AnkiDeckNote]:
-    regex_question_header = re.compile(r"^## (.+?)\s+\((.+?)\)\s+$")
+    regex_question_header = re.compile(r"^## (.+?)\s+\(([^()\s]+?)\)\s+$")
     regex_question_header_without_id = re.compile(r"^## (.+?)\s+$")
 
     regex_question_header_match = regex_question_header.match(md_file_line)
