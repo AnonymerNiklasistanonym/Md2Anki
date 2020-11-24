@@ -19,7 +19,7 @@ import markdown
 
 VERSION_MAJOR: int = 2
 VERSION_MINOR: int = 1
-VERSION_PATCH: int = 2
+VERSION_PATCH: int = 3
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 CSS_GENERAL_FILE_PATH = os.path.join(CURRENT_DIR, "stylesheet.css")
