@@ -27,3 +27,19 @@ Answer
 ## Question with (parenthesis) and without a question mark but with whitespace in parenthesis (yes this has a whitespace) (74203734-a617-4f2f-8e7e-ef4a8a6a3f75)
 
 Answer
+
+## Multi line with multiple "---" (f0e03cb6-2015-4f64-bcd3-51e24763705b)
+
+Part of the question
+
+---
+
+Answer
+
+---
+
+Second part of answer
+
+---
+
+Third part of answer

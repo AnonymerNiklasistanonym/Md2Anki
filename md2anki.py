@@ -334,6 +334,9 @@ class AnkiDeckNote:
         answer = self.update_local_file_paths(
             self.answer, local_asset_dir_path=local_asset_dir_path
         )
+        # Uncomment to debug what is a question_body and what is an answer
+        # question_body = f"[question_body]{question_body}[/question_body]"
+        # answer = f"[answer]{answer}[/answer]"
         return f"{'#' * heading_level} {question_header} ({self.guid}){question_body}\n\n{answer}"
 
 
@@ -600,6 +603,7 @@ class ParseSectionState(Enum):
     QUESTION_HEADER = ("QUESTION_HEADER",)
     QUESTION_ANSWER_SEPERATOR = ("QUESTION_ANSWER_SEPERATOR",)
     ANSWER = ("ANSWER",)
+    ANSWER_AFTER_QUESTION_ANSWER_SEPERATOR = ("ANSWER_AFTER_QUESTION_ANSWER_SEPERATOR",)
 
 
 def parse_header(md_file_line: str, debug_this=False) -> Optional[AnkiDeck]:
@@ -754,6 +758,31 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
                         print(
                             f"> Found new answer line (answer={temp_anki_note.answer})"
                         )
+        elif parse_state == ParseSectionState.ANSWER_AFTER_QUESTION_ANSWER_SEPERATOR:
+            # Question answer seperator was read -> expect more answer lines or next question header
+            temp_optional_anki_note = parse_question_header(line, debug_this=debug)
+            if temp_optional_anki_note is not None:
+                temp_anki_deck.notes.append(temp_anki_note)
+                if debug:
+                    print(
+                        f"> new note was appended to deck (notes={temp_anki_deck.notes})"
+                    )
+                temp_anki_note = temp_optional_anki_note
+                parse_state = ParseSectionState.QUESTION_HEADER
+                empty_lines = 0
+            else:
+                if len(temp_anki_note.answer.rstrip()) != 0:
+                    temp_anki_note.answer += "\n" * (empty_lines + 1)
+                temp_anki_note.answer += line.rstrip()
+                parse_state = ParseSectionState.ANSWER_AFTER_QUESTION_ANSWER_SEPERATOR
+                empty_lines = 0
+                if debug:
+                    print(f"> Found new answer line (answer={temp_anki_note.answer})")
+                if line_stripped == "---":
+                    print(
+                        f"Warning: Found another question answer separator (question={temp_anki_note.question},"
+                        f"current_answer={temp_anki_note.answer})"
+                    )
         elif parse_state == ParseSectionState.QUESTION_ANSWER_SEPERATOR:
             # Question answer separator was read -> expect answer block or new question block
             temp_optional_anki_note = parse_question_header(line, debug_this=debug)
@@ -770,12 +799,16 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
                 if len(temp_anki_note.answer.rstrip()) != 0:
                     temp_anki_note.answer += "\n" * (empty_lines + 1)
                 temp_anki_note.answer += line.rstrip()
-                parse_state = ParseSectionState.ANSWER
+                parse_state = ParseSectionState.ANSWER_AFTER_QUESTION_ANSWER_SEPERATOR
                 empty_lines = 0
                 if debug:
                     print(f"> Found answer line (answer={temp_anki_note.answer})")
 
-    if parse_state == ParseSectionState.ANSWER:
+    an_note_is_still_unprocessed_in_answer_state = (
+        parse_state == ParseSectionState.ANSWER
+        or parse_state == ParseSectionState.ANSWER_AFTER_QUESTION_ANSWER_SEPERATOR
+    )
+    if an_note_is_still_unprocessed_in_answer_state:
         temp_anki_deck.notes.append(temp_anki_note)
         if debug:
             print(f"> new note was appended to deck (notes={temp_anki_deck.notes})")
