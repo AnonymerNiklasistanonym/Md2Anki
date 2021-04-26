@@ -1,6 +1,6 @@
 cached-property==1.5.2
 frozendict==1.2
-genanki==0.8.1
-Markdown==3.3.3
+genanki==0.10.1
+Markdown==3.3.4
 pystache==0.5.4
-PyYAML==5.3.1
+PyYAML==5.4.1
