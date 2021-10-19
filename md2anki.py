@@ -161,9 +161,9 @@ class AnkiDeckNote:
                 tag_strings = regex_group_match.group(1).split(",")
                 for tag_string in tag_strings:
                     tag = tag_string.strip()
-                    if ' ' in tag:
+                    if " " in tag:
                         print(f"WARNING: A tag with spaces was found: '{tag}'")
-                        tag = tag.replace(' ', '_')
+                        tag = tag.replace(" ", "_")
                         print(f"WARNING: The tag was rewritten to: '{tag}'")
                     if len(tag) > 0:
                         tags.add(tag)
@@ -312,9 +312,10 @@ class AnkiDeckNote:
             print(f">> Final card text for answer: '{temp_answer}'")
 
         return genanki.Note(
-            guid=self.guid, model=anki_card_model,
+            guid=self.guid,
+            model=anki_card_model,
             fields=[temp_question, temp_answer],
-            tags=list(tags)
+            tags=list(tags),
         )
 
     def update_local_file_paths(
@@ -945,6 +946,7 @@ def main(args: List[str]) -> int:
             backup_dir_output_file_path, debug=debug_flag_found
         )
     return 0
+
 
 # Main method (This will not be executed when file is imported)
 if __name__ == "__main__":
