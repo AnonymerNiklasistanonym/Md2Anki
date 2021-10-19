@@ -30,4 +30,4 @@ fi
 
 # Run script
 python3 -m tests_args "$@"
-python3 -m tests_internal "$@"
+python3 -m tests_internal_AnkiDeckNote "$@"

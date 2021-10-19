@@ -87,10 +87,10 @@ class AnkiDeckNote:
     """Unique id"""
 
     regex_image_file = re.compile(
-        r"!\[(.*?)\]\((.*?)\)(?:\{(?:\s*?width\s*?=(.+?)\s*?)?(?:\s*?height\s*?=(.+?)\s*?)?\})?"
+        r"!\[(.*?)\]\((.*?)\)(?:\{(?:\s*?width\s*?=(.+?)[\s,;]*?)?(?:\s*?height\s*?=(.+?)[\s,;]*?)?\})?"
     )
     """
-    Regex expression to parse a markdown image notation: '[alt text](source path){ width=100px, height=200px)'
+    Regex expression to parse a markdown image notation: '![alt text](source path){ width=100px, height=200px }'
     The first group is the 'alt text' and the second one the 'source path' while optionally there is a third and fourth
     group for the width and height if found.
     """
@@ -162,9 +162,12 @@ class AnkiDeckNote:
                 for tag_string in tag_strings:
                     tag = tag_string.strip()
                     if " " in tag:
-                        print(f"WARNING: A tag with spaces was found: '{tag}'")
+                        old_tag = tag
                         tag = tag.replace(" ", "_")
-                        print(f"WARNING: The tag was rewritten to: '{tag}'")
+                        print(
+                            f"WARNING: A tag with spaces was found: '{old_tag}'",
+                            f"and rewritten to: '{tag}'",
+                        )
                     if len(tag) > 0:
                         tags.add(tag)
                 # TODO Replace tag list with empty string
