@@ -95,14 +95,19 @@ class AnkiDeckNote:
     group for the width and height if found.
     """
 
+    regex_tag = re.compile(r"\`{=:(.*?):=}\`")
+    """
+    Regex expression to parse a markdown tag notation: '`{=:tag list string:=}`'
+    The first group is the 'tag list string'.
+    """
+
     def get_used_files(self) -> Set[str]:
         """Get the used local files of the note"""
-        regex_image_file = re.compile(r"!\[.*?\]\((.*?)\)")
         files: Set[str] = set()
 
-        def add_image_path(regex_group_match):
+        def add_used_files(regex_group_match):
             """Detect and add all local image path to the created set"""
-            filepath = regex_group_match.group(1)
+            filepath = regex_group_match.group(2)
             # Only add file path if it is not an URL
             if not filepath.startswith("https://") and not filepath.startswith(
                 "http://"
@@ -111,9 +116,34 @@ class AnkiDeckNote:
             # Only return string for correct type checking
             return ""
 
-        re.sub(regex_image_file, add_image_path, self.question)
-        re.sub(regex_image_file, add_image_path, self.answer)
+        re.sub(self.regex_image_file, add_used_files, self.question)
+        re.sub(self.regex_image_file, add_used_files, self.answer)
         return files
+
+    def get_used_tags(self) -> Set[str]:
+        """Get the used tags of the note"""
+        tags: Set[str] = set()
+
+        def add_used_tags(regex_group_match):
+            """Detect and add all local found tags to the created set"""
+            tag_strings = regex_group_match.group(1).split(",")
+            for tag_string in tag_strings:
+                tag = tag_string.strip()
+                if " " in tag:
+                    old_tag = tag
+                    tag = tag.replace(" ", "_")
+                    print(
+                        f"WARNING: A tag with spaces was found: '{old_tag}'",
+                        f"and rewritten to: '{tag}'",
+                    )
+                if len(tag) > 0:
+                    tags.add(tag)
+            # Only return string for correct type checking
+            return ""
+
+        re.sub(self.regex_tag, add_used_tags, self.question)
+        re.sub(self.regex_tag, add_used_tags, self.answer)
+        return tags
 
     def genanki_create_note(
         self,
@@ -150,33 +180,8 @@ class AnkiDeckNote:
                 f'"{file_dir_to_escape}{os.path.sep}', '"'
             )
 
-        # Extract tags from question
-        def get_tags(question_string) -> Set[str]:
-            """Get the used tags of the note"""
-            regex_tag_part = re.compile(r"`\[(.*?)\]`")
-            tags: Set[str] = set()
-
-            def add_tag(regex_group_match):
-                """Detect and add all local image path to the created set"""
-                tag_strings = regex_group_match.group(1).split(",")
-                for tag_string in tag_strings:
-                    tag = tag_string.strip()
-                    if " " in tag:
-                        old_tag = tag
-                        tag = tag.replace(" ", "_")
-                        print(
-                            f"WARNING: A tag with spaces was found: '{old_tag}'",
-                            f"and rewritten to: '{tag}'",
-                        )
-                    if len(tag) > 0:
-                        tags.add(tag)
-                # TODO Replace tag list with empty string
-                return ""
-
-            re.sub(regex_tag_part, add_tag, question_string)
-            return tags
-
-        tags = get_tags(temp_question)
+        # Extract tags
+        tags = self.get_used_tags()
 
         if debug:
             print(f"found_tags={tags}")
@@ -318,7 +323,7 @@ class AnkiDeckNote:
             guid=self.guid,
             model=anki_card_model,
             fields=[temp_question, temp_answer],
-            tags=list(tags),
+            tags=list(tags.union(self.tags)),
         )
 
     def update_local_file_paths(

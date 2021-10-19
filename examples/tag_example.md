@@ -1,22 +1,22 @@
 # Example 'Tag' (2896220711)
 
-## One line question with tag `[one_line_question_tag1]` (f8d162e5-8e9f-4c3b-b993-79b21a3dc527)
+## One line question with tag `{=:one_line_question_tag1:=}` (f8d162e5-8e9f-4c3b-b993-79b21a3dc527)
 
 Answer
 
-## One line question with empty tag list (1) `[]` (3e2513ff-49e7-4864-8854-23ffcfb831b8)
+## One line question with empty tag list (1) `{=::=}` (3e2513ff-49e7-4864-8854-23ffcfb831b8)
 
 Answer
 
-## One line question with empty tag list (2) `[,]` (44ce86e5-5787-4bc4-b67c-1c105b50929f)
+## One line question with empty tag list (2) `{=:,:=}` (44ce86e5-5787-4bc4-b67c-1c105b50929f)
 
 Answer
 
-## One line question with empty tag list (3) `[ ]` (84b829a4-504e-4b04-9c28-c93e7ae5c665)
+## One line question with empty tag list (3) `{=: :=}` (84b829a4-504e-4b04-9c28-c93e7ae5c665)
 
 Answer
 
-## One line question with tags `[one_line_question_tag1,one_line_question_tag2]` (8e40d6a6-3f8a-4248-817b-9409ee93acda)
+## One line question with tags `{=:one_line_question_tag1,one_line_question_tag2:=}` (8e40d6a6-3f8a-4248-817b-9409ee93acda)
 
 Answer
 
@@ -24,7 +24,7 @@ Answer
 
 question
 
-`[multi_line_question_tag1]`
+`{=:multi_line_question_tag1:=}`
 
 ---
 
@@ -34,7 +34,7 @@ Answer
 
 question
 
-`[multi_line_question_tag1, multi_line_question_tag2, multi_line_question_tag3]`
+`{=:multi_line_question_tag1, multi_line_question_tag2, multi_line_question_tag3:=}`
 
 ---
 
@@ -44,7 +44,7 @@ Answer
 
 question
 
-`[multi line question tag with spaces 1, multi line question tag with spaces 2]`
+`{=:multi line question tag with spaces 1, multi line question tag with spaces 2:=}`
 
 ---
 

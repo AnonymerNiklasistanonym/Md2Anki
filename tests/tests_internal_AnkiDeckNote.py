@@ -13,7 +13,7 @@ def test_regex_image_file():
         expected_widths=[],
         expected_heights=[],
     ):
-        """Check if the recognized image file infos are expected"""
+        """Check if the recognized image file infos are as expected"""
         matches = re.findall(md2anki.AnkiDeckNote.regex_image_file, string)
         assert len(matches) == len(
             expected_alt_texts
@@ -82,6 +82,26 @@ def test_regex_image_file():
         expected_source_paths=["source path", "source path2"],
         expected_widths=["", ""],
         expected_heights=["", ""],
+    )
+
+
+def test_regex_tag():
+    def check_regex_tag(
+        string="",
+        expected_tag_list_strings=[],
+    ):
+        """Check if the recognized tag infos are as expected"""
+        matches = re.findall(md2anki.AnkiDeckNote.regex_image_file, string)
+        assert len(matches) == len(
+            expected_tag_list_strings
+        ), f"{len(matches)=}{len(expected_tag_list_strings)=}"
+        for match, expected_tag_list_string in zip(matches, expected_tag_list_strings):
+            assert match[0] == expected_tag_list_string, f"{match[0]=}{expected_tag_list_string=}"
+
+    check_regex_tag()
+    check_regex_tag(
+        "`{=:tag list string:=}`",
+        expected_tag_list_strings=["tag string list"],
     )
 
 
