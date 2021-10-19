@@ -1,5 +1,9 @@
 # Example 'Tag' (2896220711)
 
+Description:
+
+`{=:global tag:=}`
+
 ## One line question with tag `{=:one_line_question_tag1:=}` (f8d162e5-8e9f-4c3b-b993-79b21a3dc527)
 
 Answer

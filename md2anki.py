@@ -18,8 +18,8 @@ import genanki
 import markdown
 
 VERSION_MAJOR: int = 2
-VERSION_MINOR: int = 1
-VERSION_PATCH: int = 3
+VERSION_MINOR: int = 4
+VERSION_PATCH: int = 0
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 CSS_GENERAL_FILE_PATH = os.path.join(CURRENT_DIR, "stylesheet.css")
@@ -71,6 +71,22 @@ def create_unique_id_int(length: int = 32) -> int:
     return random.getrandbits(length)
 
 
+REGEX_MD_TAG = re.compile(r"\`{=:(.*?):=}\`")
+"""
+Regex expression to parse a markdown tag notation: '`{=:tag list string:=}`'
+The first group is the 'tag list string'.
+"""
+
+REGEX_MD_IMAGE_FILE = re.compile(
+    r"!\[(.*?)\]\((.*?)\)(?:\{(?:\s*?width\s*?=(.+?)[\s,;]*?)?(?:\s*?height\s*?=(.+?)[\s,;]*?)?\})?"
+)
+"""
+Regex expression to parse a markdown image notation: '![alt text](source path){ width=100px, height=200px }'
+The first group is the 'alt text' and the second one the 'source path' while optionally there is a third and fourth
+group for the width and height if found.
+"""
+
+
 @dataclass
 class AnkiDeckNote:
     """
@@ -85,21 +101,6 @@ class AnkiDeckNote:
     """Tags"""
     guid: str = create_unique_id()
     """Unique id"""
-
-    regex_image_file = re.compile(
-        r"!\[(.*?)\]\((.*?)\)(?:\{(?:\s*?width\s*?=(.+?)[\s,;]*?)?(?:\s*?height\s*?=(.+?)[\s,;]*?)?\})?"
-    )
-    """
-    Regex expression to parse a markdown image notation: '![alt text](source path){ width=100px, height=200px }'
-    The first group is the 'alt text' and the second one the 'source path' while optionally there is a third and fourth
-    group for the width and height if found.
-    """
-
-    regex_tag = re.compile(r"\`{=:(.*?):=}\`")
-    """
-    Regex expression to parse a markdown tag notation: '`{=:tag list string:=}`'
-    The first group is the 'tag list string'.
-    """
 
     def get_used_files(self) -> Set[str]:
         """Get the used local files of the note"""
@@ -116,8 +117,8 @@ class AnkiDeckNote:
             # Only return string for correct type checking
             return ""
 
-        re.sub(self.regex_image_file, add_used_files, self.question)
-        re.sub(self.regex_image_file, add_used_files, self.answer)
+        re.sub(REGEX_MD_IMAGE_FILE, add_used_files, self.question)
+        re.sub(REGEX_MD_IMAGE_FILE, add_used_files, self.answer)
         return files
 
     def get_used_tags(self) -> Set[str]:
@@ -141,8 +142,8 @@ class AnkiDeckNote:
             # Only return string for correct type checking
             return ""
 
-        re.sub(self.regex_tag, add_used_tags, self.question)
-        re.sub(self.regex_tag, add_used_tags, self.answer)
+        re.sub(REGEX_MD_TAG, add_used_tags, self.question)
+        re.sub(REGEX_MD_TAG, add_used_tags, self.answer)
         return tags
 
     def genanki_create_note(
@@ -237,12 +238,12 @@ class AnkiDeckNote:
             return f'<img src="{filename}" alt="{file_description}" style="{style}">'
 
         temp_question = re.sub(
-            self.regex_image_file,
+            REGEX_MD_IMAGE_FILE,
             extract_image_info_and_update_image_path,
             temp_question,
         )
         temp_answer = re.sub(
-            self.regex_image_file, extract_image_info_and_update_image_path, temp_answer
+            REGEX_MD_IMAGE_FILE, extract_image_info_and_update_image_path, temp_answer
         )
 
         if debug:
@@ -350,7 +351,7 @@ class AnkiDeckNote:
                 return regex_group_match.group(0)
 
         return re.sub(
-            self.regex_image_file, extract_image_info_and_update_image_path, text_input
+            REGEX_MD_IMAGE_FILE, extract_image_info_and_update_image_path, text_input
         )
 
     def md_create_string(
@@ -431,6 +432,8 @@ class AnkiDeck:
     """Model of cards of anki deck"""
     guid: int = create_unique_id_int()
     """Unique id of anki deck"""
+    description : str = ""
+    """Description of anki deck"""
     notes: List[AnkiDeckNote] = field(default_factory=lambda: list())
     """List of anki notes"""
     additional_file_dirs: List[str] = field(default_factory=lambda: list())
@@ -450,6 +453,30 @@ class AnkiDeck:
                 )
             )
         return temp_anki_deck
+
+    def get_used_global_tags(self) -> Set[str]:
+        """Get the used global tags of the anki deck"""
+        tags: Set[str] = set()
+
+        def add_used_global_tags(regex_group_match):
+            """Detect and add all local found tags to the created set"""
+            tag_strings = regex_group_match.group(1).split(",")
+            for tag_string in tag_strings:
+                tag = tag_string.strip()
+                if " " in tag:
+                    old_tag = tag
+                    tag = tag.replace(" ", "_")
+                    print(
+                        f"WARNING: A global tag with spaces was found: '{old_tag}'",
+                        f"and rewritten to: '{tag}'",
+                    )
+                if len(tag) > 0:
+                    tags.add(tag)
+            # Only return string for correct type checking
+            return ""
+
+        re.sub(REGEX_MD_TAG, add_used_global_tags, self.description)
+        return tags
 
     def get_local_files_from_notes(self, debug=False) -> List[str]:
         files: Set[str] = set()
@@ -495,6 +522,8 @@ class AnkiDeck:
     ):
         with open(output_file_path, "w", encoding="utf-8") as file:
             file.write(f"# {self.name} ({self.guid})")
+            if len(self.description) > 0:
+                file.write(f"\n{self.description}")
             for note in self.notes:
                 file.write("\n\n")
                 file.write(
@@ -655,7 +684,8 @@ def parse_header(md_file_line: str, debug_this=False) -> Optional[AnkiDeck]:
 
     if regex_header_match is not None:
         temp_anki_deck = AnkiDeck(
-            name=regex_header_match.group(1), guid=int(regex_header_match.group(2))
+            name=regex_header_match.group(1),
+            guid=int(regex_header_match.group(2)),
         )
         if debug_this:
             print(
@@ -744,6 +774,15 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
                 temp_anki_note = temp_optional_anki_note
                 parse_state = ParseSectionState.QUESTION_HEADER
                 empty_lines = 0
+                if temp_anki_deck is not None:
+                    temp_anki_deck.description = temp_anki_deck.description.rstrip()
+            elif temp_anki_deck is not None:
+                temp_anki_deck.description += (empty_lines * "\n") + line_stripped + "\n"
+                empty_lines = 0
+                if debug:
+                    print(
+                        f"> Found anki deck description line (question={temp_anki_deck.description})"
+                    )
             else:
                 print(f"WARNING: Question header was not found: '{line_stripped}'")
         elif parse_state == ParseSectionState.QUESTION_HEADER:
@@ -780,6 +819,7 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
             else:
                 temp_optional_anki_note = parse_question_header(line, debug_this=debug)
                 if temp_optional_anki_note is not None:
+                    temp_anki_note.tags = temp_anki_note.tags.union(temp_anki_deck.get_used_global_tags())
                     temp_anki_deck.notes.append(temp_anki_note)
                     if debug:
                         print(
@@ -802,6 +842,7 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
             # Question answer seperator was read -> expect more answer lines or next question header
             temp_optional_anki_note = parse_question_header(line, debug_this=debug)
             if temp_optional_anki_note is not None:
+                temp_anki_note.tags = temp_anki_note.tags.union(temp_anki_deck.get_used_global_tags())
                 temp_anki_deck.notes.append(temp_anki_note)
                 if debug:
                     print(
@@ -827,6 +868,7 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
             # Question answer separator was read -> expect answer block or new question block
             temp_optional_anki_note = parse_question_header(line, debug_this=debug)
             if temp_optional_anki_note is not None:
+                temp_anki_note.tags = temp_anki_note.tags.union(temp_anki_deck.get_used_global_tags())
                 temp_anki_deck.notes.append(temp_anki_note)
                 if debug:
                     print(
@@ -849,6 +891,7 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
         or parse_state == ParseSectionState.ANSWER_AFTER_QUESTION_ANSWER_SEPERATOR
     )
     if an_note_is_still_unprocessed_in_answer_state:
+        temp_anki_note.tags = temp_anki_note.tags.union(temp_anki_deck.get_used_global_tags())
         temp_anki_deck.notes.append(temp_anki_note)
         if debug:
             print(f"> new note was appended to deck (notes={temp_anki_deck.notes})")

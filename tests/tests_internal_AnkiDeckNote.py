@@ -14,7 +14,7 @@ def test_regex_image_file():
         expected_heights=[],
     ):
         """Check if the recognized image file infos are as expected"""
-        matches = re.findall(md2anki.AnkiDeckNote.regex_image_file, string)
+        matches = re.findall(md2anki.REGEX_MD_IMAGE_FILE, string)
         assert len(matches) == len(
             expected_alt_texts
         ), f"{len(matches)=}{len(expected_alt_texts)=}"
@@ -91,7 +91,7 @@ def test_regex_tag():
         expected_tag_list_strings=[],
     ):
         """Check if the recognized tag infos are as expected"""
-        matches = re.findall(md2anki.AnkiDeckNote.regex_image_file, string)
+        matches = re.findall(md2anki.REGEX_MD_TAG, string)
         assert len(matches) == len(
             expected_tag_list_strings
         ), f"{len(matches)=}{len(expected_tag_list_strings)=}"
