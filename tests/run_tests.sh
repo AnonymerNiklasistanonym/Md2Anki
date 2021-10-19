@@ -2,7 +2,7 @@
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 PYTHON_VENV_DIR=$SCRIPT_DIR/../venv_Md2Anki
-PYTHON_VENV_REQUIREMENTS_FILE=$SCRIPT_DIR/requirements.txt
+PYTHON_VENV_REQUIREMENTS_FILE=$SCRIPT_DIR/../requirements.txt
 
 # Make script stop when an error happens
 set -e
