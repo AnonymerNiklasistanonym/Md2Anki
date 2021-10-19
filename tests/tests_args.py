@@ -5,6 +5,7 @@ from contextlib import redirect_stdout
 sys.path.append("../")
 import md2anki
 
+
 def test_version():
     f = io.StringIO()
     with redirect_stdout(f):
@@ -13,6 +14,7 @@ def test_version():
     assert error_code == 0
     assert len(output) > 0
 
+
 def test_help():
     f = io.StringIO()
     with redirect_stdout(f):
@@ -20,6 +22,7 @@ def test_help():
     output = f.getvalue()
     assert error_code == 0
     assert len(output) > 0
+
 
 if __name__ == "__main__":
     test_version()

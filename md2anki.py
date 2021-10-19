@@ -432,7 +432,7 @@ class AnkiDeck:
     """Model of cards of anki deck"""
     guid: int = create_unique_id_int()
     """Unique id of anki deck"""
-    description : str = ""
+    description: str = ""
     """Description of anki deck"""
     notes: List[AnkiDeckNote] = field(default_factory=lambda: list())
     """List of anki notes"""
@@ -777,7 +777,9 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
                 if temp_anki_deck is not None:
                     temp_anki_deck.description = temp_anki_deck.description.rstrip()
             elif temp_anki_deck is not None:
-                temp_anki_deck.description += (empty_lines * "\n") + line_stripped + "\n"
+                temp_anki_deck.description += (
+                    (empty_lines * "\n") + line_stripped + "\n"
+                )
                 empty_lines = 0
                 if debug:
                     print(
@@ -819,7 +821,9 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
             else:
                 temp_optional_anki_note = parse_question_header(line, debug_this=debug)
                 if temp_optional_anki_note is not None:
-                    temp_anki_note.tags = temp_anki_note.tags.union(temp_anki_deck.get_used_global_tags())
+                    temp_anki_note.tags = temp_anki_note.tags.union(
+                        temp_anki_deck.get_used_global_tags()
+                    )
                     temp_anki_deck.notes.append(temp_anki_note)
                     if debug:
                         print(
@@ -842,7 +846,9 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
             # Question answer seperator was read -> expect more answer lines or next question header
             temp_optional_anki_note = parse_question_header(line, debug_this=debug)
             if temp_optional_anki_note is not None:
-                temp_anki_note.tags = temp_anki_note.tags.union(temp_anki_deck.get_used_global_tags())
+                temp_anki_note.tags = temp_anki_note.tags.union(
+                    temp_anki_deck.get_used_global_tags()
+                )
                 temp_anki_deck.notes.append(temp_anki_note)
                 if debug:
                     print(
@@ -868,7 +874,9 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
             # Question answer separator was read -> expect answer block or new question block
             temp_optional_anki_note = parse_question_header(line, debug_this=debug)
             if temp_optional_anki_note is not None:
-                temp_anki_note.tags = temp_anki_note.tags.union(temp_anki_deck.get_used_global_tags())
+                temp_anki_note.tags = temp_anki_note.tags.union(
+                    temp_anki_deck.get_used_global_tags()
+                )
                 temp_anki_deck.notes.append(temp_anki_note)
                 if debug:
                     print(
@@ -891,7 +899,9 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
         or parse_state == ParseSectionState.ANSWER_AFTER_QUESTION_ANSWER_SEPERATOR
     )
     if an_note_is_still_unprocessed_in_answer_state:
-        temp_anki_note.tags = temp_anki_note.tags.union(temp_anki_deck.get_used_global_tags())
+        temp_anki_note.tags = temp_anki_note.tags.union(
+            temp_anki_deck.get_used_global_tags()
+        )
         temp_anki_deck.notes.append(temp_anki_note)
         if debug:
             print(f"> new note was appended to deck (notes={temp_anki_deck.notes})")
