@@ -13,7 +13,7 @@ from enum import Enum
 from typing import Optional, List, TextIO, Set
 from uuid import uuid4
 
-# Installed packages
+# Installed packages (via pip)
 import genanki
 import markdown
 
@@ -780,7 +780,7 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
                     print(f"> Found new answer line (answer={temp_anki_note.answer})")
                 if line_stripped == "---":
                     print(
-                        f"Warning: Found another question answer separator (question={temp_anki_note.question},"
+                        f"WARNING: Found another question answer separator (question={temp_anki_note.question},"
                         f"current_answer={temp_anki_note.answer})"
                     )
         elif parse_state == ParseSectionState.QUESTION_ANSWER_SEPERATOR:
@@ -816,9 +816,7 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
     return temp_anki_deck
 
 
-# Main method (This will not be executed when file is imported)
-if __name__ == "__main__":
-
+def main(args: List[str]) -> int:
     debug_flag_found = False
 
     nextAnkiOutFilePath: bool = False
@@ -826,42 +824,42 @@ if __name__ == "__main__":
     nextRmResPrefix: bool = False
     nextBackupDirFilePath: bool = False
 
-    argsToRemove: List[str] = [sys.argv[0]]
+    argsToRemove: List[str] = [args[0]]
 
     # Simple (activate) options
-    for x in sys.argv:
+    for x in args:
         if x == "--help" or x == "-help" or x == "-h":
             cli_help()
-            exit(0)
+            return 0
         if x == "--version" or x == "-version" or x == "-v":
             cli_version()
-            exit(0)
+            return 0
 
     for rmArg in argsToRemove:
-        sys.argv.pop(sys.argv.index(rmArg))
+        args.pop(args.index(rmArg))
     argsToRemove = []
 
-    if len(sys.argv) < 1:
+    if len(args) < 1:
         print("No input file was specified!")
-        sys.exit(1)
+        return 1
 
-    md_input_file_path = sys.argv[0]
-    md_output_file_path = sys.argv[0]
-    argsToRemove.append(sys.argv[0])
+    md_input_file_path = args[0]
+    md_output_file_path = args[0]
+    argsToRemove.append(args[0])
     anki_output_file_path = f"{os.path.basename(md_input_file_path)}.apkg"
     backup_dir_output_file_path = None
 
     if not os.path.isfile(md_input_file_path):
         print(f"Input file was not found: '{md_input_file_path}'")
-        sys.exit(1)
+        return 1
 
     for rmArg in argsToRemove:
-        sys.argv.pop(sys.argv.index(rmArg))
+        args.pop(args.index(rmArg))
     argsToRemove = []
 
     additional_file_dirs: List[str] = []
 
-    for x in sys.argv:
+    for x in args:
         if x == "-d":
             argsToRemove.append(x)
             debug_flag_found = True
@@ -896,7 +894,7 @@ if __name__ == "__main__":
             argsToRemove.append(x)
         else:
             print(f"Unknown option found: '{x}'")
-            sys.exit(1)
+            return 1
 
     anki_deck: AnkiDeck
     with open(md_input_file_path, "r", encoding="utf-8") as md_file:
@@ -915,3 +913,9 @@ if __name__ == "__main__":
         anki_deck.md_backup_deck_to_directory(
             backup_dir_output_file_path, debug=debug_flag_found
         )
+    return 0
+
+# Main method (This will not be executed when file is imported)
+if __name__ == "__main__":
+    exitCode = main(sys.argv)
+    exit(exitCode)
