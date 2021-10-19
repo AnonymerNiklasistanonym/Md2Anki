@@ -81,10 +81,10 @@ class AnkiDeckNote:
     """Question multi line string"""
     answer: str = ""
     """Answer multi line string"""
-    category: Optional[str] = None
-    """Optional category for note"""
+    tags: Set[str] = field(default_factory=lambda: set())
+    """Tags"""
     guid: str = create_unique_id()
-    """Unique id of anki deck note"""
+    """Unique id"""
 
     regex_image_file = re.compile(
         r"!\[(.*?)\]\((.*?)\)(?:\{(?:\s*?width\s*?=(.+?)\s*?)?(?:\s*?height\s*?=(.+?)\s*?)?\})?"
@@ -149,6 +149,35 @@ class AnkiDeckNote:
             temp_answer = temp_answer.replace(
                 f'"{file_dir_to_escape}{os.path.sep}', '"'
             )
+
+        # Extract tags from question
+        def get_tags(question_string) -> Set[str]:
+            """Get the used tags of the note"""
+            regex_tag_part = re.compile(r"`\[(.*?)\]`")
+            tags: Set[str] = set()
+
+            def add_tag(regex_group_match):
+                """Detect and add all local image path to the created set"""
+                tag_strings = regex_group_match.group(1).split(",")
+                for tag_string in tag_strings:
+                    tag = tag_string.strip()
+                    if ' ' in tag:
+                        print(f"WARNING: A tag with spaces was found: '{tag}'")
+                        tag = tag.replace(' ', '_')
+                        print(f"WARNING: The tag was rewritten to: '{tag}'")
+                    if len(tag) > 0:
+                        tags.add(tag)
+                # TODO Replace tag list with empty string
+                return ""
+
+            re.sub(regex_tag_part, add_tag, question_string)
+            return tags
+
+        tags = get_tags(temp_question)
+
+        if debug:
+            print(f"found_tags={tags}")
+            print(f"temp_question_tag_fix={temp_question}")
 
         def code_block_replace(regex_group_match):
             language = regex_group_match.group(1)
@@ -283,7 +312,9 @@ class AnkiDeckNote:
             print(f">> Final card text for answer: '{temp_answer}'")
 
         return genanki.Note(
-            guid=self.guid, model=anki_card_model, fields=[temp_question, temp_answer]
+            guid=self.guid, model=anki_card_model,
+            fields=[temp_question, temp_answer],
+            tags=list(tags)
         )
 
     def update_local_file_paths(
