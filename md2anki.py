@@ -708,15 +708,41 @@ class AnkiDeck:
         if not os.path.isdir(output_dir_path):
             os.mkdir(output_dir_path)
         asset_dir_path = os.path.join(output_dir_path, "assets")
-        if not os.path.isdir(asset_dir_path):
-            os.mkdir(asset_dir_path)
         local_asset_dir_path = os.path.relpath(asset_dir_path, output_dir_path)
         self.md_write_deck_to_file(
             os.path.join(output_dir_path, "document.md"),
             local_asset_dir_path=local_asset_dir_path,
         )
-        for file in self.get_local_files_from_notes(debug=debug):
-            shutil.copyfile(file, os.path.join(asset_dir_path, os.path.basename(file)))
+        filesToCopy = self.get_local_files_from_notes(debug=debug)
+        if len(filesToCopy) > 0:
+            if not os.path.isdir(asset_dir_path):
+                os.mkdir(asset_dir_path)
+            for file in filesToCopy:
+                shutil.copyfile(file, os.path.join(asset_dir_path, os.path.basename(file)))
+        bash_build_script = os.path.join(output_dir_path, "build.sh")
+        with open(bash_build_script, "w", encoding="utf-8") as file:
+            file.write("#!/usr/bin/env bash\n\n")
+            file.write("if [ ! -d \"Md2Anki\" ] ; then\n")
+            file.write("    git clone \"https://github.com/AnonymerNiklasistanonym/Md2Anki.git\"\n")
+            file.write("fi\n")
+            file.write("./Md2Anki/run.sh \"../document.md\"")
+            if len(filesToCopy) > 0:
+                file.write(" -file-dir \"../\"")
+            file.write(" -o-anki \"../anki_deck.apkg\" \"$@\"\n")
+        pwsh_build_script = os.path.join(output_dir_path, "build.ps1")
+        with open(pwsh_build_script, "w", encoding="utf-8") as file:
+            file.write("#!/usr/bin/env pwsh\n\n")
+            file.write("$Md2AnkiGitDir = Join-Path $PSScriptRoot -ChildPath Md2Anki\n\n")
+            file.write("if (-not (Test-Path -LiteralPath $Md2AnkiGitDir)) {\n")
+            file.write("    git clone \"https://github.com/AnonymerNiklasistanonym/Md2Anki.git\"\n")
+            file.write("}\n\n")
+            file.write("$Md2AnkiRun = Join-Path $Md2AnkiGitDir -ChildPath run.ps1\n")
+            file.write("$Md2AnkiDocument = Join-Path $PSScriptRoot -ChildPath document.md\n")
+            file.write("$Md2AnkiApkg = Join-Path $PSScriptRoot -ChildPath anki_deck.apkg\n\n")
+            file.write("Invoke-Expression \"$Md2AnkiRun $Md2AnkiDocument")
+            if len(filesToCopy) > 0:
+                file.write(" -file-dir $PSScriptRoot")
+            file.write(" -o-anki $Md2AnkiApkg $args\"\n")
 
 
 def download_script_files(
@@ -1096,28 +1122,46 @@ def main(args: Md2AnkiArgs) -> int:
         cli_version()
         return 0
 
-    with open(args.md_input_file_paths[0], "r", encoding="utf-8") as md_file:
-        anki_deck: AnkiDeck = parse_md_file_to_anki_deck(
-            md_file, debug=debug_flag_found
-        )
+    anki_decks: List[AnkiDeck] = list()
+    for md_input_file_path in args.md_input_file_paths:
+        with open(md_input_file_path, "r", encoding="utf-8") as md_file:
+            anki_decks.append(
+                parse_md_file_to_anki_deck(md_file, debug=debug_flag_found)
+            )
 
-    anki_deck.additional_file_dirs = args.additional_file_dirs
-    anki_deck.model = create_katex_highlightjs_anki_deck_model(
+    for anki_deck in anki_decks:
+        if anki_deck.name != anki_decks[0].name:
+            print(f"The by the input files created decks have different names: {anki_deck.name}!={anki_decks[0].name}")
+            return 1
+        if anki_deck.guid != anki_decks[0].guid:
+            print(f"The by the input files created decks have different guids: {anki_deck.guid}!={anki_decks[0].guid}")
+            return 1
+
+    final_anki_deck = anki_decks[0]
+    for anki_deck in anki_decks[1:]:
+        final_anki_deck.notes.append(anki_deck.notes)
+
+    final_anki_deck.additional_file_dirs = args.additional_file_dirs
+    final_anki_deck.model = create_katex_highlightjs_anki_deck_model(
         online=True, debug=debug_flag_found
     )
 
-    anki_deck.genanki_write_deck_to_file(
+    final_anki_deck.genanki_write_deck_to_file(
         args.anki_output_file_path, debug=debug_flag_found
     )
 
     if args.md_output_file_path is not None:
-        anki_deck.md_write_deck_to_file(
+        final_anki_deck.md_write_deck_to_file(
             args.md_output_file_path, debug=debug_flag_found
         )
     if args.backup_output_dir_path is not None:
-        anki_deck.md_backup_deck_to_directory(
+        # TODO Do not merge decks in this step!
+        final_anki_deck.md_backup_deck_to_directory(
             args.backup_output_dir_path, debug=debug_flag_found
         )
+        # TODO Add build script for Powershell/Bash
+        # git clone md2anki
+        # ./md2anki/run.sh document.md -file-dir attachments
     return 0
 
 
