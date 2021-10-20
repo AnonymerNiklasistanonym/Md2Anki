@@ -718,31 +718,43 @@ class AnkiDeck:
             if not os.path.isdir(asset_dir_path):
                 os.mkdir(asset_dir_path)
             for file in filesToCopy:
-                shutil.copyfile(file, os.path.join(asset_dir_path, os.path.basename(file)))
+                shutil.copyfile(
+                    file, os.path.join(asset_dir_path, os.path.basename(file))
+                )
         bash_build_script = os.path.join(output_dir_path, "build.sh")
         with open(bash_build_script, "w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env bash\n\n")
-            file.write("if [ ! -d \"Md2Anki\" ] ; then\n")
-            file.write("    git clone \"https://github.com/AnonymerNiklasistanonym/Md2Anki.git\"\n")
+            file.write('if [ ! -d "Md2Anki" ] ; then\n')
+            file.write(
+                '    git clone "https://github.com/AnonymerNiklasistanonym/Md2Anki.git"\n'
+            )
             file.write("fi\n")
-            file.write("./Md2Anki/run.sh \"../document.md\"")
+            file.write('./Md2Anki/run.sh "../document.md"')
             if len(filesToCopy) > 0:
-                file.write(" -file-dir \"../\"")
-            file.write(" -o-anki \"../anki_deck.apkg\" \"$@\"\n")
+                file.write(' -file-dir "../"')
+            file.write(' -o-anki "../anki_deck.apkg" "$@"\n')
         pwsh_build_script = os.path.join(output_dir_path, "build.ps1")
         with open(pwsh_build_script, "w", encoding="utf-8") as file:
             file.write("#!/usr/bin/env pwsh\n\n")
-            file.write("$Md2AnkiGitDir = Join-Path $PSScriptRoot -ChildPath Md2Anki\n\n")
+            file.write(
+                "$Md2AnkiGitDir = Join-Path $PSScriptRoot -ChildPath Md2Anki\n\n"
+            )
             file.write("if (-not (Test-Path -LiteralPath $Md2AnkiGitDir)) {\n")
-            file.write("    git clone \"https://github.com/AnonymerNiklasistanonym/Md2Anki.git\"\n")
+            file.write(
+                '    git clone "https://github.com/AnonymerNiklasistanonym/Md2Anki.git"\n'
+            )
             file.write("}\n\n")
             file.write("$Md2AnkiRun = Join-Path $Md2AnkiGitDir -ChildPath run.ps1\n")
-            file.write("$Md2AnkiDocument = Join-Path $PSScriptRoot -ChildPath document.md\n")
-            file.write("$Md2AnkiApkg = Join-Path $PSScriptRoot -ChildPath anki_deck.apkg\n\n")
-            file.write("Invoke-Expression \"$Md2AnkiRun $Md2AnkiDocument")
+            file.write(
+                "$Md2AnkiDocument = Join-Path $PSScriptRoot -ChildPath document.md\n"
+            )
+            file.write(
+                "$Md2AnkiApkg = Join-Path $PSScriptRoot -ChildPath anki_deck.apkg\n\n"
+            )
+            file.write('Invoke-Expression "$Md2AnkiRun $Md2AnkiDocument')
             if len(filesToCopy) > 0:
                 file.write(" -file-dir $PSScriptRoot")
-            file.write(" -o-anki $Md2AnkiApkg $args\"\n")
+            file.write(' -o-anki $Md2AnkiApkg $args"\n')
 
 
 def download_script_files(
@@ -1131,10 +1143,14 @@ def main(args: Md2AnkiArgs) -> int:
 
     for anki_deck in anki_decks:
         if anki_deck.name != anki_decks[0].name:
-            print(f"The by the input files created decks have different names: {anki_deck.name}!={anki_decks[0].name}")
+            print(
+                f"The by the input files created decks have different names: {anki_deck.name}!={anki_decks[0].name}"
+            )
             return 1
         if anki_deck.guid != anki_decks[0].guid:
-            print(f"The by the input files created decks have different guids: {anki_deck.guid}!={anki_decks[0].guid}")
+            print(
+                f"The by the input files created decks have different guids: {anki_deck.guid}!={anki_decks[0].guid}"
+            )
             return 1
 
     final_anki_deck = anki_decks[0]
