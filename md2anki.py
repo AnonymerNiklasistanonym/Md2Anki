@@ -43,16 +43,26 @@ KATEX_AUTO_RENDERER_FILE_NAME = f"katex_auto_render_{KATEX_VERSION}.min.js"
 
 def cli_help():
     print(
-        "$ python3 md2anki.py MD_FILE [OPTIONS]\n\n"
-        + "Create an anki deck file (.apkg) from a markdown document.\n"
-        + "If no custom output path is given the file name of the document\n"
-        + "(+ .apkg) is used.\n\n"
+        "$ python3 md2anki.py MD_FILE [MD_FILE...] [OPTIONS]\n\n"
+        + "Create an anki deck file (.apkg) from one or more markdown\n"
+        + "documents. If no custom output path is given the file name\n"
+        + "of the document (+ .apkg) is used.\n\n"
         + "Options:\n"
         + "\t-d\t\t\tActivate debugging output\n"
-        + "\t-o-anki FILE_PATH\tCustom anki deck output file path\n"
-        + "\t-o-md FILE_PATH\t\tCustom markdown output file path\n"
-        + "\t-o-backup-dir DIR_PATH\tBackup the input and its local assets\n"
-        + "\t-file-dir DIR_PATH\tAdditional file directory\n\n"
+        + "\t-o-anki FILE_PATH\tCustom anki deck output\n"
+        + "\t                 \tfile path\n"
+        + "\t-o-md FILE_PATH\t\tCustom markdown output\n"
+        + "\t               \t\tfile path (multiple files\n"
+        + "\t               \t\twill be merged into one)\n"
+        + "\t-o-md-dir DIR_PATH\tCustom markdown output\n"
+        + "\t                  \tdirectory path\n"
+        + "\t-o-backup-dir DIR_PATH\tBackup the input and its\n"
+        + "\t                      \tlocal assets with a build\n"
+        + "\t                      \tscript\n"
+        + "\t-file-dir DIR_PATH\tAdditional file directory\n"
+        + "\t                  \twhich can be supplied\n"
+        + "\t                  \tmultiple times\n"
+        + "\n"
         + "Also supported are:\n"
         + "\t--help\n"
         + "\t--version"
@@ -85,6 +95,155 @@ Regex expression to parse a markdown image notation: '![alt text](source path){ 
 The first group is the 'alt text' and the second one the 'source path' while optionally there is a third and fourth
 group for the width and height if found.
 """
+
+
+@dataclass
+class Md2AnkiArgs:
+    """
+    Contains all information of the md2anki command line arguments
+    """
+
+    additional_file_dirs: List[str] = field(default_factory=lambda: list())
+    md_input_file_paths: List[str] = field(default_factory=lambda: list())
+    md_output_file_path: Optional[str] = None
+    md_output_dir_path: Optional[str] = None
+    anki_output_file_path: Optional[str] = None
+    backup_output_dir_path: Optional[str] = None
+
+    enable_debugging: bool = False
+    show_help: bool = False
+    show_version: bool = False
+
+    error_message: Optional[str] = None
+    error_code: int = 0
+
+
+def parse_cli_args(args: List[str]) -> Md2AnkiArgs:
+    """Parse the command line args"""
+    md2AnkiArgs = Md2AnkiArgs()
+    argsToRemove: List[str] = []
+
+    # Simple "global" options
+    for arg in args:
+        if arg == "-d":
+            md2AnkiArgs.enable_debugging = True
+            print("> Debugging was enabled")
+            argsToRemove.append(arg)
+        if arg == "--help":
+            md2AnkiArgs.show_help = True
+            return md2AnkiArgs
+        if arg == "--version":
+            md2AnkiArgs.show_version = True
+            return md2AnkiArgs
+
+    # Remove all parsed "global" options from the arg list
+    for argToRemove in argsToRemove:
+        args.pop(args.index(argToRemove))
+    argsToRemove = []
+
+    for arg in args:
+        # If a supported option is found break out of the loop
+        if (
+            arg == "-o-anki"
+            or arg == "-o-md"
+            or arg == "-o-md-dir"
+            or arg == "-o-backup-dir"
+            or arg == "-file-dir"
+        ):
+            break
+        else:
+            md2AnkiArgs.md_input_file_paths.append(arg)
+            argsToRemove.append(arg)
+
+    # Remove all parsed input file paths from the arg list
+    for argToRemove in argsToRemove:
+        args.pop(args.index(argToRemove))
+    argsToRemove = []
+
+    # If no args are found throw error
+    if len(md2AnkiArgs.md_input_file_paths) == 0:
+        md2AnkiArgs.error_code = 1
+        md2AnkiArgs.error_message = "No input file was specified!"
+        return md2AnkiArgs
+
+    # If an input file is not found throw error
+    for md_input_file_path in md2AnkiArgs.md_input_file_paths:
+        if not os.path.isfile(md_input_file_path):
+            md2AnkiArgs.error_code = 1
+            md2AnkiArgs.error_message = (
+                f"Input file was not found: '{md_input_file_path}'"
+            )
+            return md2AnkiArgs
+
+    nextAnkiOutFilePath: Optional[bool] = False
+    nextMdOutFilePath: Optional[bool] = False
+    nextMdOutDirPath: Optional[bool] = False
+    nextFileDirPath: bool = False
+    nextBackupDirFilePath: Optional[bool] = False
+
+    # Set default arguments
+    md2AnkiArgs.anki_output_file_path = (
+        f"{os.path.basename(md2AnkiArgs.md_input_file_paths[0])}.apkg"
+    )
+
+    for x in args:
+        if nextAnkiOutFilePath:
+            nextAnkiOutFilePath = None
+            md2AnkiArgs.anki_output_file_path = x
+            argsToRemove.append(x)
+        elif nextMdOutFilePath:
+            nextMdOutFilePath = None
+            md2AnkiArgs.md_output_file_path = x
+            argsToRemove.append(x)
+        elif nextMdOutDirPath:
+            nextMdOutDirPath = None
+            md2AnkiArgs.md_output_dir_path = x
+            argsToRemove.append(x)
+        elif nextFileDirPath:
+            nextFileDirPath = None
+            md2AnkiArgs.additional_file_dirs.append(x)
+            argsToRemove.append(x)
+        elif nextBackupDirFilePath:
+            nextBackupDirFilePath = None
+            md2AnkiArgs.backup_output_dir_path = x
+            argsToRemove.append(x)
+        elif x == "-o-anki":
+            if nextAnkiOutFilePath is None:
+                md2AnkiArgs.error_code = 1
+                md2AnkiArgs.error_message = f"Option was found multiple times: '{x}'"
+                return md2AnkiArgs
+            nextAnkiOutFilePath = True
+            argsToRemove.append(x)
+        elif x == "-o-md":
+            if nextMdOutFilePath is None:
+                md2AnkiArgs.error_code = 1
+                md2AnkiArgs.error_message = f"Option was found multiple times: '{x}'"
+                return md2AnkiArgs
+            nextMdOutFilePath = True
+            argsToRemove.append(x)
+        elif x == "-o-md-dir":
+            if nextMdOutDirPath is None:
+                md2AnkiArgs.error_code = 1
+                md2AnkiArgs.error_message = f"Option was found multiple times: '{x}'"
+                return md2AnkiArgs
+            nextMdOutDirPath = True
+            argsToRemove.append(x)
+        elif x == "-file-dir":
+            nextFileDirPath = True
+            argsToRemove.append(x)
+        elif x == "-o-backup-dir":
+            if nextBackupDirFilePath is None:
+                md2AnkiArgs.error_code = 1
+                md2AnkiArgs.error_message = f"Option was found multiple times: '{x}'"
+                return md2AnkiArgs
+            nextBackupDirFilePath = True
+            argsToRemove.append(x)
+        else:
+            md2AnkiArgs.error_code = 1
+            md2AnkiArgs.error_message = f"Unknown option found: '{x}'"
+            return md2AnkiArgs
+
+    return md2AnkiArgs
 
 
 @dataclass
@@ -923,107 +1082,47 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
     return temp_anki_deck
 
 
-def main(args: List[str]) -> int:
-    debug_flag_found = False
+def main(args: Md2AnkiArgs) -> int:
+    debug_flag_found = args.enable_debugging
 
-    nextAnkiOutFilePath: bool = False
-    nextMdOutFilePath: bool = False
-    nextRmResPrefix: bool = False
-    nextBackupDirFilePath: bool = False
+    if args.error_code != 0:
+        if args.error_message is not None:
+            print(args.error_message)
+        return args.error_code
+    if args.show_help:
+        cli_help()
+        return 0
+    if args.show_version:
+        cli_version()
+        return 0
 
-    argsToRemove: List[str] = [args[0]]
+    with open(args.md_input_file_paths[0], "r", encoding="utf-8") as md_file:
+        anki_deck: AnkiDeck = parse_md_file_to_anki_deck(
+            md_file, debug=debug_flag_found
+        )
 
-    # Simple (activate) options
-    for x in args:
-        if x == "--help" or x == "-help" or x == "-h":
-            cli_help()
-            return 0
-        if x == "--version" or x == "-version" or x == "-v":
-            cli_version()
-            return 0
-
-    for rmArg in argsToRemove:
-        args.pop(args.index(rmArg))
-    argsToRemove = []
-
-    if len(args) < 1:
-        print("No input file was specified!")
-        return 1
-
-    md_input_file_path = args[0]
-    md_output_file_path = args[0]
-    argsToRemove.append(args[0])
-    anki_output_file_path = f"{os.path.basename(md_input_file_path)}.apkg"
-    backup_dir_output_file_path = None
-
-    if not os.path.isfile(md_input_file_path):
-        print(f"Input file was not found: '{md_input_file_path}'")
-        return 1
-
-    for rmArg in argsToRemove:
-        args.pop(args.index(rmArg))
-    argsToRemove = []
-
-    additional_file_dirs: List[str] = []
-
-    for x in args:
-        if x == "-d":
-            argsToRemove.append(x)
-            debug_flag_found = True
-            print("> Debugging was turned on")
-        elif nextAnkiOutFilePath:
-            nextAnkiOutFilePath = False
-            anki_output_file_path = x
-            argsToRemove.append(x)
-        elif nextMdOutFilePath:
-            nextMdOutFilePath = False
-            md_output_file_path = x
-            argsToRemove.append(x)
-        elif nextRmResPrefix:
-            nextRmResPrefix = False
-            additional_file_dirs.append(x)
-            argsToRemove.append(x)
-        elif nextBackupDirFilePath:
-            nextBackupDirFilePath = False
-            backup_dir_output_file_path = x
-            argsToRemove.append(x)
-        elif x == "-o-anki":
-            nextAnkiOutFilePath = True
-            argsToRemove.append(x)
-        elif x == "-o-md":
-            nextMdOutFilePath = True
-            argsToRemove.append(x)
-        elif x == "-file-dir":
-            nextRmResPrefix = True
-            argsToRemove.append(x)
-        elif x == "-o-backup-dir":
-            nextBackupDirFilePath = True
-            argsToRemove.append(x)
-        else:
-            print(f"Unknown option found: '{x}'")
-            return 1
-
-    anki_deck: AnkiDeck
-    with open(md_input_file_path, "r", encoding="utf-8") as md_file:
-        anki_deck = parse_md_file_to_anki_deck(md_file, debug=debug_flag_found)
-
-    anki_deck.additional_file_dirs = additional_file_dirs
+    anki_deck.additional_file_dirs = args.additional_file_dirs
     anki_deck.model = create_katex_highlightjs_anki_deck_model(
         online=True, debug=debug_flag_found
     )
 
-    anki_deck.genanki_write_deck_to_file(anki_output_file_path, debug=debug_flag_found)
+    anki_deck.genanki_write_deck_to_file(
+        args.anki_output_file_path, debug=debug_flag_found
+    )
 
-    if md_output_file_path is not None:
-        anki_deck.md_write_deck_to_file(md_output_file_path, debug=debug_flag_found)
-    if backup_dir_output_file_path is not None:
+    if args.md_output_file_path is not None:
+        anki_deck.md_write_deck_to_file(
+            args.md_output_file_path, debug=debug_flag_found
+        )
+    if args.backup_output_dir_path is not None:
         anki_deck.md_backup_deck_to_directory(
-            backup_dir_output_file_path, debug=debug_flag_found
+            args.backup_output_dir_path, debug=debug_flag_found
         )
     return 0
 
 
 # Main method (This will not be executed when file is imported)
 if __name__ == "__main__":
-    exitCode = main(sys.argv)
+    cliArgs = parse_cli_args(sys.argv[1:])
+    exitCode = main(cliArgs)
     exit(exitCode)
