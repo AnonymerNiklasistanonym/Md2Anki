@@ -280,6 +280,20 @@ class AnkiDeckNote:
                 f">> Card text for question after markdown module parsing: '{temp_answer}'"
             )
 
+        # This is for now dropped since the rendering does not seem to be faster
+        # or look as good as the current kaTex rendering
+        # def return_math_section_in_new_format(math_section: str):
+        #    if math_section.startswith("$$"):
+        #        math_section_fixed_end = re.sub(r"\$\$$", "\\]", math_section)
+        #        math_section_fixed = re.sub(r"^\$\$", "\\[", math_section_fixed_end)
+        #        print(f"{math_section=}{math_section_fixed=}")
+        #        return math_section_fixed
+        #    else:
+        #        math_section_fixed_end = re.sub(r"\$$", "\\)", math_section)
+        #        math_section_fixed = re.sub(r"^\$", "\\(", math_section_fixed_end)
+        #        print(f"{math_section=}{math_section_fixed=}")
+        #        return math_section_fixed
+
         # Dumb fix (2): Collect all math sections to later overwrite the from python markdown updated sections
         temp_question = re.sub(
             regex_dumb,
