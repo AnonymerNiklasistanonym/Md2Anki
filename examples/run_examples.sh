@@ -22,7 +22,7 @@ done
           "examples/multi_page_example_part_02.md" \
           "examples/multi_page_example_part_03.md" \
           -o-anki "examples/multi_page_example.apkg" \
-          -o-md "examples/multi_page_example.md" \
+          -o-md "examples/multi_page_example_all_parts.md" \
           -o-md-dir "examples" \
           -file-dir "examples" \
           -o-backup-dir "examples/backup_multi_page_example" \

@@ -1153,6 +1153,15 @@ def main(args: Md2AnkiArgs) -> int:
             )
             return 1
 
+    if args.md_output_dir_path is not None:
+        for anki_deck, md_input_file_path in zip(anki_decks, args.md_input_file_paths):
+            anki_output_file_path = os.path.join(
+                args.md_output_dir_path, os.path.basename(md_input_file_path)
+            )
+            anki_deck.md_write_deck_to_file(
+                anki_output_file_path, debug=debug_flag_found
+            )
+
     final_anki_deck = anki_decks[0]
     for anki_deck in anki_decks[1:]:
         for anki_deck_note in anki_deck.notes:
@@ -1171,15 +1180,6 @@ def main(args: Md2AnkiArgs) -> int:
         final_anki_deck.md_write_deck_to_file(
             args.md_output_file_path, debug=debug_flag_found
         )
-
-    if args.md_output_dir_path is not None:
-        for anki_deck, md_input_file_path in zip(anki_decks, args.md_input_file_paths):
-            anki_output_file_path = os.path.join(
-                args.md_output_dir_path, os.path.basename(md_input_file_path)
-            )
-            anki_deck.md_write_deck_to_file(
-                anki_output_file_path, debug=debug_flag_found
-            )
 
     if args.backup_output_dir_path is not None:
         # TODO Do not merge decks in this step!
