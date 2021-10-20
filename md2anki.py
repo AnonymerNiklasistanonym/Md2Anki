@@ -26,13 +26,13 @@ CSS_GENERAL_FILE_PATH = os.path.join(CURRENT_DIR, "stylesheet.css")
 HIGHLIGHTJS_SCRIPT_FILE_PATH = os.path.join(CURRENT_DIR, "highlightJs_renderer.js")
 KATEXT_FILE_SCRIPT_PATH = os.path.join(CURRENT_DIR, "kaTex_renderer.js")
 
-HLJS_VERSION = "10.3.1"
+HLJS_VERSION = "11.3.1"
 HLJS_CSS_URL = f"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/{HLJS_VERSION}/styles/default.min.css"
 HLJS_CSS_FILE_NAME = f"highlight_{HLJS_VERSION}.min.css"
 HLJS_URL = f"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/{HLJS_VERSION}/highlight.min.js"
 HLJS_FILE_NAME = f"highlight_{HLJS_VERSION}.min.js"
 
-KATEX_VERSION = "0.12.0"
+KATEX_VERSION = "0.13.18"
 KATEX_CSS_URL = f"https://cdn.jsdelivr.net/npm/katex@{KATEX_VERSION}/dist/katex.min.css"
 KATEX_CSS_FILE_NAME = f"katex_{KATEX_VERSION}.min.css"
 KATEX_URL = f"https://cdn.jsdelivr.net/npm/katex@{KATEX_VERSION}/dist/katex.min.js"
@@ -672,7 +672,7 @@ def create_katex_highlightjs_anki_deck_model(
 
     online_state = "online" if online else "offline"
     return AnkiModel(
-        guid=999990001,
+        guid=999990002,
         name=f"Md2Anki card (KaTeX {KATEX_VERSION}, HighlightJs {HLJS_VERSION}, {online_state})",
         description="Card with integrated KaTeX and HighlightJs support",
         css=katex_css_template_code + highlightjs_css_template_code + css_code,
