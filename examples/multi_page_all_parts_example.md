@@ -4,6 +4,14 @@ Part 1/3
 
 `{=:multi_part_1_of_3:=}`
 
+Part 2/3
+
+`{=:multi_part_2_of_3:=}`
+
+Part 3/3
+
+`{=:multi_part_3_of_3:=}`
+
 ## Question with inline formula $\omega = a^2 + 10$ (a010fdca-d52f-42a5-baf4-fb60cbf2c9cc)
 
 Answer with inline formula $100 = 10 * 10 x + 3$

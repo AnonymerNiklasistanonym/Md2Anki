@@ -10,7 +10,7 @@ import html
 import shutil
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, List, TextIO, Set
+from typing import Optional, List, TextIO, Set, Tuple
 from uuid import uuid4
 
 # Installed packages (via pip)
@@ -18,7 +18,7 @@ import genanki
 import markdown
 
 VERSION_MAJOR: int = 2
-VERSION_MINOR: int = 4
+VERSION_MINOR: int = 5
 VERSION_PATCH: int = 0
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -674,7 +674,9 @@ class AnkiDeck:
                         file_found = True
                         break
                 if not file_found:
-                    raise Exception(f"File was not found: {file}")
+                    raise Exception(
+                        f"File was not found: {file} ({self.additional_file_dirs=})"
+                    )
         return file_list
 
     def genanki_write_deck_to_file(self, output_file_path: str, debug=False):
@@ -704,13 +706,22 @@ class AnkiDeck:
                 )
             file.write("\n")
 
-    def md_backup_deck_to_directory(self, output_dir_path: str, debug=False):
+    def md_backup_deck_to_directory(
+        self,
+        output_dir_path: str,
+        multi_page_part_of: Optional[Tuple[int, int]] = None,
+        debug=False,
+    ):
         if not os.path.isdir(output_dir_path):
             os.mkdir(output_dir_path)
         asset_dir_path = os.path.join(output_dir_path, "assets")
         local_asset_dir_path = os.path.relpath(asset_dir_path, output_dir_path)
+        if multi_page_part_of is not None:
+            document_name = f"document_part_{multi_page_part_of[0]}.md"
+        else:
+            document_name = "document.md"
         self.md_write_deck_to_file(
-            os.path.join(output_dir_path, "document.md"),
+            os.path.join(output_dir_path, document_name),
             local_asset_dir_path=local_asset_dir_path,
         )
         filesToCopy = self.get_local_files_from_notes(debug=debug)
@@ -729,7 +740,12 @@ class AnkiDeck:
                 '    git clone "https://github.com/AnonymerNiklasistanonym/Md2Anki.git"\n'
             )
             file.write("fi\n")
-            file.write('./Md2Anki/run.sh "../document.md"')
+            file.write(f"./Md2Anki/run.sh")
+            if multi_page_part_of is not None:
+                for x in range(1, multi_page_part_of[1] + 1):
+                    file.write(f' "../document_part_{x}.md"')
+            else:
+                file.write(f' "../{document_name}"')
             if len(filesToCopy) > 0:
                 file.write(' -file-dir "../"')
             file.write(' -o-anki "../anki_deck.apkg" "$@"\n')
@@ -745,13 +761,24 @@ class AnkiDeck:
             )
             file.write("}\n\n")
             file.write("$Md2AnkiRun = Join-Path $Md2AnkiGitDir -ChildPath run.ps1\n")
-            file.write(
-                "$Md2AnkiDocument = Join-Path $PSScriptRoot -ChildPath document.md\n"
-            )
+            if multi_page_part_of is not None:
+                for x in range(1, multi_page_part_of[1]):
+                    file.write(
+                        f"$Md2AnkiDocumentPart{x} = Join-Path $PSScriptRoot -ChildPath document_part_{x}.md\n"
+                    )
+            else:
+                file.write(
+                    "$Md2AnkiDocument = Join-Path $PSScriptRoot -ChildPath document.md\n"
+                )
             file.write(
                 "$Md2AnkiApkg = Join-Path $PSScriptRoot -ChildPath anki_deck.apkg\n\n"
             )
-            file.write('Invoke-Expression "$Md2AnkiRun $Md2AnkiDocument')
+            file.write('Invoke-Expression "$Md2AnkiRun')
+            if multi_page_part_of is not None:
+                for x in range(1, multi_page_part_of[1]):
+                    file.write(f" $Md2AnkiDocumentPart{x}")
+            else:
+                file.write(" $Md2AnkiDocument")
             if len(filesToCopy) > 0:
                 file.write(" -file-dir $PSScriptRoot")
             file.write(' -o-anki $Md2AnkiApkg $args"\n')
@@ -1137,9 +1164,9 @@ def main(args: Md2AnkiArgs) -> int:
     anki_decks: List[AnkiDeck] = list()
     for md_input_file_path in args.md_input_file_paths:
         with open(md_input_file_path, "r", encoding="utf-8") as md_file:
-            anki_decks.append(
-                parse_md_file_to_anki_deck(md_file, debug=debug_flag_found)
-            )
+            anki_deck = parse_md_file_to_anki_deck(md_file, debug=debug_flag_found)
+            anki_deck.additional_file_dirs = args.additional_file_dirs
+            anki_decks.append(anki_deck)
 
     for anki_deck in anki_decks:
         if anki_deck.name != anki_decks[0].name:
@@ -1162,12 +1189,12 @@ def main(args: Md2AnkiArgs) -> int:
                 anki_output_file_path, debug=debug_flag_found
             )
 
+    # Combine all decks into one
     final_anki_deck = anki_decks[0]
     for anki_deck in anki_decks[1:]:
-        for anki_deck_note in anki_deck.notes:
-            final_anki_deck.notes.append(anki_deck_note)
+        final_anki_deck.description += f"\n{anki_deck.description}"
+        final_anki_deck.notes += anki_deck.notes
 
-    final_anki_deck.additional_file_dirs = args.additional_file_dirs
     final_anki_deck.model = create_katex_highlightjs_anki_deck_model(
         online=True, debug=debug_flag_found
     )
@@ -1177,18 +1204,27 @@ def main(args: Md2AnkiArgs) -> int:
     )
 
     if args.md_output_file_path is not None:
+        final_global_tags = final_anki_deck.get_used_global_tags()
+        if len(anki_decks) > 1 and len(final_global_tags) > 0:
+            print(
+                f"WARNING: Global tags were found in the anki decks: '{final_global_tags}'",
+                f"which will now apply to ALL cards!",
+            )
         final_anki_deck.md_write_deck_to_file(
             args.md_output_file_path, debug=debug_flag_found
         )
 
     if args.backup_output_dir_path is not None:
-        # TODO Do not merge decks in this step!
-        final_anki_deck.md_backup_deck_to_directory(
-            args.backup_output_dir_path, debug=debug_flag_found
-        )
-        # TODO Add build script for Powershell/Bash
-        # git clone md2anki
-        # ./md2anki/run.sh document.md -file-dir attachments
+        for num, anki_deck in enumerate(anki_decks, start=1):
+            if len(anki_decks) == 1:
+                multi_page_part_of = None
+            else:
+                multi_page_part_of = (num, len(anki_decks))
+            anki_deck.md_backup_deck_to_directory(
+                args.backup_output_dir_path,
+                multi_page_part_of,
+                debug=debug_flag_found,
+            )
     return 0
 
 
