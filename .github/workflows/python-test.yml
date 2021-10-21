@@ -5,9 +5,9 @@ name: Python Test
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -51,6 +51,9 @@ jobs:
     - name: Check if formatting is ok
       run: |
         black --check md2anki.py
+        black --check setup.py
+        black --check scripts
+        black --check tests
 
   examples:
 
@@ -87,3 +90,24 @@ jobs:
     - name: Check if tests can be ran without errors
       run: |
         ./tests/run_tests.sh
+
+
+  package:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Create Python package
+      run: |
+        python3 -m pip install --upgrade build
+        python3 -m build
+        ls -lt
+        # TODO Check if the installation can be done / tests?
