@@ -19,7 +19,7 @@ import markdown
 
 VERSION_MAJOR: int = 2
 VERSION_MINOR: int = 5
-VERSION_PATCH: int = 0
+VERSION_PATCH: int = 1
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 CSS_GENERAL_FILE_PATH = os.path.join(CURRENT_DIR, "stylesheet.css")
@@ -763,7 +763,7 @@ class AnkiDeck:
             file.write("}\n\n")
             file.write("$Md2AnkiRun = Join-Path $Md2AnkiGitDir -ChildPath run.ps1\n")
             if multi_page_part_of is not None:
-                for x in range(1, multi_page_part_of[1]):
+                for x in range(1, multi_page_part_of[1] + 1):
                     file.write(
                         f"$Md2AnkiDocumentPart{x} = Join-Path $PSScriptRoot -ChildPath document_part_{x}.md\n"
                     )
@@ -776,7 +776,7 @@ class AnkiDeck:
             )
             file.write('Invoke-Expression "$Md2AnkiRun')
             if multi_page_part_of is not None:
-                for x in range(1, multi_page_part_of[1]):
+                for x in range(1, multi_page_part_of[1] + 1):
                     file.write(f" $Md2AnkiDocumentPart{x}")
             else:
                 file.write(" $Md2AnkiDocument")
