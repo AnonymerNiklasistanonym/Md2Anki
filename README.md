@@ -10,7 +10,7 @@ Supported features (and planned ones if not checked):
 - [x] Works on the anki Desktop client
 - [x] Works on the anki Web client
 - [x] Works on the anki Android client
-  - [ ] Fix problem with syntax highlighting of code blocks 
+  - [ ] Fix problem with syntax highlighting of code blocks
 - [x] Automatically indexes cards so that they can be updated without loosing their learning progress (just import the updated anki deck)
 - [x] LaTeX math (inline and blocks)
 - [x] Images (local and URL, vector and raster)
@@ -103,3 +103,21 @@ python3 md2anki.py input.md -o-md output.md
 ```
 
 For more examples checkout the [`examples`](examples) directory where you can also run [`run_examples.sh`](examples/run_examples.sh) to quickly create all corresponding anki decks and check them out in anki.
+
+## Install Python package
+
+Via the file [`setup.py`](setup.py) the package can be built and installed.
+
+```sh
+python3 -m pip install --upgrade build
+python3 -m build
+# Which the creates a new directory called `dist` with the following files in there:
+- md2anki-2.5.2-py3-none-any.whl
+- md2anki-2.5.2.tar.gz
+```
+
+The wheel file can be installed via:
+
+```sh
+pip install package.whl
+```
