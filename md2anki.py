@@ -19,7 +19,7 @@ import markdown
 
 VERSION_MAJOR: int = 2
 VERSION_MINOR: int = 5
-VERSION_PATCH: int = 1
+VERSION_PATCH: int = 2
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 CSS_GENERAL_FILE_PATH = os.path.join(CURRENT_DIR, "stylesheet.css")
@@ -182,8 +182,9 @@ def parse_cli_args(args: List[str]) -> Md2AnkiArgs:
     nextBackupDirFilePath: Optional[bool] = False
 
     # Set default arguments
-    md2AnkiArgs.anki_output_file_path = (
-        f"{os.path.basename(md2AnkiArgs.md_input_file_paths[0])}.apkg"
+    md2AnkiArgs.anki_output_file_path = os.path.join(
+        os.path.dirname(md2AnkiArgs.md_input_file_paths[0]),
+        f"{os.path.splitext(os.path.basename(md2AnkiArgs.md_input_file_paths[0]))[0]}.apkg",
     )
 
     for x in args:
