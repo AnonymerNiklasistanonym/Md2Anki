@@ -710,6 +710,7 @@ class AnkiDeck:
         self,
         output_dir_path: str,
         multi_page_part_of: Optional[Tuple[int, int]] = None,
+        another_page_has_assets=False,
         debug=False,
     ):
         if not os.path.isdir(output_dir_path):
@@ -746,7 +747,7 @@ class AnkiDeck:
                     file.write(f' "../document_part_{x}.md"')
             else:
                 file.write(f' "../{document_name}"')
-            if len(filesToCopy) > 0:
+            if len(filesToCopy) > 0 or another_page_has_assets:
                 file.write(' -file-dir "../"')
             file.write(' -o-anki "../anki_deck.apkg" "$@"\n')
         pwsh_build_script = os.path.join(output_dir_path, "build.ps1")
@@ -779,7 +780,7 @@ class AnkiDeck:
                     file.write(f" $Md2AnkiDocumentPart{x}")
             else:
                 file.write(" $Md2AnkiDocument")
-            if len(filesToCopy) > 0:
+            if len(filesToCopy) > 0 or another_page_has_assets:
                 file.write(" -file-dir $PSScriptRoot")
             file.write(' -o-anki $Md2AnkiApkg $args"\n')
 
@@ -1215,6 +1216,11 @@ def main(args: Md2AnkiArgs) -> int:
         )
 
     if args.backup_output_dir_path is not None:
+        another_page_has_assets = False
+        for anki_deck in anki_decks:
+            if anki_deck.get_local_files_from_notes(debug=debug_flag_found):
+                another_page_has_assets = True
+                break
         for num, anki_deck in enumerate(anki_decks, start=1):
             if len(anki_decks) == 1:
                 multi_page_part_of = None
@@ -1223,6 +1229,7 @@ def main(args: Md2AnkiArgs) -> int:
             anki_deck.md_backup_deck_to_directory(
                 args.backup_output_dir_path,
                 multi_page_part_of,
+                another_page_has_assets,
                 debug=debug_flag_found,
             )
     return 0
