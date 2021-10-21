@@ -25,7 +25,7 @@ setup(
         ],
     },
     include_package_data=True,
-    license='MIT',
+    license="MIT",
     scripts=["scripts/md2anki.py", "scripts/md2anki"],
     install_requires=[
         "genanki>=0.11.0",
