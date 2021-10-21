@@ -19,22 +19,34 @@ Supported features (and planned ones if not checked):
 - [x] Tables
 - [x] Text formatting (bold, italics)
 - [x] Export document and local assets to a custom directory that can easily be shared or used as backup
+- [x] Split the Anki deck markdown document into multiple pages that can then merged together into one anki deck
+- [x] Insert tags for each card to allow for better custom studies/references/etc.
+
 
 ## Usage
 
 ```text
-$ python3 md2anki.py MD_FILE [OPTIONS]
+$ python3 md2anki.py MD_FILE [MD_FILE...] [OPTIONS]
 
-Create an anki deck file (.apkg) from a markdown document.
-If no custom output path is given the file name of the document
-(+ .apkg) is used.
+Create an anki deck file (.apkg) from one or more markdown
+documents. If no custom output path is given the file name
+of the document (+ .apkg) is used.
 
 Options:
         -d                      Activate debugging output
-        -o-anki FILE_PATH       Custom anki deck output file path
-        -o-md FILE_PATH         Custom markdown output file path
-        -o-backup-dir DIR_PATH  Backup the input and its local assets
+        -o-anki FILE_PATH       Custom anki deck output
+                                file path
+        -o-md FILE_PATH         Custom markdown output
+                                file path (multiple files
+                                will be merged into one)
+        -o-md-dir DIR_PATH      Custom markdown output
+                                directory path
+        -o-backup-dir DIR_PATH  Backup the input and its
+                                local assets with a build
+                                script
         -file-dir DIR_PATH      Additional file directory
+                                which can be supplied
+                                multiple times
 
 Also supported are:
         --help
