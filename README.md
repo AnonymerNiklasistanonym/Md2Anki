@@ -111,13 +111,17 @@ Via the file [`setup.py`](setup.py) the package can be built and installed.
 ```sh
 python3 -m pip install --upgrade build
 python3 -m build
-# Which the creates a new directory called `dist` with the following files in there:
-- md2anki-2.5.2-py3-none-any.whl
-- md2anki-2.5.2.tar.gz
+# Which then creates a new directory called `dist` with the following files in there:
+#- md2anki-2.5.2-py3-none-any.whl
+#- md2anki-2.5.2.tar.gz
 ```
 
 The wheel file can be installed via:
 
 ```sh
-pip install package.whl
+# Create a virtual environment for testing otherwise skip this section
+python3 -m venv venv_testing
+source venv_testing/bin/activate
+# Install it
+pip install dist/md2anki-2.5.2-py3-none-any.whl
 ```
