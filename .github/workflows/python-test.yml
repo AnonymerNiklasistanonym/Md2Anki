@@ -29,7 +29,8 @@ jobs:
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Check if it can be run without errors
       run: |
-        python -m md2anki --help
+        python "src/md2anki/md2anki.py" --version
+        python "src/md2anki/md2anki.py" --help
 
 
   formatting:
@@ -109,9 +110,9 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Create Python package
       run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install --upgrade build
-        python3 -m build
+        python -m pip install --upgrade pip
+        python -m pip install --upgrade build
+        python -m build
         ls -lt dist
     - name: Install Python package
       run: |
