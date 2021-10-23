@@ -27,7 +27,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "md2anki=md2anki:main",
+            "md2anki=md2anki:_main",
         ],
     },
     project_urls={

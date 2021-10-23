@@ -18,8 +18,8 @@ import genanki
 import markdown
 
 VERSION_MAJOR: int = 2
-VERSION_MINOR: int = 5
-VERSION_PATCH: int = 2
+VERSION_MINOR: int = 6
+VERSION_PATCH: int = 0
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 CSS_GENERAL_FILE_PATH = os.path.join(CURRENT_DIR, "stylesheet.css")
@@ -1154,7 +1154,7 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
     return temp_anki_deck
 
 
-def main_method(args: Md2AnkiArgs, is_package=False) -> int:
+def main(args: Md2AnkiArgs, is_package=False) -> int:
     debug_flag_found = args.enable_debugging
 
     if args.error_code != 0:
@@ -1244,5 +1244,5 @@ def main_method(args: Md2AnkiArgs, is_package=False) -> int:
 # Main method (This will not be executed when file is imported)
 if __name__ == "__main__":
     cliArgs = parse_cli_args(sys.argv[1:])
-    exitCode = main_method(cliArgs)
+    exitCode = main(cliArgs)
     exit(exitCode)
