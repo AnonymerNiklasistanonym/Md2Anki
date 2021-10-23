@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name="md2anki",
-    version="2.5.2",
+    version="2.6.1",
     author="AnonymerNiklasistanonym",
     description="Convert Markdown formatted documents to anki decks",
     long_description=long_description,

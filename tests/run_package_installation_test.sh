@@ -11,7 +11,7 @@ cd "$SCRIPT_DIR/.."
 DIST_DIRECTORY="dist"
 SRC_DIRECTORY="src"
 PACKAGE_NAME="md2anki"
-PACKAGE_VERSION="2.5.2"
+PACKAGE_VERSION="2.6.1"
 BUILD_ENVIRONMENT="venv_build_environment"
 INSTALL_ENVIRONMENT="venv_install_environment"
 
@@ -33,8 +33,8 @@ python3 -m pip install --upgrade pip
 pip install "$DIST_DIRECTORY/$PACKAGE_NAME-$PACKAGE_VERSION-py3-none-any.whl"
 md2anki --version
 md2anki --help
-md2anki /home/niklas/Documents/GitHub/Md2Anki/examples/basic_example.md -o-anki /home/niklas/Documents/GitHub/Md2Anki/examples/aaa_it_works.apkg
-md2anki /home/niklas/Documents/GitHub/Md2Anki/examples/images_example.md -o-anki /home/niklas/Documents/GitHub/Md2Anki/examples/bbb_it_works.apkg -file-dir /home/niklas/Documents/GitHub/Md2Anki/examples/
+md2anki "examples/basic_example.md" -o-anki "examples/aaa_it_works.apkg"
+md2anki "examples/images_example.md" -o-anki "examples/bbb_it_works.apkg" -file-dir "examples/"
 deactivate
 
 cd "$CALL_DIR"
