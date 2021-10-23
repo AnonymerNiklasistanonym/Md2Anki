@@ -123,3 +123,10 @@ jobs:
         md2anki --help
         md2anki "examples/basic_example.md"
         md2anki "examples/images_example.md" -file-dir "examples/"
+    - name: Archive package files
+      uses: actions/upload-artifact@v2
+      with:
+        name: Python package files
+        path: |
+          dist/**/*.tar.gz
+          dist/**/*.whl
