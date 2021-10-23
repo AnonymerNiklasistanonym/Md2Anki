@@ -41,9 +41,13 @@ KATEX_AUTO_RENDERER_URL = f"https://cdn.jsdelivr.net/npm/katex@{KATEX_VERSION}/d
 KATEX_AUTO_RENDERER_FILE_NAME = f"katex_auto_render_{KATEX_VERSION}.min.js"
 
 
-def cli_help():
+def cli_help(is_package=False):
+    if is_package:
+        runCommand = "md2anki"
+    else:
+        runCommand = "python3 md2anki.py"
     print(
-        "$ python3 md2anki.py MD_FILE [MD_FILE...] [OPTIONS]\n\n"
+        f"$ {runCommand} MD_FILE [MD_FILE...] [OPTIONS]\n\n"
         + "Create an anki deck file (.apkg) from one or more markdown\n"
         + "documents. If no custom output path is given the file name\n"
         + "of the document (+ .apkg) is used.\n\n"
@@ -170,8 +174,9 @@ def parse_cli_args(args: List[str]) -> Md2AnkiArgs:
     for md_input_file_path in md2AnkiArgs.md_input_file_paths:
         if not os.path.isfile(md_input_file_path):
             md2AnkiArgs.error_code = 1
+            absolute_path = os.path.abspath(md_input_file_path)
             md2AnkiArgs.error_message = (
-                f"Input file was not found: '{md_input_file_path}'"
+                f"Input file was not found: '{md_input_file_path}'/'{absolute_path=}'"
             )
             return md2AnkiArgs
 
@@ -1149,7 +1154,7 @@ def parse_md_file_to_anki_deck(text_file: TextIO, debug=False) -> AnkiDeck:
     return temp_anki_deck
 
 
-def main(args: Md2AnkiArgs) -> int:
+def main_method(args: Md2AnkiArgs, is_package=False) -> int:
     debug_flag_found = args.enable_debugging
 
     if args.error_code != 0:
@@ -1239,5 +1244,5 @@ def main(args: Md2AnkiArgs) -> int:
 # Main method (This will not be executed when file is imported)
 if __name__ == "__main__":
     cliArgs = parse_cli_args(sys.argv[1:])
-    exitCode = main(cliArgs)
+    exitCode = main_method(cliArgs)
     exit(exitCode)

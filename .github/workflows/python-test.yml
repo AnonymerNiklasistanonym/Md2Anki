@@ -31,6 +31,7 @@ jobs:
       run: |
         python -m md2anki --help
 
+
   formatting:
 
     runs-on: ubuntu-latest
@@ -50,10 +51,10 @@ jobs:
         pip install black
     - name: Check if formatting is ok
       run: |
-        black --check md2anki.py
+        black --check src
         black --check setup.py
-        black --check scripts
         black --check tests
+
 
   examples:
 
@@ -73,6 +74,7 @@ jobs:
         ls -lt examples
         ./examples/run_examples.sh
         ls -lt examples
+
 
   tests:
 
@@ -107,7 +109,16 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Create Python package
       run: |
+        python3 -m pip install --upgrade pip
         python3 -m pip install --upgrade build
         python3 -m build
-        ls -lt
-        # TODO Check if the installation can be done / tests?
+        ls -lt dist
+    - name: Install Python package
+      run: |
+        pip install "dist/$(ls dist | grep .*.whl)"
+    - name: Test if Python package installation was successful
+      run: |
+        md2anki --version
+        md2anki --help
+        md2anki "examples/basic_example.md"
+        md2anki "examples/images_example.md" -file-dir "examples/"

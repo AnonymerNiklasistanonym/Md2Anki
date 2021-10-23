@@ -1,7 +1,7 @@
 import sys
 import re
 
-sys.path.append("../")
+sys.path.append("../src/md2anki/")
 import md2anki
 
 

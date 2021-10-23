@@ -17,6 +17,7 @@ if ($IsWindows) {
 }
 
 # Go to script directory even when run from another one
+$CALL_DIR = $pwd
 Set-Location -Path $PSScriptRoot
 
 # (Create and) Enter virtual environment
@@ -42,5 +43,9 @@ if (-not (Test-Path -LiteralPath $PYTHON_VENV_DIR)) {
   Invoke-Expression $ACTIVATE_SCRIPT_PATH
 }
 
+# Go back to the call directory
+Set-Location -Path $CALL_DIR
+
 # Run
-python3 -m md2anki $args
+$PYTHON_FILE_PATH = Join-Path $PSScriptRoot -ChildPath "src" | Join-Path -ChildPath "md2anki" | Join-Path -ChildPath "md2anki.py"
+python3 "$PYTHON_FILE_PATH" $args

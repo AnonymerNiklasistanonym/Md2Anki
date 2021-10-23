@@ -11,12 +11,13 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/AnonymerNiklasistanonym/Md2Anki",
-    project_urls={
-        "Bug Tracker": "https://github.com/AnonymerNiklasistanonym/Md2Anki/issues",
-    },
-    packages=find_packages(),
-    py_modules=["md2anki"],
-    package_dir={"": "./"},
+    package_dir={"": "src"},
+    packages=find_packages(where="src"),
+    python_requires=">=3.8",
+    install_requires=[
+        "genanki>=0.11.0",
+        "Markdown>=3.3.4",
+    ],
     package_data={
         "md2anki": [
             "highlightJs_renderer.js",
@@ -24,17 +25,18 @@ setup(
             "stylesheet.css",
         ],
     },
-    include_package_data=True,
+    entry_points={
+        "console_scripts": [
+            "md2anki=md2anki:main",
+        ],
+    },
+    project_urls={
+        "Bug Tracker": "https://github.com/AnonymerNiklasistanonym/Md2Anki/issues",
+    },
     license="MIT",
-    scripts=["scripts/md2anki.py", "scripts/md2anki"],
-    install_requires=[
-        "genanki>=0.11.0",
-        "Markdown>=3.3.4",
-    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.8",
 )

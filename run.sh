@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
+CALL_DIR="$( pwd )"
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-PYTHON_VENV_DIR=$SCRIPT_DIR/venv_Md2Anki
+PYTHON_VENV_DIR=$SCRIPT_DIR/venv_format
 PYTHON_VENV_REQUIREMENTS_FILE=$SCRIPT_DIR/requirements.txt
 
 # Make script stop when an error happens
@@ -28,5 +29,6 @@ else
     source "$PYTHON_VENV_DIR/bin/activate"
 fi
 
-# Run script
-python3 -m md2anki "$@"
+# Run script from call directory
+cd "$CALL_DIR"
+python3 "$SCRIPT_DIR/src/md2anki/md2anki.py" "$@"
