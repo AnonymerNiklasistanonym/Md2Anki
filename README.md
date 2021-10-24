@@ -22,7 +22,6 @@ Supported features (and planned ones if not checked):
 - [x] Split the Anki deck markdown document into multiple pages that can then merged together into one anki deck
 - [x] Insert tags for each card to allow for better custom studies/references/etc.
 
-
 ## Usage
 
 ```text

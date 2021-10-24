@@ -31,6 +31,10 @@ jobs:
       run: |
         python "src/md2anki/md2anki.py" --version
         python "src/md2anki/md2anki.py" --help
+    - name: Check if it can be run without errors using the run scripts
+      run: |
+        ./run.sh --version
+        ./run.ps1 --version
 
 
   formatting:
