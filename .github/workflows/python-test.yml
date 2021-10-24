@@ -123,6 +123,12 @@ jobs:
         md2anki --help
         md2anki "examples/basic_example.md"
         md2anki "examples/images_example.md" -file-dir "examples/"
+    - name: Create checksums for the Python package files
+      run: |
+        sha256sum "$(ls | grep .*.tar.gz)" > "checksums_sha256.txt"
+        sha256sum "$(ls | grep .*.whl)" >> "checksums_sha256.txt"
+        cat "checksums_sha256.txt"
+      working-directory: dist
     - name: Archive package files
       uses: actions/upload-artifact@v2
       with:
@@ -130,3 +136,4 @@ jobs:
         path: |
           dist/**/*.tar.gz
           dist/**/*.whl
+          dist/checksums_sha256.txt
