@@ -11,7 +11,7 @@ cd "$SCRIPT_DIR/.."
 DIST_DIRECTORY="dist"
 SRC_DIRECTORY="src"
 PACKAGE_NAME="md2anki"
-PACKAGE_VERSION="2.6.1"
+PACKAGE_VERSION="2.6.2"
 BUILD_ENVIRONMENT="venv_build_environment"
 INSTALL_ENVIRONMENT="venv_install_environment"
 
@@ -36,5 +36,10 @@ md2anki --help
 md2anki "examples/basic_example.md" -o-anki "examples/aaa_it_works.apkg"
 md2anki "examples/images_example.md" -o-anki "examples/bbb_it_works.apkg" -file-dir "examples/"
 deactivate
+
+cd "$DIST_DIRECTORY"
+sha256sum "$(ls | grep .*.tar.gz)" > "checksums_sha256.txt"
+sha256sum "$(ls | grep .*.whl)" >> "checksums_sha256.txt"
+sha256sum -c "checksums_sha256.txt"
 
 cd "$CALL_DIR"

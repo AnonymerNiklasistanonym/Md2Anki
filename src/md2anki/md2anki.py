@@ -19,7 +19,7 @@ import markdown
 
 VERSION_MAJOR: int = 2
 VERSION_MINOR: int = 6
-VERSION_PATCH: int = 1
+VERSION_PATCH: int = 2
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 CSS_GENERAL_FILE_PATH = os.path.join(CURRENT_DIR, "stylesheet.css")
@@ -1162,7 +1162,7 @@ def main(args: Md2AnkiArgs, is_package=False) -> int:
             print(args.error_message)
         return args.error_code
     if args.show_help:
-        cli_help()
+        cli_help(is_package=is_package)
         return 0
     if args.show_version:
         cli_version()
