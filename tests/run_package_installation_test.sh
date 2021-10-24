@@ -11,7 +11,6 @@ cd "$SCRIPT_DIR/.."
 DIST_DIRECTORY="dist"
 SRC_DIRECTORY="src"
 PACKAGE_NAME="md2anki"
-PACKAGE_VERSION="2.6.2"
 BUILD_ENVIRONMENT="venv_build_environment"
 INSTALL_ENVIRONMENT="venv_install_environment"
 
@@ -30,7 +29,7 @@ deactivate
 python3 -m venv "$INSTALL_ENVIRONMENT"
 source "$INSTALL_ENVIRONMENT/bin/activate"
 python3 -m pip install --upgrade pip
-pip install "$DIST_DIRECTORY/$PACKAGE_NAME-$PACKAGE_VERSION-py3-none-any.whl"
+pip install "$DIST_DIRECTORY/$(ls $DIST_DIRECTORY | grep .*.whl)"
 md2anki --version
 md2anki --help
 md2anki "examples/basic_example.md" -o-anki "examples/aaa_it_works.apkg"

@@ -19,7 +19,7 @@ import markdown
 
 VERSION_MAJOR: int = 2
 VERSION_MINOR: int = 6
-VERSION_PATCH: int = 2
+VERSION_PATCH: int = 3
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 CSS_GENERAL_FILE_PATH = os.path.join(CURRENT_DIR, "stylesheet.css")
@@ -248,6 +248,34 @@ def parse_cli_args(args: List[str]) -> Md2AnkiArgs:
             md2AnkiArgs.error_code = 1
             md2AnkiArgs.error_message = f"Unknown option found: '{x}'"
             return md2AnkiArgs
+
+    # Select the input file or input directory as output if nothing was specified
+    if len(md2AnkiArgs.md_input_file_paths) == 1:
+        if md2AnkiArgs.md_output_file_path is None:
+            md2AnkiArgs.md_output_file_path = md2AnkiArgs.md_input_file_paths[0]
+    elif len(md2AnkiArgs.md_input_file_paths) > 1:
+        if (
+            md2AnkiArgs.md_output_dir_path is None
+            and md2AnkiArgs.md_output_file_path is None
+        ):
+            md_output_dir_path = os.path.abspath(
+                os.path.dirname(md2AnkiArgs.md_input_file_paths[0])
+            )
+            for md_input_file_path in md2AnkiArgs.md_input_file_paths:
+                current_md_output_dir_path = os.path.abspath(
+                    os.path.dirname(md_input_file_path)
+                )
+                if md_output_dir_path != current_md_output_dir_path:
+                    md2AnkiArgs.error_code = 1
+                    md2AnkiArgs.error_message = (
+                        "Multiple input paths from different directories found"
+                        "and no -o-md or -o-md-dir was specified!"
+                        f" ({md_output_dir_path}!={current_md_output_dir_path})"
+                    )
+                    return md2AnkiArgs
+            md2AnkiArgs.md_output_dir_path = os.path.dirname(
+                md2AnkiArgs.md_input_file_paths[0]
+            )
 
     return md2AnkiArgs
 
@@ -1188,6 +1216,8 @@ def main(args: Md2AnkiArgs, is_package=False) -> int:
             return 1
 
     if args.md_output_dir_path is not None:
+        if not os.path.isdir(args.md_output_dir_path):
+            os.mkdir(args.md_output_dir_path)
         for anki_deck, md_input_file_path in zip(anki_decks, args.md_input_file_paths):
             anki_output_file_path = os.path.join(
                 args.md_output_dir_path, os.path.basename(md_input_file_path)
