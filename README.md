@@ -131,3 +131,8 @@ It can also be uninstalled via:
 # Uninstall it
 pip uninstall md2anki
 ```
+
+## Dependencies
+
+- [`Markdown`](https://pypi.org/project/Markdown/)
+- [`genanki`](https://pypi.org/project/genanki/)
