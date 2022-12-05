@@ -152,7 +152,7 @@ jobs:
     - name: Archive package files
       uses: actions/upload-artifact@v3
       with:
-        name: Python package files
+        name: python_package_files
         path: |
           dist/**/*.tar.gz
           dist/**/*.whl
@@ -170,7 +170,7 @@ jobs:
     runs-on: ${{ matrix.os-version }}
 
     # Only create a GitHub release if a new tag was pushed that starts with v
-    # and if the build step was successful
+    # and if the package step was successful
     needs: package
     if: startsWith(github.ref, 'refs/tags/v')
 
@@ -178,11 +178,8 @@ jobs:
     - uses: actions/checkout@v3
     - name: Download all workflow run artifacts
       uses: actions/download-artifact@v3
-    - name: Where are the downloaded artifacts
-      run: ls
-    - name: Where are the downloaded artifacts 2
-      run: ls
-      working-directory: dist
+    - run: ls
+      working-directory: python_package_files
     - name: Create automatic GitHub release
       uses: marvinpinto/action-automatic-releases@v1.2.1
       with:
@@ -190,7 +187,4 @@ jobs:
          automatic_release_tag: "${{ github.ref_name }}"
          prerelease: false
          title: "${{ github.ref_name }}"
-         files: |
-           *.tar.gz
-           *.whl
-           checksums_sha256.txt
+         files: python_package_files/*

@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name="md2anki",
-    version="2.7.0",
+    version="2.7.1",
     author="AnonymerNiklasistanonym",
     description="Convert Markdown formatted documents to anki decks",
     long_description=long_description,
@@ -15,8 +15,8 @@ setup(
     packages=find_packages(where="src"),
     python_requires=">=3.8",
     install_requires=[
-        "genanki>=0.11.0",
-        "Markdown>=3.3.4",
+        "genanki>=0.13.0",
+        "Markdown>=3.4.1",
     ],
     package_data={
         "md2anki": [
