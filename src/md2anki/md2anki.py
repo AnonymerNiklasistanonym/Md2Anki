@@ -19,20 +19,20 @@ import markdown
 
 VERSION_MAJOR: int = 2
 VERSION_MINOR: int = 6
-VERSION_PATCH: int = 3
+VERSION_PATCH: int = 4
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 CSS_GENERAL_FILE_PATH = os.path.join(CURRENT_DIR, "stylesheet.css")
 HIGHLIGHTJS_SCRIPT_FILE_PATH = os.path.join(CURRENT_DIR, "highlightJs_renderer.js")
 KATEXT_FILE_SCRIPT_PATH = os.path.join(CURRENT_DIR, "kaTex_renderer.js")
 
-HLJS_VERSION = "11.3.1"
+HLJS_VERSION = "11.7.0"
 HLJS_CSS_URL = f"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/{HLJS_VERSION}/styles/default.min.css"
 HLJS_CSS_FILE_NAME = f"highlight_{HLJS_VERSION}.min.css"
 HLJS_URL = f"https://cdnjs.cloudflare.com/ajax/libs/highlight.js/{HLJS_VERSION}/highlight.min.js"
 HLJS_FILE_NAME = f"highlight_{HLJS_VERSION}.min.js"
 
-KATEX_VERSION = "0.13.18"
+KATEX_VERSION = "0.16.3"
 KATEX_CSS_URL = f"https://cdn.jsdelivr.net/npm/katex@{KATEX_VERSION}/dist/katex.min.css"
 KATEX_CSS_FILE_NAME = f"katex_{KATEX_VERSION}.min.css"
 KATEX_URL = f"https://cdn.jsdelivr.net/npm/katex@{KATEX_VERSION}/dist/katex.min.js"
@@ -43,11 +43,11 @@ KATEX_AUTO_RENDERER_FILE_NAME = f"katex_auto_render_{KATEX_VERSION}.min.js"
 
 def cli_help(is_package=False):
     if is_package:
-        runCommand = "md2anki"
+        run_command = "md2anki"
     else:
-        runCommand = "python3 md2anki.py"
+        run_command = "python md2anki.py"
     print(
-        f"$ {runCommand} MD_FILE [MD_FILE...] [OPTIONS]\n\n"
+        f"$ {run_command} MD_FILE [MD_FILE...] [OPTIONS]\n\n"
         + "Create an anki deck file (.apkg) from one or more markdown\n"
         + "documents. If no custom output path is given the file name\n"
         + "of the document (+ .apkg) is used.\n\n"
@@ -635,7 +635,7 @@ class AnkiDeck:
 
     name: str = "No name"
     """Name of the deck"""
-    model: AnkiModel = AnkiModel()
+    model: AnkiModel = field(default_factory=lambda: AnkiModel())
     """Model of cards of anki deck"""
     guid: int = create_unique_id_int()
     """Unique id of anki deck"""

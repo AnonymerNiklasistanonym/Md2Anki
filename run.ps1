@@ -1,5 +1,7 @@
 #!/usr/bin/env pwsh
 
+Set-StrictMode -Version 1.0
+
 # Make script stop when an error happens
 $ErrorActionPreference = "Stop"
 

@@ -12,15 +12,17 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.9]
+        os-version: [ubuntu-latest]
+        python-version: [3.11]
+
+    runs-on: ${{ matrix.os-version }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -39,15 +41,17 @@ jobs:
 
   formatting:
 
-    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.9]
+        os-version: [ubuntu-latest]
+        python-version: [3.11]
+
+    runs-on: ${{ matrix.os-version }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -63,15 +67,17 @@ jobs:
 
   examples:
 
-    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.9]
+        os-version: [ubuntu-latest]
+        python-version: [3.11]
+
+    runs-on: ${{ matrix.os-version }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Check if examples can be created without errors
@@ -83,15 +89,17 @@ jobs:
 
   tests:
 
-    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.9]
+        os-version: [ubuntu-latest]
+        python-version: [3.11]
+
+    runs-on: ${{ matrix.os-version }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Check if tests can be ran without errors
@@ -101,15 +109,17 @@ jobs:
 
   package:
 
-    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.9]
+        os-version: [ubuntu-latest]
+        python-version: [3.11]
+
+    runs-on: ${{ matrix.os-version }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Create Python package
@@ -134,10 +144,11 @@ jobs:
         cat "checksums_sha256.txt"
       working-directory: dist
     - name: Archive package files
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: Python package files
         path: |
           dist/**/*.tar.gz
           dist/**/*.whl
           dist/checksums_sha256.txt
+        retention-days: 7
