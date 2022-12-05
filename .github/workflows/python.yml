@@ -1,7 +1,7 @@
 # This workflow will install Python dependencies, run tests and lint with a variety of Python versions
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Python Test
+name: Python CI/CD
 
 on:
   push:
@@ -178,6 +178,11 @@ jobs:
     - uses: actions/checkout@v3
     - name: Download all workflow run artifacts
       uses: actions/download-artifact@v3
+    - name: Where are the downloaded artifacts
+      run: ls
+    - name: Where are the downloaded artifacts 2
+      run: ls
+      working-directory: dist
     - name: Create automatic GitHub release
       uses: marvinpinto/action-automatic-releases@v1.2.1
       with:
@@ -186,6 +191,6 @@ jobs:
          prerelease: false
          title: "${{ github.ref_name }}"
          files: |
-           dist/**/*.tar.gz
-           dist/**/*.whl
-           dist/checksums_sha256.txt
+           *.tar.gz
+           *.whl
+           checksums_sha256.txt
