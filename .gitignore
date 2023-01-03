@@ -137,3 +137,6 @@ venv_*
 # Anki deck files
 *.apkg
 backup_*
+
+# Temp directories
+temp

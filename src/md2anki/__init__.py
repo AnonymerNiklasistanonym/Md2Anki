@@ -1,21 +1,11 @@
 #!/usr/bin/env python3
 
 import sys as _sys
-from md2anki.md2anki import (
-    parse_cli_args,
-    main,
-    parse_md_file_to_anki_deck,
-    Md2AnkiArgs,
-    AnkiDeckNote,
-    AnkiDeck,
-    AnkiModel,
-    VERSION_MAJOR,
-    VERSION_MINOR,
-    VERSION_PATCH,
-)
+from md2anki.cli import parse_cli_args
+from md2anki.main import main
 
 
 def _main():
-    cliArgs = parse_cli_args(_sys.argv[1:])
-    exitCode = main(cliArgs, is_package=True)
-    exit(exitCode)
+    cli_args = parse_cli_args(_sys.argv[1:])
+    exit_code = main(cli_args)
+    exit(exit_code)

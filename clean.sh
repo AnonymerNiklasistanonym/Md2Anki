@@ -11,8 +11,8 @@ cd "$SCRIPT_DIR"
 
 rm -rf dist
 find . -maxdepth 1 -type d -name "venv_*" -exec rm -rf {} \;
-find . -type d -name "*__pycache__" -exec rm -rf {} \;
 find examples -maxdepth 1 -type d -name "backup_*" -exec rm -rf {} \;
 find examples -maxdepth 1 -type f -name "*.apkg" -exec rm -f {} \;
+find . -type d -name "*__pycache__" -exec rm -rf {} \;
 
 cd "$CALL_DIR"

@@ -4,14 +4,6 @@ Part 1/3
 
 `{=:multi_part_1_of_3:=}`
 
-Part 2/3
-
-`{=:multi_part_2_of_3:=}`
-
-Part 3/3
-
-`{=:multi_part_3_of_3:=}`
-
 ## Question with inline formula $\omega = a^2 + 10$ (a010fdca-d52f-42a5-baf4-fb60cbf2c9cc)
 
 Answer with inline formula $100 = 10 * 10 x + 3$
@@ -35,6 +27,12 @@ b = \omega * \begin{cases}
 0 & \text{else}
 \end{cases}
 $$
+
+# Example 'Multi Part' (2829336909)
+
+Part 2/3
+
+`{=:multi_part_2_of_3:=}`
 
 ## Question for online image (b39b3889-1e75-4c43-ae20-96a3dbe2f52d)
 
@@ -73,6 +71,12 @@ Answer to that question
 Answer that has an image that is linked through a local SVG file path:
 
 ![Local SVG image](wikipedia_svg_demo.svg)
+
+# Example 'Multi Part' (2829336909)
+
+Part 3/3
+
+`{=:multi_part_3_of_3:=}`
 
 ## Question with inline code `camelCaseVar()` (9750f8fa-b0d4-40d7-8f1c-e1fec8c5b2e9)
 

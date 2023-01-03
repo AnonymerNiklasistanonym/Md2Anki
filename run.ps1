@@ -50,7 +50,7 @@ Set-Location -Path $CALL_DIR
 
 # Run
 try {
-  $PYTHON_FILE_PATH = Join-Path $PSScriptRoot -ChildPath "src" | Join-Path -ChildPath "md2anki" | Join-Path -ChildPath "md2anki.py"
+  $PYTHON_FILE_PATH = Join-Path $PSScriptRoot -ChildPath "main.py"
   python "$PYTHON_FILE_PATH" $args
 }
 catch {

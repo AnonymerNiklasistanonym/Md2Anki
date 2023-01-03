@@ -1,136 +1,131 @@
 # Md2Anki
 
-Convert your markdown notes to an anki deck.
+Convert Markdown notes to an anki deck.
 
-This was tested on the anki Desktop client and the anki web client.
+This was tested on the anki Desktop client, the anki web client and AnkiDroid.
 
-Supported features (and planned ones if not checked):
+**TODO**:
 
-- [x] Pleasant creation of cards using a markdown editor and then exporting them to an anki deck
-- [x] Works on the anki Desktop client
-- [x] Works on the anki Web client
-- [x] Works on the anki Android client
-  - [ ] Fix problem with syntax highlighting of code blocks
-- [x] Automatically indexes cards so that they can be updated without loosing their learning progress (just import the updated anki deck)
-- [x] LaTeX math (inline and blocks)
-- [x] Images (local and URL, vector and raster)
-- [x] Code (code blocks and inline)
-  - [x] Syntax highlighting for code blocks
-- [x] Tables
-- [x] Text formatting (bold, italics)
-- [x] Export document and local assets to a custom directory that can easily be shared or used as backup
-- [x] Split the Anki deck markdown document into multiple pages that can then merged together into one anki deck
-- [x] Insert tags for each card to allow for better custom studies/references/etc.
+- [ ] Offline support for
+  - [ ] LaTeX math
+  - [ ] source code syntax highlighting
+- [ ] Actually merge decks
+  - [ ] Merge anki decks with same id
+  - [ ] Merge markdown sections with same id
+- [ ] Update logs/debug logs
+
+## Features
+
+- Create an anki deck `.apkg` file
+- The name of the deck and its notes will be updated on your next deck import (this works via automatic IDs, **deletions can not be tracked!**)
+- Very simple basic structure that supports additionally anki note tags and anki subdecks:
+
+  ```markdown
+  # Anki deck name (AUTOMATIC_DECK_ID)
+
+  Optional deck description
+
+  `{=:optional_tag_for_cards_in_deck,another_optional_tag_for_cards_in_deck:=}`
+
+  ## Anki note question (AUTOMATIC_NOTE_ID)
+
+  Anki note answer
+
+  ## Long anki note question (AUTOMATIC_NOTE_ID)
+
+  More question content
+
+  ---
+
+  Answer
+
+  ## Subdeck: Anki subdeck name (AUTOMATIC_DECK_ID)
+
+  ## Anki note question of subdeck (AUTOMATIC_NOTE_ID)
+
+  Anki note answer
+  ```
+
+- Supported question/answer content:
+  - LaTeX math (inline and blocks)
+  - Images (local files and URLs, vector and raster format)
+  - Code (inline and blocks)
+  - All basic Markdown features (i.e. tables, bold, italics, lines)
+- Merge notes from multiple markdown input files into a single deck output file
+- Export document and all used local assets to a custom directory that can easily be shared or used as backup
 
 ## Usage
 
 ```text
-$ python3 md2anki.py MD_FILE [MD_FILE...] [OPTIONS]
+usage: md2anki [-h] [-v] [-d] [-anki-model MODEL_ID] [-o-anki APKG_FILE]
+               [-o-md MD_FILE] [-o-md-dir MD_DIR] [-o-backup-dir BACKUP_DIR]
+               [-file-dir [FILE_DIR ...]] [-md-heading-depth HEADING_DEPTH]
+               MD_INPUT_FILE [MD_INPUT_FILE ...]
 
-Create an anki deck file (.apkg) from one or more markdown
-documents. If no custom output path is given the file name
-of the document (+ .apkg) is used.
+Create an anki deck file (.apkg) from one or more Markdown documents. If no
+custom output path is given the file name of the document (+ .apkg) is used.
 
-Options:
-        -d                      Activate debugging output
-        -o-anki FILE_PATH       Custom anki deck output
-                                file path
-        -o-md FILE_PATH         Custom markdown output
-                                file path (multiple files
-                                will be merged into one)
-        -o-md-dir DIR_PATH      Custom markdown output
-                                directory path
-        -o-backup-dir DIR_PATH  Backup the input and its
-                                local assets with a build
-                                script
-        -file-dir DIR_PATH      Additional file directory
-                                which can be supplied
-                                multiple times
+positional arguments:
+  MD_INPUT_FILE         Markdown (.md) input file that contains anki deck
+                        notes
 
-Also supported are:
-        --help
-        --version
+options:
+  -h, --help            show this help message and exit
+  -v, --version         show program's version number and exit
+  -d, --debug           enable debug output
+  -anki-model MODEL_ID  custom anki card model (md2anki_online, type_answer)
+  -o-anki APKG_FILE     custom anki deck (.apkg) output file path
+  -o-md MD_FILE         custom updated and merged Markdown (.md) output file
+                        path for all input files
+  -o-md-dir MD_DIR      custom output directory for all updated Markdown (.md)
+                        input files
+  -o-backup-dir BACKUP_DIR
+                        create a backup of the anki deck (i.e. merges input
+                        files and copies external files)
+  -file-dir [FILE_DIR ...]
+                        file directories that contain referenced files (like
+                        images)
+  -md-heading-depth HEADING_DEPTH
+                        use a custom Markdown heading depth (>1, default: 1)
 ```
 
-For convenience the scripts `run.sh` (Linux) and `run.ps1` (Windows and Linux) can be called to automatically create a local Python 3 virtual environment so that the dependencies do not pollute the whole system.
-
-## Editor
-
-A list of editors which support WYSIWYG editing of such markdown documents (source code and math blocks):
-
-- [Typora](https://typora.io/) (free to use)
-- [Visual Studio Code](https://code.visualstudio.com/) (open source - some problems with math blocks...)
-
-## Example
-
-```sh
-python3 md2anki.py input.md
-```
-
-`input.md`:
-
-```markdown
-# Test deck (1475745167)
-
-## Question 1 (4e19216b-521a-4202-be03-5c4cf5368b9f)
-
-Answer1
-
-$100$
-
-## Question 2 (44f2549a-e812-4ebc-807b-95d46fd43578)
-
-more text of question 2
-
-$$
-a = 10 * \begin{cases}
-1 & \text{yes} \\
-0 & \text{else}
-\end{cases}
-$$
-
----
-
-Answer2
-```
-
-The IDs are automatically generated if not manually specified.
-To not update the markdown file but create a new one specify a custom output path:
-
-```sh
-python3 md2anki.py input.md -o-md output.md
-```
-
-For more examples checkout the [`examples`](examples) directory where you can also run [`run_examples.sh`](examples/run_examples.sh) to quickly create all corresponding anki decks and check them out in anki.
-
-## Install Python package
+## Setup
 
 Via the file [`setup.py`](setup.py) the package can be built and installed.
 
+### Build
+
+The following commands create the package files in a new directory called `dist`:
+
+- `md2anki-$CURRENT_VERSION-py3-none-any.whl`
+- `md2anki-$CURRENT_VERSION.tar.gz`
+
 ```sh
-python3 -m pip install --upgrade build
-python3 -m build
-# Which then creates a new directory called `dist` with the following files in there:
-#- md2anki-$CURRENT_VERSION-py3-none-any.whl
-#- md2anki-$CURRENT_VERSION.tar.gz
+python -m pip install --upgrade build
+python -m build
 ```
 
-The wheel file can be installed via:
+### Install
+
+The wheel (`.whl`) file can be installed and uninstalled via `pip`:
 
 ```sh
-# Create a virtual environment for testing otherwise skip this section
-python3 -m venv venv_testing_package_installation
-source venv_testing_package_installation/bin/activate
-# Install it
+# Install package
 pip install dist/md2anki-$CURRENT_VERSION-py3-none-any.whl
-```
-
-It can also be uninstalled via:
-
-```sh
-# Uninstall it
+# Uninstall package
 pip uninstall md2anki
 ```
+
+## Markdown Editors
+
+A list of editors which support WYSIWYG editing of such Markdown documents (source code and math blocks):
+
+- [Typora](https://typora.io/) (paid, free to use until version 0.9)
+- [Visual Studio Code](https://code.visualstudio.com/) (open source)
+
+## Examples
+
+Checkout the [`examples`](examples) directory for examples.
 
 ## Dependencies
 

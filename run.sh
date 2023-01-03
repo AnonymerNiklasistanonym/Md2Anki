@@ -31,4 +31,4 @@ fi
 
 # Run script from call directory
 cd "$CALL_DIR"
-python3 "$SCRIPT_DIR/src/md2anki/md2anki.py" "$@"
+python3 "$SCRIPT_DIR/main.py" "$@"

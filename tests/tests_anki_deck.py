@@ -1,20 +1,32 @@
 import sys
 import re
+from os.path import dirname, join
 
-sys.path.append("../src/md2anki/")
-import md2anki
+# Append the module path for md2anki
+sys.path.append(join(dirname(__file__), "..", "src"))
+
+from md2anki.anki_deck import AnkiNote, REGEX_MD_IMAGE_FILE, REGEX_MD_TAG
 
 
 def test_regex_image_file():
     def check_regex_image_file(
         string="",
-        expected_alt_texts=[],
-        expected_source_paths=[],
-        expected_widths=[],
-        expected_heights=[],
+        expected_alt_texts=None,
+        expected_source_paths=None,
+        expected_widths=None,
+        expected_heights=None,
     ):
-        """Check if the recognized image file infos are as expected"""
-        matches = re.findall(md2anki.REGEX_MD_IMAGE_FILE, string)
+        """Check if the recognized image file info is as expected"""
+        if expected_alt_texts is None:
+            expected_alt_texts = []
+        if expected_source_paths is None:
+            expected_source_paths = []
+        if expected_widths is None:
+            expected_widths = []
+        if expected_heights is None:
+            expected_heights = []
+
+        matches = re.findall(REGEX_MD_IMAGE_FILE, string)
         assert len(matches) == len(
             expected_alt_texts
         ), f"{len(matches)=}{len(expected_alt_texts)=}"
@@ -88,10 +100,12 @@ def test_regex_image_file():
 def test_regex_tag():
     def check_regex_tag(
         string="",
-        expected_tag_list_strings=[],
+        expected_tag_list_strings=None,
     ):
         """Check if the recognized tag infos are as expected"""
-        matches = re.findall(md2anki.REGEX_MD_TAG, string)
+        if expected_tag_list_strings is None:
+            expected_tag_list_strings = []
+        matches = re.findall(REGEX_MD_TAG, string)
         assert len(matches) == len(
             expected_tag_list_strings
         ), f"{len(matches)=}{len(expected_tag_list_strings)=}"
@@ -109,12 +123,14 @@ def test_regex_tag():
 
 def test_get_used_files():
     def check_used_files(
-        expected_used_files=set(),
+        expected_used_files=None,
         question_string="",
         answer_string="",
     ):
         """Check if the recognized used files are the expected ones"""
-        note = md2anki.AnkiDeckNote(
+        if expected_used_files is None:
+            expected_used_files = set()
+        note = AnkiNote(
             question=question_string,
             answer=answer_string,
         )
@@ -128,30 +144,24 @@ def test_get_used_files():
         question_string="abc",
     )
     check_used_files(
-        expected_used_files=set(["path1"]),
+        expected_used_files={"path1"},
         question_string="![](path1)",
     )
     check_used_files(
-        expected_used_files=set(["path1"]),
+        expected_used_files={"path1"},
         question_string="hi\n![](path1)",
     )
     check_used_files(
-        expected_used_files=set(["path1", "path2"]),
+        expected_used_files={"path1", "path2"},
         question_string="hi\n![](path1)\n![](path2)",
     )
     # Check if answer strings are also searched
     check_used_files(
-        expected_used_files=set(["path1", "path2"]),
+        expected_used_files={"path1", "path2"},
         answer_string="![](path1) ![](path2)",
     )
     # Check if URLs are ignored
     check_used_files(
-        expected_used_files=set(["path1", "path2"]),
+        expected_used_files={"path1", "path2"},
         question_string="![](path1) ![](path2) ![https://www.google.com/image.png]",
     )
-
-
-if __name__ == "__main__":
-    test_regex_image_file()
-    test_get_used_files()
-    print("Everything passed [internal AnkiDeckNote]")
