@@ -4,6 +4,8 @@
 
 Answer with `inline` code
 
+Format inline code `print('inline')`{.python} is also supported
+
 ## Question with code block: (605ec2c5-e905-4019-a309-39bbb401c589)
 
 ```html

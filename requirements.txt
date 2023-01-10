@@ -8,10 +8,12 @@ frozendict==2.3.4
 genanki==0.13.0
 Markdown==3.4.1
 mypy-extensions==0.4.3
-packaging==21.3
+packaging==22.0
 pathspec==0.10.3
 pep517==0.13.0
 platformdirs==2.6.2
+Pygments==2.14.0
 pyparsing==3.0.9
+pyproject_hooks==1.0.0
 PyYAML==6.0
 tomli==2.0.1

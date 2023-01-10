@@ -1,3 +1,6 @@
 #!/usr/bin/env pwsh
 
-black src setup.py main.py tests examples
+# Make script stop when an error happens
+$ErrorActionPreference = "Stop"
+
+python -m black src setup.py main.py clean.py update_readme.py tests examples

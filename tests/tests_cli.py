@@ -1,18 +1,111 @@
+import os.path
 import sys
+import unittest
 from os.path import dirname, join
+from pathlib import Path
+from typing import List, Tuple
 
 # Append the module path for md2anki
 sys.path.append(join(dirname(__file__), "..", "src"))
 
-import md2anki
+from md2anki.cli import parse_cli_args, Md2AnkiArgs
 
 
-def test_cli_args():
-    # Debug flag
-    valid_args = ["input_file.md"]
-    assert md2anki.parse_cli_args(["-d", *valid_args]).debug is True
-    assert md2anki.parse_cli_args(["--debug", *valid_args]).debug is True
-    # Detect not existing files
-    assert md2anki.parse_cli_args(["input_file.md"]).error is not None
-    # Don't throw errors if file exists
-    assert md2anki.parse_cli_args([__file__]).error is None
+class TestCliArgs(unittest.TestCase):
+    def setUp(self):
+        self.valid_args = [__file__]
+
+        self.cli_args: List[List[str]] = list()
+        self.results: List[Md2AnkiArgs] = list()
+        self.expected: List[Md2AnkiArgs] = list()
+
+        test_data: List[Tuple[List[str], Md2AnkiArgs]] = [
+            (
+                [__file__],
+                Md2AnkiArgs(
+                    md_input_file_paths=[__file__],
+                    md_output_file_paths=[__file__],
+                    anki_output_file_path=os.path.join(
+                        os.path.dirname(__file__), Path(__file__).stem + ".apkg"
+                    ),
+                ),
+            ),
+            (
+                [__file__, "-file-dir", os.path.dirname(__file__)],
+                Md2AnkiArgs(
+                    md_input_file_paths=[__file__],
+                    md_output_file_paths=[__file__],
+                    additional_file_dirs=[os.path.dirname(__file__)],
+                    anki_output_file_path=os.path.join(
+                        os.path.dirname(__file__), Path(__file__).stem + ".apkg"
+                    ),
+                ),
+            ),
+            (
+                [__file__, os.path.join(os.path.dirname(__file__), "__init__.py")],
+                Md2AnkiArgs(
+                    md_input_file_paths=[
+                        __file__,
+                        os.path.join(os.path.dirname(__file__), "__init__.py"),
+                    ],
+                    md_output_file_paths=[
+                        __file__,
+                        os.path.join(os.path.dirname(__file__), "__init__.py"),
+                    ],
+                    anki_output_file_path=os.path.join(
+                        os.path.dirname(__file__), Path(__file__).stem + ".apkg"
+                    ),
+                ),
+            ),
+        ]
+
+        for test_cli_args, test_expected in test_data:
+            self.cli_args.append(test_cli_args)
+            self.results.append(parse_cli_args(test_cli_args))
+            self.expected.append(test_expected)
+
+    def test_cli_logic(self):
+        # Debug flag
+        self.assertTrue(
+            parse_cli_args(["-d", *self.valid_args]).debug,
+            "Debug flag -d enables debugging",
+        )
+        self.assertTrue(
+            parse_cli_args(["--debug", *self.valid_args]).debug,
+            "Debug flag --debug enables debugging",
+        )
+        # Detect not existing files
+        file_path_not_found = "not_found.md"
+        self.assertEqual(
+            parse_cli_args([file_path_not_found]).error.md_input_file_path,
+            file_path_not_found,
+            "Error is thrown if file can not be found",
+        )
+        # Detect not existing additional file directories
+        file_dir_not_found = "not_found"
+        self.assertEqual(
+            parse_cli_args(
+                [__file__, "-file-dir", file_dir_not_found]
+            ).error.additional_file_dir_path,
+            file_dir_not_found,
+            "Error is thrown if additional file directory can not be found",
+        )
+        # Don't throw errors if file exists
+        self.assertIsNone(parse_cli_args([*self.valid_args]).error)
+        # Don't throw errors if additional file directory exists
+        self.assertIsNone(
+            parse_cli_args(
+                [*self.valid_args, "-file-dir", os.path.dirname(__file__)]
+            ).error
+        )
+
+    def test_parsed_cli_args_same(self):
+        for cli_args, result, expected in zip(
+            self.cli_args, self.results, self.expected
+        ):
+            with self.subTest(cli_args=cli_args):
+                self.assertEqual(
+                    result,
+                    expected,
+                    f"Check if parsed cli args {result=}=={expected=}",
+                )

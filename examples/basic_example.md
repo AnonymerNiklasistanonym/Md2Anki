@@ -2,35 +2,25 @@
 
 ## One line question (66b3661f-e22e-4986-a50d-569fdac454ad)
 
-Answer that can be one line or
-
-even multiple lines
+One line answer
 
 ## Multi line (24501c1a-f615-4355-a862-a00f64cc4725)
 
-question
+question thanks to a question answer separator (`---`)
 
 ---
 
-Answer that can be one line or
+Answer that has multiple lines.
 
-even multiple lines
+**Basic** *Markdown* and <ins>HTML</ins> <del>formatting</del> is supported.
 
-## Question with **bold text** (b1150a97-e2d2-466a-8bb6-92c5b2a28816)
-
-Answer with *italic text*
-
-## Question with multiple (parenthesis) (this is possible) (yes)? (b7b85393-b76d-43e6-965a-d86108bf5b09)
+## Question with multiple (parenthesis) (is) (possible) (b7b85393-b76d-43e6-965a-d86108bf5b09)
 
 Answer
 
-## Question with (parenthesis) and without a question mark but with whitespace in parenthesis (yes this has a whitespace) (74203734-a617-4f2f-8e7e-ef4a8a6a3f75)
+## Lines in answers with multiple `---` (f0e03cb6-2015-4f64-bcd3-51e24763705b)
 
-Answer
-
-## Multi line with multiple "---" (f0e03cb6-2015-4f64-bcd3-51e24763705b)
-
-Part of the question
+First question answer seperator in the question.
 
 ---
 
@@ -38,8 +28,4 @@ Answer
 
 ---
 
-Second part of answer
-
----
-
-Third part of answer
+Second part of answer with a line before it.

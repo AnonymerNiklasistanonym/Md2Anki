@@ -3,4 +3,4 @@
 # Make script stop when an error happens
 set -e
 
-black src setup.py main.py tests examples
+python -m black src setup.py main.py clean.py update_readme.py tests examples

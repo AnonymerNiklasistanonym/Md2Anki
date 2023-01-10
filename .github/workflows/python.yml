@@ -28,10 +28,11 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        python -m pip install -r requirements.txt
     - name: Run check [main.py]
       run: python main.py --version
     - name: Run check [run.sh]
@@ -56,12 +57,13 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install black
+        python -m pip install black
     - name: Check formatting
-      run: black --check src setup.py main.py tests examples
+      run: python -m black --check src setup.py main.py clean.py update_readme.py tests examples
 
 
   examples:
@@ -79,10 +81,24 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        python -m pip install -r requirements.txt
+    - name: Install external dependencies [Ubuntu]
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt update
+        sudo apt install clang librsvg2-bin nodejs pandoc texlive-xetex
+    - name: Install external dependencies [Windows]
+      if: matrix.os == 'windows-latest'
+      run: |
+        choco install llvm miktex nodejs pandoc rsvg-convert
+    - name: Install external dependencies
+      run: |
+        npm install -g ts-node
+        python -m pip install numpy matplotlib
     - name: Check if examples can be ran without errors
       run: python -m examples
       working-directory: examples
@@ -103,12 +119,26 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        python -m pip install -r requirements.txt
+    - name: Install external dependencies [Ubuntu]
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt update
+        sudo apt install clang librsvg2-bin nodejs pandoc texlive-xetex
+    - name: Install external dependencies [Windows]
+      if: matrix.os == 'windows-latest'
+      run: |
+        choco install llvm miktex nodejs pandoc rsvg-convert
+    - name: Install external dependencies
+      run: |
+        npm install -g ts-node
+        python -m pip install numpy matplotlib
     - name: Check if tests can be ran without errors
-      run: python -m tests
+      run: python -m unittest
       working-directory: tests
 
 
@@ -131,6 +161,7 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
     - name: Create Python package
       run: |
         python -m pip install --upgrade pip
@@ -138,11 +169,11 @@ jobs:
         python -m build
     - name: Install Python package [Linux]
       if: matrix.os == 'ubuntu-latest'
-      run: pip install "$(ls | grep .*.whl)"
+      run: python -m pip install "$(ls | grep .*.whl)"
       working-directory: dist
     - name: Install Python package [Windows]
       if: matrix.os == 'windows-latest'
-      run: pip install ((Get-ChildItem .).Name | Select-String -Pattern ".*.whl")
+      run: python -m pip install ((Get-ChildItem .).Name | Select-String -Pattern ".*.whl")
       working-directory: dist
     - name: Test if Python package installation was successful
       run: |
@@ -176,6 +207,11 @@ jobs:
           dist/**/*.whl
           dist/checksums_sha256.txt
         retention-days: 7
+    - name: Publish package
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
 
   # Creates a GitHub release if a new tag was pushed
   create-github-release:
@@ -183,7 +219,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.11]
 
     runs-on: ${{ matrix.os }}
 

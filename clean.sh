@@ -9,10 +9,8 @@ set -e
 # Go to script directory even when run from another one
 cd "$SCRIPT_DIR"
 
-rm -rf dist
+python -m clean
 find . -maxdepth 1 -type d -name "venv_*" -exec rm -rf {} \;
-find examples -maxdepth 1 -type d -name "backup_*" -exec rm -rf {} \;
-find examples -maxdepth 1 -type f -name "*.apkg" -exec rm -f {} \;
-find . -type d -name "*__pycache__" -exec rm -rf {} \;
 
+# Go back to original directory
 cd "$CALL_DIR"

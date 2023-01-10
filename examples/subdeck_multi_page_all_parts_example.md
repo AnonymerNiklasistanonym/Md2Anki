@@ -1,5 +1,4 @@
-
-## Example 'Multi Subdeck'
+# Example 'Multi Subdeck' (2829336917)
 
 ## Subdeck: First subdeck (758807664)
 
@@ -10,10 +9,6 @@ Answer
 ### Question 1.2 (b4d1a59c-c7c5-4fe5-9a2c-aad34a808d8e)
 
 Answer
-
-# Example 'Multi Subdeck' (2829336917)
-
-# Example 'Multi Subdeck' (2829336917)
 
 ## Question 2.3.2 (4cddd2a6-965c-44b5-bc34-cf27ad7e4536)
 
