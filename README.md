@@ -34,18 +34,24 @@ To evaluate code and export to pdf the following additional software needs to be
 
 ```sh
 # Linux (the apt package manager is just an example)
-sudo apt install clang librsvg2-bin nodejs pandoc texlive-xetex
+# > Evaluate code
+sudo apt install clang nodejs
+# > PDF export
+sudo apt install librsvg2-bin pandoc texlive-xetex
 ```
 
-```pwsh
+```ps1
 # Windows (the choco package manager is just an example)
-choco install llvm miktex nodejs pandoc rsvg-convert
+# > Evaluate code
+choco install llvm nodejs
+# > PDF export
+choco install miktex pandoc rsvg-convert
 ```
 
 ```sh
 # Both
 npm install -g ts-node
-# > For matplotlib python graphs in examples:
+# > For matplotlib python graphs (used in some examples):
 python -m pip install numpy matplotlib
 ```
 

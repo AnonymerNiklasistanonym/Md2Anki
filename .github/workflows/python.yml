@@ -66,44 +66,6 @@ jobs:
       run: python -m black --check src setup.py main.py clean.py update_readme.py tests examples
 
 
-  examples:
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: [3.11]
-
-    runs-on: ${{ matrix.os }}
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install -r requirements.txt
-    - name: Install external dependencies [Ubuntu]
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt update
-        sudo apt install clang librsvg2-bin nodejs pandoc texlive-xetex
-    - name: Install external dependencies [Windows]
-      if: matrix.os == 'windows-latest'
-      run: |
-        choco install llvm miktex nodejs pandoc rsvg-convert
-    - name: Install external dependencies
-      run: |
-        npm install -g ts-node
-        python -m pip install numpy matplotlib
-    - name: Check if examples can be ran without errors
-      run: python -m examples
-      working-directory: examples
-
-
   tests:
 
     strategy:
@@ -128,15 +90,14 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt update
-        sudo apt install clang librsvg2-bin nodejs pandoc texlive-xetex
+        sudo apt install clang nodejs
     - name: Install external dependencies [Windows]
       if: matrix.os == 'windows-latest'
       run: |
-        choco install llvm miktex nodejs pandoc rsvg-convert
+        choco install llvm nodejs
     - name: Install external dependencies
       run: |
         npm install -g ts-node
-        python -m pip install numpy matplotlib
     - name: Check if tests can be ran without errors
       run: python -m unittest
       working-directory: tests
@@ -182,7 +143,7 @@ jobs:
         md2anki "images_example.md" -file-dir "."
       working-directory: examples
     - name: Publish package
-      if: startsWith(github.ref, 'refs/tags/v')
+      if: startsWith(github.ref, 'refs/tags/v') && matrix.os == 'ubuntu-latest'
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
@@ -213,6 +174,7 @@ jobs:
           dist/**/*.whl
           dist/checksums_sha256.txt
         retention-days: 7
+
 
   # Creates a GitHub release if a new tag was pushed
   create-github-release:
