@@ -10,10 +10,10 @@ This was tested on the anki Desktop client, the anki web client and AnkiDroid.
 
 **TODO**:
 
-- [ ] Fix inline code generation without stupid css rule for ALL `<p>` tags
-- [ ] Add tests for note generation
-- [ ] Enable inline code execution to generate:
-  - [ ] Graph generation
+- [ ] Fix inline code generation without css rule for ALL `<p>` tags
+- [ ] Add tests for anki note generation
+- [ ] Enable inline code execution to additionally generate:
+  - [ ] Graphs
     - [ ] LaTeX `tikzpicture`
 
 ## Features

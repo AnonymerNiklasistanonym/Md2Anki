@@ -181,6 +181,12 @@ jobs:
         md2anki "basic_example.md"
         md2anki "images_example.md" -file-dir "."
       working-directory: examples
+    - name: Publish package
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        verbose: true
     - name: Create checksums for the Python package files [Linux]
       if: matrix.os == 'ubuntu-latest'
       run: |
@@ -207,11 +213,6 @@ jobs:
           dist/**/*.whl
           dist/checksums_sha256.txt
         retention-days: 7
-    - name: Publish package
-      if: startsWith(github.ref, 'refs/tags/v')
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
 
   # Creates a GitHub release if a new tag was pushed
   create-github-release:
