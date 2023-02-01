@@ -1,0 +1,85 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Preview styling</title>
+    <meta name="description" content="A simple preview of the CSS rules applied to any inserted code.">
+    <meta name="author" content="AnonymerNiklasistanonym">
+
+    <link rel="stylesheet" href="../src/md2anki/res/stylesheet.css">
+
+    <style>
+        div#preview {
+            border:1px solid black;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="content">
+        <div id="header"></div>
+        <div id="input">
+            <form action="/action_page.php">
+                <label for="htmlcode">Anki card HTML code:</label>
+                <br>
+                <textarea id="form_htmlcode" id="htmlcode" name="htmlcode" rows="4" cols="50">
+                Insert HTML code
+                </textarea>
+                <br>
+                <label for="htmlcode">Anki card CSS code:</label>
+                <br>
+                <textarea id="form_csscode" id="csscode" name="csscode" rows="4" cols="50">
+                Insert CSS code
+                </textarea>
+            </form>
+        </div>
+        <style id="preview_style" type="text/css"></style>
+        <div id="preview"></div>
+    </div>
+    <script type="text/javascript">
+        /**
+         * @param {HTMLTextAreaElement} textarea
+         * @param {Event} event
+         */
+        const updatePreviewHtml = (textarea, event) => {
+            console.log(`Update HTML preview to '${textarea.value}'`)
+            // New HTML code
+            const newPreview = document.createElement("div")
+            newPreview.classList.add("card")
+            newPreview.innerHTML = textarea.value
+            newPreview.id = "previewRender"
+            // Update DOM
+            const previewDiv = document.getElementById('preview')
+            previewDiv.replaceChildren(newPreview)
+        }
+        const textareaElement = document.getElementById('form_htmlcode')
+        textareaElement.addEventListener("change", function (event) { updatePreviewHtml(this, event) })
+        textareaElement.addEventListener("keyup", function (event) { updatePreviewHtml(this, event) })
+        /**
+         * @param {HTMLTextAreaElement} textarea
+         * @param {Event} event
+         */
+        const updatePreviewCss = (textarea, event) => {
+            console.log(`Update CSS rules of preview to '${textarea.value}'`)
+            // Remove existing CSS rules in head
+            const head = document.getElementsByTagName('head')[0]
+            const styles = Array.from(head.getElementsByTagName('link')).filter(a => a.rel === "stylesheet")
+            for (const style of styles) {
+                head.removeChild(style)
+            }
+            // Add new CSS code
+            const previewStyleDiv = document.getElementById('preview_style')
+            previewStyleDiv.innerText = textarea.value
+        }
+        const cssElement = document.getElementById('form_csscode')
+        cssElement.addEventListener("change", function (event) { updatePreviewCss(this, event) })
+        cssElement.addEventListener("keyup", function (event) { updatePreviewCss(this, event) })
+    </script>
+</body>
+
+</html>

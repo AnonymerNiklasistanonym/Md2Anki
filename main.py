@@ -5,7 +5,6 @@
 import sys
 from os.path import dirname, join
 
-
 # Append the module path for md2anki
 sys.path.append(join(dirname(__file__), "src"))
 

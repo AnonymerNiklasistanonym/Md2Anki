@@ -1,19 +1,21 @@
 @import url('https://fonts.googleapis.com/css?family=Noto+Sans');
 
+/* >> General */
+
 .card {
     font-family: 'Noto Sans', sans-serif;
     font-size: 1em;
 }
 
-.card pre.inline {
-    display: inline-table;
-}
+/* >> Line (that separates question and answer) */
 
 .card hr {
     border: 0;
     height: 0.1em;
     background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
 }
+
+/* >> Tables */
 
 .card table,
 .card td,
@@ -31,6 +33,20 @@
     padding: 0.3em;
 }
 
-.card p, .card div.highlight_inline, .card div.highlight_inline > pre {
+/* >> Inline code */
+
+.card div.highlight_inline, .card div.highlight_inline > pre {
     display: inline;
 }
+
+/** Bad fix for inline code between p tags: */
+.card p.highlight_inline_next {
+    display: inline;
+}
+/** Future fix for inline code within p tags:
+   (currently not supported in firefox or anki desktop)
+    > This would also mean the "\n" to <br> could be removed from the Python code
+.card p:has(+ div.highlight_inline) {
+    display: inline;
+}
+*/

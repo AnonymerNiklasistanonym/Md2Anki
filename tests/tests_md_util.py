@@ -13,7 +13,6 @@ from md2anki.md_util import (
     md_update_code_parts,
     md_update_images,
     md_update_math_sections,
-    md_convert_newlines_to_html,
 )
 
 
@@ -94,6 +93,10 @@ class TestMdUpdateCodeParts(unittest.TestCase):
             ("", ""),
             ("`text`", "`ctextd`"),
             ("a `text`{.python}", "a `ctextd`{a.pythonb}"),
+            (
+                "Format inline code `print('inline')`{.python} is also `supported`{.txt}",
+                "Format inline code `cprint('inline')d`{a.pythonb} is also `csupportedd`{a.txtb}",
+            ),
             (
                 "abc\n```python\nprint('hi')\n```",
                 "abc\n```apythonb\ncprint('hi')\nd```",
@@ -262,34 +265,4 @@ class TestMdUpdateMathSections(unittest.TestCase):
                     result,
                     expected,
                     f"Check if updated math section {result=}=={expected=}",
-                )
-
-
-class TestMdConvertNewlinesToHtml(unittest.TestCase):
-    def setUp(self):
-        self.md_content_list: List[str] = list()
-        self.results: List[str] = list()
-        self.expected: List[str] = list()
-
-        test_data: List[Tuple[str, str]] = [
-            ("", ""),
-            ("\n", "<br>"),
-            ("\n\n", "<br><br>"),
-            ("\n\n\n", "<br><br>"),
-        ]
-
-        for test_input, test_expected in test_data:
-            self.md_content_list.append(test_input)
-            self.results.append(md_convert_newlines_to_html(test_input))
-            self.expected.append(test_expected)
-
-    def test_updated_newlines_same(self):
-        for md_content, result, expected in zip(
-            self.md_content_list, self.results, self.expected
-        ):
-            with self.subTest(md_content=md_content):
-                self.assertEqual(
-                    result,
-                    expected,
-                    f"Check if updated newlines {result=}=={expected=}",
                 )

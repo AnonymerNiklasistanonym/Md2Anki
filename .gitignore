@@ -141,3 +141,4 @@ backup_*
 # Temp directories
 temp
 *.pdf
+.vscode/settings.json

@@ -4,13 +4,13 @@ import shutil
 import subprocess
 import tempfile
 from typing import List, Optional
-from enum import StrEnum
+from enum import Enum
 
 from md2anki.info import md2anki_name
 from md2anki.print import debug_print
 
 
-class SubprocessPrograms(StrEnum):
+class SubprocessPrograms(str, Enum):
     PYTHON = ("python",)
     JAVASCRIPT = ("javascript",)
     TYPESCRIPT = ("typescript",)

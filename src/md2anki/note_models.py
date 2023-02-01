@@ -29,12 +29,12 @@ class AnkiCardModelId(Enum):
 
 def create_type_answer_anki_deck_model() -> AnkiModel:
     with open(CSS_FILE_PATH, "r") as file:
-        css_data = file.read().replace("\n", "")
+        css_data = file.read()
     with open(CSS_FILE_PATH_TYPE_ANSWER, "r") as file:
-        css_data += file.read().replace("\n", "")
+        css_data += file.read()
     return AnkiModel(
-        guid=396500202,
-        name=f"{md2anki_name} {AnkiCardModelId.TYPE_ANSWER.value} (v2)",
+        guid=396500203,
+        name=f"{md2anki_name} {AnkiCardModelId.TYPE_ANSWER.value} (v3)",
         description=f"{md2anki_name} (type answer)",
         css=css_data,
         template_card_question='<div class="card card_question">{{Question}}</div>\n\n{{type:Answer}}',
@@ -46,10 +46,10 @@ def create_type_answer_anki_deck_model() -> AnkiModel:
 
 def create_default_anki_deck_model() -> AnkiModel:
     with open(CSS_FILE_PATH, "r") as file:
-        css_data = file.read().replace("\n", "")
+        css_data = file.read()
     return AnkiModel(
-        guid=396500102,
-        name=f"{md2anki_name} {AnkiCardModelId.DEFAULT.value} (v2)",
+        guid=396500103,
+        name=f"{md2anki_name} {AnkiCardModelId.DEFAULT.value} (v3)",
         description=f"{md2anki_name} (default)",
         css=css_data,
     )

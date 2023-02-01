@@ -1,8 +1,9 @@
 import os
 import re
-import sys
 from re import Match
-from typing import Set, Callable, Optional, List, Tuple
+from typing import Set, Callable, Optional
+
+from md2anki.print import warn_print
 
 REGEX_MD_TAG = re.compile(r"`{=:(.*?):=}`")
 """
@@ -22,7 +23,7 @@ group for the width and height if found.
 REGEX_CODE_BLOCK = re.compile(
     r"```(?:\{(.+?)}|(.+?))\n([\S\s\n]+?)```", flags=re.MULTILINE
 )
-REGEX_INLINE_CODE = re.compile(r"(?<!\S)`([^`]+?)`(?:\{(.+)})?(?!\S)")
+REGEX_INLINE_CODE = re.compile(r"(?<!\S)`([^`]+?)`(?:\{(.+?)})?(?!\S)")
 
 REGEX_MATH_SECTION = re.compile(r"\${2}((?:[^$]|\n)+?)\${2}|\$(.+?)\$")
 
@@ -123,11 +124,7 @@ def md_get_used_md2anki_tags(md_content: str) -> Set[str]:
             if " " in tag:
                 old_tag = tag
                 tag = tag.replace(" ", "_")
-                print(
-                    f"WARNING: A tag with spaces was found: '{old_tag}'",
-                    f"and rewritten to: '{tag}'",
-                    file=sys.stderr,
-                )
+                warn_print(f"A tag with spaces {old_tag!r} was rewritten to {tag!r}")
             if len(tag) > 0:
                 tags.add(tag)
         # Only return string for correct type checking
@@ -149,7 +146,3 @@ def md_update_math_sections(md_content: str, replacer: Callable[[str, bool], str
     md_content = re.sub(REGEX_MATH_SECTION, math_section_replace, md_content)
 
     return md_content
-
-
-def md_convert_newlines_to_html(md_content: str):
-    return re.sub(r"(?:<br>){2,}", "<br><br>", re.sub(r"\n|\r", "<br>", md_content))

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Optional, Tuple
 
 import genanki
 
@@ -18,7 +18,7 @@ class AnkiModel:
     """Model description"""
     css: str = ""
     """Style information (CSS code) for each anki note"""
-    js: str = ""
+    js: Optional[str] = None
     """Script information (JS code) for each anki note"""
     guid: int = create_unique_id_int()
     """Unique id of anki model"""
@@ -40,6 +40,11 @@ class AnkiModel:
     """Card answer template content before and after"""
 
     def genanki_create_model(self) -> genanki.Model:
+        js_string = (
+            ""
+            if self.js is None
+            else f'<script type="text/javascript>{self.js}</script>'
+        )
         return genanki.Model(
             self.guid,
             self.description,
@@ -48,7 +53,7 @@ class AnkiModel:
             templates=[
                 {
                     "name": self.name,
-                    "qfmt": f"{self.js}\n{self.template_card_question_surround[0]}\n{self.template_card_question}\n"
+                    "qfmt": f"{js_string}\n{self.template_card_question_surround[0]}\n{self.template_card_question}\n"
                     f"{self.template_card_question_surround[1]}",
                     "afmt": f"{self.template_card_answer_front_side}{self.template_card_answer_surround[0]}\n"
                     f"{self.template_card_answer}\n{self.template_card_answer_surround[1]}",

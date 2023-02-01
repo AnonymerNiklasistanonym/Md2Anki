@@ -16,59 +16,58 @@ from md2anki.main import main
 
 
 def run_example(
-    input_files: List[str],
-    o_anki: Optional[str] = None,
-    o_md: Optional[str] = None,
-    o_md_dir: Optional[str] = None,
-    o_pdf: Optional[str] = None,
-    file_dir: Optional[List[str]] = None,
-    o_backup_dir: Optional[str] = None,
+    input_files: List[Path],
+    o_anki: Optional[Path] = None,
+    o_md: Optional[Path] = None,
+    o_md_dir: Optional[Path] = None,
+    o_pdf: Optional[Path] = None,
+    file_dirs: Optional[List[Path]] = None,
+    o_backup_dir: Optional[Path] = None,
     anki_model: Optional[AnkiCardModelId] = None,
     debug: Optional[bool] = False,
 ):
-    args = input_files
+    args: List[str] = [str(input_file) for input_file in input_files]
     if debug is True:
         args.append("-d")
     if o_anki is not None:
-        args.extend(["-o-anki", o_anki])
+        args.extend(["-o-anki", str(o_anki)])
     if o_md is not None:
-        args.extend(["-o-md", o_md])
+        args.extend(["-o-md", str(o_md)])
     if o_md_dir is not None:
-        args.extend(["-o-md-dir", o_md_dir])
+        args.extend(["-o-md-dir", str(o_md_dir)])
     if o_pdf is not None:
-        args.extend(["-o-pdf", o_pdf])
-    if file_dir is not None:
-        args.extend(["-file-dir", *file_dir])
+        args.extend(["-o-pdf", str(o_pdf)])
+    if file_dirs is not None:
+        args.extend(["-file-dir", *[str(file_dir) for file_dir in file_dirs]])
     if anki_model is not None:
         args.extend(["-anki-model", anki_model.value])
     if o_backup_dir is not None:
-        args.extend(["-o-backup-dir", o_backup_dir])
+        args.extend(["-o-backup-dir", str(o_backup_dir)])
     print(f"{md2anki_name} {' '.join(args)}")
     cli_args = parse_cli_args(args)
     assert main(cli_args) == 0
 
 
 def run_example_glob(
-    dir_path: str,
+    dir_path: Path,
     glob_str: str,
     anki_model: Optional[AnkiCardModelId] = None,
     debug: Optional[bool] = False,
 ):
-    os.chdir(dir_path)
-    for glob_file in glob.glob(glob_str, recursive=False):
+    for glob_file in dir_path.glob(glob_str):
         run_example(
             [glob_file],
-            o_anki=f"{Path(glob_file).stem}.apkg",
-            o_md=f"{Path(glob_file).stem}.md",
-            o_md_dir=".",
+            o_anki=glob_file.parent.joinpath(f"{glob_file.stem}.apkg"),
+            o_md=glob_file.parent.joinpath(f"{glob_file.stem}.md"),
+            o_md_dir=glob_file.parent,
             anki_model=anki_model,
-            file_dir=["."],
-            o_backup_dir=f"backup_{Path(glob_file).stem}",
+            file_dirs=[glob_file.parent],
+            o_backup_dir=glob_file.parent.joinpath(f"backup_{glob_file.stem}"),
             debug=debug,
         )
 
 
-EXAMPLE_DIR = dirname(__file__)
+EXAMPLE_DIR = Path(__file__).parent.resolve()
 
 # Main method
 if __name__ == "__main__":
@@ -82,28 +81,21 @@ if __name__ == "__main__":
     if multi_part_examples:
         # Merge multi part examples
         run_example(
-            [
-                "multi_page_example_part_01.md",
-                "multi_page_example_part_02.md",
-                "multi_page_example_part_03.md",
-            ],
-            o_anki="multi_page_example.apkg",
-            o_md="multi_page_all_parts_example.md",
-            o_md_dir=".",
-            file_dir=["."],
-            o_backup_dir="backup_multi_page_example",
+            list(EXAMPLE_DIR.glob("multi_page_example_part_*.md")),
+            o_anki=EXAMPLE_DIR.joinpath("multi_page_example.apkg"),
+            o_md=EXAMPLE_DIR.joinpath("multi_page_all_parts_example.md"),
+            o_md_dir=EXAMPLE_DIR,
+            file_dirs=[EXAMPLE_DIR],
+            o_backup_dir=EXAMPLE_DIR.joinpath("backup_multi_page_example"),
             debug=debug_examples,
         )
         run_example(
-            [
-                "subdeck_multi_page_example_part_01.md",
-                "subdeck_multi_page_example_part_02.md",
-            ],
-            o_anki="subdeck_multi_page_example.apkg",
-            o_md="subdeck_multi_page_all_parts_example.md",
-            o_md_dir=".",
-            file_dir=["."],
-            o_backup_dir="backup_subdeck_multi_page_example",
+            list(EXAMPLE_DIR.glob("subdeck_multi_page_example_part_*.md")),
+            o_anki=EXAMPLE_DIR.joinpath("subdeck_multi_page_example.apkg"),
+            o_md=EXAMPLE_DIR.joinpath("subdeck_multi_page_all_parts_example.md"),
+            o_md_dir=EXAMPLE_DIR,
+            file_dirs=[EXAMPLE_DIR],
+            o_backup_dir=EXAMPLE_DIR.joinpath("backup_subdeck_multi_page_example"),
             debug=debug_examples,
         )
 
@@ -118,14 +110,13 @@ if __name__ == "__main__":
         )
 
         # Rerun all created backups
-        os.chdir(EXAMPLE_DIR)
-        for backup_dir in glob.glob("backup_*", recursive=False):
+        for backup_dir in EXAMPLE_DIR.glob("backup_*"):
             run_example(
-                glob.glob(os.path.join(backup_dir, "*.md")),
-                o_anki=os.path.join(backup_dir, f"{backup_dir}.apkg"),
-                o_md=os.path.join(backup_dir, f"document.md"),
+                list(backup_dir.glob("*.md")),
+                o_anki=backup_dir.joinpath(f"{backup_dir.stem}.apkg"),
+                o_md=backup_dir.joinpath("document.md"),
                 o_md_dir=backup_dir,
-                file_dir=[backup_dir],
+                file_dirs=[backup_dir],
                 debug=debug_examples,
             )
 
@@ -133,7 +124,7 @@ if __name__ == "__main__":
         # Create PDFs
         for pdf_example in ["basic", "code", "code_run", "images"]:
             run_example(
-                [f"{pdf_example}_example.md"],
-                o_pdf=os.path.join(EXAMPLE_DIR, f"{pdf_example}_example.pdf"),
+                [EXAMPLE_DIR.joinpath(f"{pdf_example}_example.md")],
+                o_pdf=EXAMPLE_DIR.joinpath(f"{pdf_example}_example.pdf"),
                 debug=debug_examples,
             )

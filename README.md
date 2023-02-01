@@ -222,8 +222,35 @@ A list of editors which support WYSIWYG editing of such Markdown documents (sour
 - [Typora](https://typora.io/) (paid, free to use until version 0.9)
 - [Visual Studio Code](https://code.visualstudio.com/) (open source)
 
-## Dependencies
+## Development
 
-- [`genanki`](https://pypi.org/project/genanki/)
-- [`Markdown`](https://pypi.org/project/Markdown/)
-- [`Pygments`](https://pypi.org/project/Pygments/)
+### Dependencies
+
+- [`beautifulsoup4`](https://pypi.org/project/beautifulsoup4/): Edit HTML
+- [`genanki`](https://pypi.org/project/genanki/): Write Anki decks
+- [`Markdown`](https://pypi.org/project/Markdown/): Convert Markdown to HTML
+- [`Pygments`](https://pypi.org/project/Pygments/): Convert source code to HTML with syntax highlighting/colors
+
+```sh
+python -m pip install --upgrade pip
+# Runtime dependencies
+python -m pip install --upgrade beautifulsoup4 genanki Markdown Pygments
+# Save requirements
+python -m pip freeze > "requirements.txt"
+```
+
+### Upload package to PyPI
+
+1. [Create an PyPI account](https://pypi.org/account/login/)
+2. Go to account settings, Scroll to API tokens, Create PyPI API token (with only the project scope if project already exists)
+
+```sh
+# Build
+python -m pip install --upgrade pip build
+python -m build
+# Upload (only if a non existing version is found)
+python -m pip install twine
+python -m twine upload --skip-existing dist
+# Use as username: "__token__"
+# Use as password the created PyPI API token: "pypi-......"
+```

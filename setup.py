@@ -33,6 +33,7 @@ setup(
     packages=find_packages(where="src"),
     python_requires=">=3.8",
     install_requires=[
+        "beautifulsoup4>=4.11.2",
         "genanki>=0.13.0",
         "Markdown>=3.4.1",
         "Pygments>=2.14.0",

@@ -9,8 +9,10 @@ import markdown
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters import get_formatter_by_name
+from pygments.util import ClassNotFound
 
-from md2anki.print import debug_print
+from md2anki.html_util import fix_inline_code_p_tags
+from md2anki.print import debug_print, warn_print
 from md2anki.subprocess import (
     evaluate_code,
     UnableToEvaluateCodeException,
@@ -24,7 +26,6 @@ from md2anki.md_util import (
     md_update_code_parts,
     md_update_images,
     md_update_math_sections,
-    md_convert_newlines_to_html,
 )
 
 
@@ -126,7 +127,11 @@ class AnkiNote:
                 language = SubprocessPrograms.PYTHON.name
             if language is None:
                 language = "text"
-            language_lexer = get_lexer_by_name(language)
+            try:
+                language_lexer = get_lexer_by_name(language)
+            except ClassNotFound as err:
+                warn_print(f"Default to text lexer ({language=}, {err=})")
+                language_lexer = get_lexer_by_name("text")
             html_formatter = get_formatter_by_name("html", noclasses=True)
             pygments_html_output = highlight(
                 code, language_lexer, html_formatter
@@ -241,8 +246,8 @@ class AnkiNote:
             print(f">> tmp_answer_math_fix:   {tmp_answer!r}")
 
         # Explicitly render line breaks
-        tmp_question = md_convert_newlines_to_html(tmp_question)
-        tmp_answer = md_convert_newlines_to_html(tmp_answer)
+        tmp_question = fix_inline_code_p_tags(tmp_question)
+        tmp_answer = fix_inline_code_p_tags(tmp_answer)
 
         if debug:
             print(f">> tmp_question_newline_fix: {tmp_question!r}")

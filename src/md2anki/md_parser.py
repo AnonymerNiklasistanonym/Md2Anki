@@ -1,6 +1,5 @@
 import copy
 import re
-import sys
 from enum import Enum
 from typing import Optional, TextIO, List, Tuple
 
@@ -11,7 +10,7 @@ from md2anki.info import (
     MD_ANKI_DECK_HEADING_SUBDECK_PREFIX,
     MD_ANKI_NOTE_QUESTION_ANSWER_SEPARATOR,
 )
-from md2anki.print import debug_print, TerminalColors
+from md2anki.print import debug_print, TerminalColors, warn_print
 
 REGEX_MD_ANKI_DECK_HEADING = re.compile(r"^(#+)\s+(.+?)(?:\s+\((\d+)\))?\s*$")
 """
@@ -63,7 +62,7 @@ class ParseStateMarkdownDocument(str, Enum):
     INSIDE_ANKI_DECK = ("INSIDE_ANKI_DECK",)
     """Anki deck heading was read and an anki note question/sub deck heading or anki deck description is expected."""
     LOOKING_FOR_ANKI_SUBDECK_DESCRIPTION = ("LOOKING_FOR_ANKI_SUBDECK_DESCRIPTION",)
-    """Anki sub deck heading was read and an anki note question/sub deck heading or anki subdeck description is 
+    """Anki sub deck heading was read and an anki note question/sub deck heading or anki subdeck description is
     expected."""
     ANKI_NOTE_QUESTION = ("ANKI_NOTE_QUESTION",)
     """An anki note question heading was read and a question answer seperator or answer is expected."""
@@ -95,9 +94,8 @@ def parse_possible_anki_deck_heading(
         )
         if anki_deck_is_subdeck:
             if parent_deck_name is None:
-                print(
-                    f"WARNING: Found {anki_deck_name=} heading that is a subdeck but no parent deck name",
-                    file=sys.stderr,
+                warn_print(
+                    f"Found {anki_deck_name=} heading that is a subdeck but no parent deck name",
                 )
             anki_deck_name = anki_deck_name[len(MD_ANKI_DECK_HEADING_SUBDECK_PREFIX) :]
         if parent_deck_name is not None:

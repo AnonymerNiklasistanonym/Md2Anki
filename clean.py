@@ -1,44 +1,37 @@
 #!/usr/bin/env python3
 
 import shutil
-import glob
-import os
+from pathlib import Path
 
 
-def rm_dir(dir_path: str, dry_run=False):
+def rm_dir(dir_path: Path, dry_run=False):
     print(f"Remove directory {dir_path!r}")
-    if not dry_run and os.path.isdir(dir_path):
+    if not dry_run and dir_path.is_dir():
         shutil.rmtree(dir_path)
 
 
-def rm_file(file_path: str, dry_run=False):
+def rm_file(file_path: Path, dry_run=False):
     print(f"Remove file {file_path!r}")
-    if not dry_run and os.path.isfile(file_path):
-        os.remove(file_path)
+    if not dry_run and file_path.is_file():
+        file_path.unlink()
 
 
 if __name__ == "__main__":
-    dry_run_deletions = False
+    dry_run_deletions = True
 
-    dir_root = os.path.dirname(__file__)
-    dir_dist = os.path.join(dir_root, "dist")
-    dir_examples = os.path.join(dir_root, "examples")
-    dir_src = os.path.join(dir_root, "src")
-    dir_egg_info = os.path.join(dir_src, "md2anki.egg-info")
+    dir_root = Path(__file__).parent.resolve()
+    dir_dist = dir_root.joinpath("dist")
+    dir_examples = dir_root.joinpath("examples")
+    dir_src = dir_root.joinpath("src")
+    dir_egg_info = dir_src.joinpath("md2anki.egg-info")
 
     # Remove example files
-    os.chdir(dir_examples)
-    for glob_example_backup_dir in glob.glob("backup_*", recursive=False):
-        rm_dir(
-            os.path.join(dir_examples, glob_example_backup_dir),
-            dry_run=dry_run_deletions,
-        )
-    for glob_example_apkg in glob.glob("*.apkg", recursive=False):
-        rm_file(
-            os.path.join(dir_examples, glob_example_apkg), dry_run=dry_run_deletions
-        )
-    for glob_example_pdf in glob.glob("*.pdf", recursive=False):
-        rm_file(os.path.join(dir_examples, glob_example_pdf), dry_run=dry_run_deletions)
+    for example_backup_dir in dir_examples.rglob("backup_*"):
+        rm_dir(example_backup_dir, dry_run=dry_run_deletions)
+    for example_apkg in dir_examples.rglob("*.apkg"):
+        rm_file(example_apkg, dry_run=dry_run_deletions)
+    for example_pdf in dir_examples.rglob("*.pdf"):
+        rm_file(example_pdf, dry_run=dry_run_deletions)
 
     # Remove dist directory
     rm_dir(dir_dist, dry_run=dry_run_deletions)
@@ -47,6 +40,14 @@ if __name__ == "__main__":
     rm_dir(dir_egg_info, dry_run=dry_run_deletions)
 
     # Remove pycache directories
-    os.chdir(dir_root)
-    for glob_pycache_dir in glob.glob("*__pycache__", recursive=True):
-        rm_dir(os.path.join(dir_root, glob_pycache_dir), dry_run=dry_run_deletions)
+    venv_directories = [
+        dir_root.joinpath("venv_Md2Anki_pwsh"),
+        dir_root.joinpath("venv_Md2Anki_sh"),
+    ]
+    for pycache_dir in dir_root.rglob("__pycache__"):
+        skip = False
+        for venv_directory in venv_directories:
+            if pycache_dir.as_posix().startswith(venv_directory.as_posix()):
+                skip = True
+        if not skip:
+            rm_dir(pycache_dir, dry_run=dry_run_deletions)

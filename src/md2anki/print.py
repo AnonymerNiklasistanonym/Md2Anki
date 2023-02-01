@@ -1,3 +1,4 @@
+import sys
 from typing import Optional
 
 
@@ -22,3 +23,7 @@ def debug_print(
             sep=sep,
             **kwargs
         )
+
+
+def warn_print(*args, sep: str = "", **kwargs):
+    print("WARNING: ", *args, file=sys.stderr, sep=sep, **kwargs)
