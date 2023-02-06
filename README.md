@@ -10,11 +10,10 @@ This was tested on the anki Desktop client, the anki web client and AnkiDroid.
 
 **TODO**:
 
-- [ ] Fix inline code generation without css rule for ALL `<p>` tags
 - [ ] Add tests for anki note generation
-- [ ] Enable inline code execution to additionally generate:
-  - [ ] Graphs
-    - [ ] LaTeX `tikzpicture`
+- [ ] Enable code execution to additionally generate:
+  - [ ] LaTeX `tikzpicture` Graphs
+- [ ] Add custom overrides of used executables and their args (e.g. custom C compiler that also includes another header file)
 
 ## Features
 
@@ -188,11 +187,21 @@ options:
 
 [//]: <> (END: USAGE)
 
-## Setup
+## Install
+
+### PyPI
+
+It can be installed using `pip`:
+
+```sh
+pip install md2anki
+```
+
+### Build
 
 Via the file [`setup.py`](setup.py) the package can be built and installed.
 
-### Build
+#### Create package files
 
 The following commands create the package files in a new directory called `dist`:
 
@@ -204,7 +213,7 @@ python -m pip install --upgrade build
 python -m build
 ```
 
-### Install
+#### Install package files
 
 The wheel (`.whl`) file can be installed and uninstalled via `pip`:
 
@@ -250,7 +259,7 @@ python -m pip install --upgrade pip build
 python -m build
 # Upload (only if a non existing version is found)
 python -m pip install twine
-python -m twine upload --skip-existing dist
+python -m twine upload --skip-existing dist/*
 # Use as username: "__token__"
 # Use as password the created PyPI API token: "pypi-......"
 ```
