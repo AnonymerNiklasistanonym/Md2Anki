@@ -1,4 +1,4 @@
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 
 
 def fix_inline_code_p_tags(html_content: str) -> str:
@@ -9,9 +9,7 @@ def fix_inline_code_p_tags(html_content: str) -> str:
     """
     soup = BeautifulSoup(html_content, "html.parser")
     for inline_code_div in soup.findAll("div", {"class": "highlight_inline"}):
-        inline_code_div: Tag = inline_code_div
         for inline_code_div_prev in inline_code_div.previous_elements:
-            inline_code_div_prev: Tag = inline_code_div_prev
             if inline_code_div_prev.name == "p":
                 inline_code_div_prev["class"] = inline_code_div_prev.get(
                     "class", []

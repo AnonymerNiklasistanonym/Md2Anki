@@ -6,7 +6,11 @@ Convert Markdown formatted documents to anki decks
 
 [//]: <> (END: HEADER)
 
-This was tested on the anki Desktop client, the anki web client and AnkiDroid.
+The decks were tested on:
+
+- [Anki (Desktop client, 2.1.56)](https://apps.ankiweb.net/)
+- [Anki web (Browser client, 02.2022)](https://ankiweb.net/)
+- [AnkiDroid (Android client, 2.15.6)](https://play.google.com/store/apps/details?id=com.ichi2.anki)
 
 **TODO**:
 
@@ -194,12 +198,27 @@ options:
 It can be installed using `pip`:
 
 ```sh
+# Install package
 pip install md2anki
+# Uninstall package
+pip uninstall md2anki
 ```
+
+### GitHub Releases
+
+1. Download a wheel (`.whl`) file from [GitHub Releases](https://github.com/AnonymerNiklasistanonym/Md2Anki/releases)
+2. Run:
+
+   ```sh
+   # Install package
+   pip install md2anki-$CURRENT_VERSION-py3-none-any.whl
+   # Uninstall package
+   pip uninstall md2anki
+   ```
 
 ### Build
 
-Via the file [`setup.py`](setup.py) the package can be built and installed.
+Via the file [`setup.py`](setup.py) the package can be built:
 
 #### Create package files
 
@@ -219,9 +238,9 @@ The wheel (`.whl`) file can be installed and uninstalled via `pip`:
 
 ```sh
 # Install package
-pip install dist/md2anki-$CURRENT_VERSION-py3-none-any.whl
+python -m pip install dist/md2anki-$CURRENT_VERSION-py3-none-any.whl
 # Uninstall package
-pip uninstall md2anki
+python -m pip uninstall md2anki
 ```
 
 ## Markdown Editors
@@ -262,4 +281,23 @@ python -m pip install twine
 python -m twine upload --skip-existing dist/*
 # Use as username: "__token__"
 # Use as password the created PyPI API token: "pypi-......"
+```
+
+### Type checks
+
+Python files can be checked for type errors (to some extent) using the commands:
+
+```sh
+python -m pip install --upgrade mypy types-beautifulsoup4 types-Markdown types-Pygments
+python -m mypy src setup.py examples tests clean.py main.py update_readme.py
+```
+
+### Format code
+
+Python files can be formatted using the commands:
+
+```sh
+python -m pip install --upgrade black
+# Add the option --check to only check if its already in the correct format
+python -m black src setup.py examples tests clean.py main.py update_readme.py
 ```

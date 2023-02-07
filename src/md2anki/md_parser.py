@@ -1,7 +1,7 @@
 import copy
 import re
 from enum import Enum
-from typing import Optional, TextIO, List, Tuple
+from typing import Optional, TextIO, List, Tuple, Final
 
 from md2anki.anki_deck import AnkiDeck, AnkiNote
 from md2anki.create_id import create_unique_id_int, create_unique_id
@@ -80,7 +80,7 @@ def parse_possible_anki_deck_heading(
     @param parent_deck_name: The current parent deck name in case this is a subdeck heading.
     @return: Anki (sub) deck with heading depth and subdeck indicator if match otherwise None.
     """
-    regex_match = REGEX_MD_ANKI_DECK_HEADING.match(md_file_line)
+    regex_match: Final = REGEX_MD_ANKI_DECK_HEADING.match(md_file_line)
 
     if regex_match is not None:
         anki_deck_name = regex_match.group(2)
@@ -111,21 +111,22 @@ def parse_possible_anki_deck_heading(
             len(regex_match.group(1)),
             anki_deck_is_subdeck,
         )
+    return None
 
 
 def parse_possible_anki_note_heading(
     md_file_line: str,
 ) -> Optional[Tuple[AnkiNote, int]]:
-    regex_match = REGEX_MD_ANKI_NOTE_QUESTION_HEADING.match(md_file_line)
+    regex_match: Final = REGEX_MD_ANKI_NOTE_QUESTION_HEADING.match(md_file_line)
 
     if regex_match is not None:
-        tmp_anki_note = AnkiNote(
+        return AnkiNote(
             question=regex_match.group(2),
             guid=regex_match.group(3)
             if regex_match.group(3) is not None
             else create_unique_id(),
-        )
-        return tmp_anki_note, len(regex_match.group(1))
+        ), len(regex_match.group(1))
+    return None
 
 
 def parse_md_content_to_anki_deck_list(
@@ -148,9 +149,9 @@ def parse_md_content_to_anki_deck_list(
         ParseStateMarkdownDocument.LOOKING_FOR_ANKI_DECK_HEADING
     )
     """Parse state to know what information is currently being searched for"""
-    anki_decks: List[AnkiDeck] = []
+    anki_decks: Final[List[AnkiDeck]] = []
     """Final list of anki decks"""
-    anki_decks_stack: List[AnkiDeck] = []
+    anki_decks_stack: Final[List[AnkiDeck]] = []
     """The current anki deck stack"""
 
     debug_print("-----------------------", debug=debug, color=TerminalColors.FAIL)

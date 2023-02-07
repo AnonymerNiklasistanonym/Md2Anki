@@ -1,17 +1,17 @@
 import os
 import re
 from re import Match
-from typing import Set, Callable, Optional
+from typing import Callable, Final, Optional, Set
 
 from md2anki.print import warn_print
 
-REGEX_MD_TAG = re.compile(r"`{=:(.*?):=}`")
+REGEX_MD_TAG: Final = re.compile(r"`{=:(.*?):=}`")
 """
 Regex expression to parse a markdown tag notation: '`{=:tag list string:=}`'
 The first group is the 'tag list string'.
 """
 
-REGEX_MD_IMAGE_FILE = re.compile(
+REGEX_MD_IMAGE_FILE: Final = re.compile(
     r"!\[(.*?)]\((.*?)\)(?:\{(?:\s*?width\s*?=(.+?)[\s,;]*?)?(?:\s*?height\s*?=(.+?)[\s,;]*?)?})?"
 )
 """
@@ -20,12 +20,12 @@ The first group is the 'alt text' and the second one the 'source path' while opt
 group for the width and height if found.
 """
 
-REGEX_CODE_BLOCK = re.compile(
+REGEX_CODE_BLOCK: Final = re.compile(
     r"```(?:\{(.+?)}|(.+?))\n([\S\s\n]+?)```", flags=re.MULTILINE
 )
-REGEX_INLINE_CODE = re.compile(r"(?<!\S)`([^`]+?)`(?:\{(.+?)})?(?!\S)")
+REGEX_INLINE_CODE: Final = re.compile(r"(?<!\S)`([^`]+?)`(?:\{(.+?)})?(?!\S)")
 
-REGEX_MATH_SECTION = re.compile(r"\${2}((?:[^$]|\n)+?)\${2}|\$(.+?)\$")
+REGEX_MATH_SECTION: Final = re.compile(r"\${2}((?:[^$]|\n)+?)\${2}|\$(.+?)\$")
 
 # TODO Add update local files method
 # TODO Add update (inline) code blocks method
@@ -33,17 +33,15 @@ REGEX_MATH_SECTION = re.compile(r"\${2}((?:[^$]|\n)+?)\${2}|\$(.+?)\$")
 
 def md_get_used_files(md_content: str) -> Set[str]:
     """Get the used files of a Markdown text"""
-    files: Set[str] = set()
+    files: Final[Set[str]] = set()
 
-    def add_used_files(regex_group_match: Match):
+    def add_used_files(regex_group_match: Match) -> str:
         """Detect and add all image paths to the created set"""
         filepath = regex_group_match.group(2)
         files.add(filepath)
-        # Only return string for correct type checking
-        return regex_group_match[0]
+        return ""
 
     re.sub(REGEX_MD_IMAGE_FILE, add_used_files, md_content)
-
     return files
 
 
@@ -55,12 +53,14 @@ def md_update_local_filepaths(
     if new_directory is None:
         return md_content
 
+    local_filepath_dir: Final[str] = new_directory
+
     def update_local_filepath(regex_group_match: Match):
         filepath = regex_group_match.group(2)
         # Ignore non local filepaths
         if filepath.startswith("https://") or filepath.startswith("http://"):
             return regex_group_match[0]
-        new_filepath = os.path.join(new_directory, os.path.basename(filepath))
+        new_filepath = os.path.join(local_filepath_dir, os.path.basename(filepath))
         return regex_group_match[0].replace(filepath, new_filepath)
 
     return re.sub(REGEX_MD_IMAGE_FILE, update_local_filepath, md_content)
@@ -79,11 +79,7 @@ def md_update_images(
             file_path, file_description, opt_image_width, opt_image_height
         )
 
-    return re.sub(
-        REGEX_MD_IMAGE_FILE,
-        update_image,
-        md_content,
-    )
+    return re.sub(REGEX_MD_IMAGE_FILE, update_image, md_content)
 
 
 def md_update_code_parts(
@@ -114,9 +110,9 @@ def md_update_code_parts(
 
 def md_get_used_md2anki_tags(md_content: str) -> Set[str]:
     """Get the used (custom) md2anki tags of a Markdown text"""
-    tags: Set[str] = set()
+    tags: Final[Set[str]] = set()
 
-    def add_used_tags(regex_group_match: Match):
+    def add_used_tags(regex_group_match: Match) -> str:
         """Detect and add all local found tags to the created set"""
         tag_strings = regex_group_match.group(1).split(",")
         for tag_string in tag_strings:
@@ -127,8 +123,7 @@ def md_get_used_md2anki_tags(md_content: str) -> Set[str]:
                 warn_print(f"A tag with spaces {old_tag!r} was rewritten to {tag!r}")
             if len(tag) > 0:
                 tags.add(tag)
-        # Only return string for correct type checking
-        return regex_group_match[0]
+        return ""
 
     re.sub(REGEX_MD_TAG, add_used_tags, md_content)
     return tags
@@ -144,5 +139,4 @@ def md_update_math_sections(md_content: str, replacer: Callable[[str, bool], str
             return replacer(regex_group_match.group(2), False)
 
     md_content = re.sub(REGEX_MATH_SECTION, math_section_replace, md_content)
-
     return md_content

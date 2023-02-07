@@ -1,8 +1,9 @@
 import sys
 from typing import Optional
+from enum import Enum
 
 
-class TerminalColors:
+class TerminalColors(str, Enum):
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
     OKCYAN = "\033[96m"
@@ -19,7 +20,11 @@ def debug_print(
 ):
     if debug:
         print(
-            *(args if color is None else [color, *args, TerminalColors.ENDC]),
+            *(
+                args
+                if color is None
+                else [color.value, *args, TerminalColors.ENDC.value]
+            ),
             sep=sep,
             **kwargs
         )

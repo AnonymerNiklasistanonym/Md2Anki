@@ -3,7 +3,7 @@ import os
 import shutil
 import subprocess
 import tempfile
-from typing import List, Optional
+from typing import List, Optional, Final
 from enum import Enum
 
 from md2anki.info import md2anki_name
@@ -43,7 +43,7 @@ def run_subprocess(
     cwd: Optional[str] = None,
     debug=False,
 ):
-    command_path = shutil.which(command)
+    command_path: Final = shutil.which(command)
     if command_path is None:
         raise ProgramNotFoundException(f"{command=} could not be found")
     if arguments is None:
@@ -62,7 +62,9 @@ def run_subprocess(
     return p.stdout
 
 
-def evaluate_code(program: str, code: str, debug=False, dir_dynamic_files: str = None):
+def evaluate_code(
+    program: str, code: str, debug=False, dir_dynamic_files: Optional[str] = None
+):
     dir_path_temp = tempfile.mkdtemp(prefix=f"{md2anki_name}_evaluate_code_")
     try:
         if program == SubprocessPrograms.PYTHON:
@@ -88,6 +90,8 @@ def evaluate_code(program: str, code: str, debug=False, dir_dynamic_files: str =
             for glob_file in (
                 glob.glob("*.svg") + glob.glob("*.png") + glob.glob("*.pdf")
             ):
+                if dir_dynamic_files is None:
+                    raise RuntimeError("Directory for dynamic files is None")
                 debug_print(
                     f"Copy created file {glob_file=} to {dir_dynamic_files=}",
                     debug=debug,

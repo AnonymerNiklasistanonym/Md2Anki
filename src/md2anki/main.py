@@ -4,7 +4,7 @@
 import os.path
 import shutil
 import tempfile
-from typing import List
+from typing import List, Final
 
 # Local modules
 from md2anki.cli import Md2AnkiArgs, AnkiCardModelId
@@ -39,7 +39,7 @@ def main(args: Md2AnkiArgs) -> int:
     else:
         raise RuntimeError(f"Unknown anki card model ID '{args.anki_card_model}'")
 
-    anki_decks: List[List[AnkiDeck]] = []
+    anki_decks: Final[List[List[AnkiDeck]]] = []
     for md_input_file_path in args.md_input_file_paths:
         with open(md_input_file_path, "r", encoding="utf-8") as md_file:
             debug_print(
@@ -53,7 +53,7 @@ def main(args: Md2AnkiArgs) -> int:
                 anki_deck.model = anki_deck_model
             anki_decks.append(anki_deck_list)
 
-    anki_decks_flat: List[AnkiDeck] = [
+    anki_decks_flat: Final[List[AnkiDeck]] = [
         item for sublist in anki_decks for item in sublist
     ]
 

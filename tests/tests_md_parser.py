@@ -85,6 +85,8 @@ class TestParsePossibleAnkiDeckHeading(unittest.TestCase):
                         result,
                         f"Check if parsed anki deck None {result=}",
                     )
+                elif result is None:
+                    self.fail(f"{result=} was None but something else was {expected=}")
                 else:
                     self.assertEqual(
                         result[0].name,
@@ -183,11 +185,36 @@ class TestParseMdContentToAnkiDeckList(unittest.TestCase):
         self.expected_exception: List[Exception] = list()
 
         test_data: List[Tuple[str, List[AnkiDeck], Optional[Exception]]] = [
-            ("", [], NoAnkiDeckFoundException),
-            ("## Question", [], NoAnkiDeckFoundException),
-            ("# Subdeck: Heading", [], RootAnkiDeckWasSubdeckException),
-            ("# Heading\n\n### Question", [], AnkiNoteUnexpectedDepth),
-            ("# Heading\n\n### Subdeck: Heading 2", [], AnkiSubdeckUnexpectedDepth),
+            (
+                "",
+                [],
+                # type: ignore
+                NoAnkiDeckFoundException,
+            ),
+            (
+                "## Question",
+                [],
+                # type: ignore
+                NoAnkiDeckFoundException,
+            ),
+            (
+                "# Subdeck: Heading",
+                [],
+                # type: ignore
+                RootAnkiDeckWasSubdeckException,
+            ),
+            (
+                "# Heading\n\n### Question",
+                [],
+                # type: ignore
+                AnkiNoteUnexpectedDepth,
+            ),
+            (
+                "# Heading\n\n### Subdeck: Heading 2",
+                [],
+                # type: ignore
+                AnkiSubdeckUnexpectedDepth,
+            ),
             ("# Heading (1234)", [AnkiDeck(name="Heading", guid=1234)], None),
             (
                 "# Heading (1234)\n\n" "## Question (abcdef)\n\nAnswer",
@@ -388,6 +415,7 @@ class TestParseMdContentToAnkiDeckList(unittest.TestCase):
             with self.subTest(md_content=md_content):
                 # Ignore type error, is the correct type
                 self.assertRaises(
+                    # type: ignore
                     expected_exception,
                     parse_md_content_to_anki_deck_list,
                     io.StringIO(md_content),

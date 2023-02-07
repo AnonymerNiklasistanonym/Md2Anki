@@ -8,7 +8,12 @@ from typing import List, Tuple
 # Append the module path for md2anki
 sys.path.append(join(dirname(__file__), "..", "src"))
 
-from md2anki.cli import parse_cli_args, Md2AnkiArgs
+from md2anki.cli import (
+    parse_cli_args,
+    Md2AnkiArgs,
+    AdditionalFileDirNotFoundException,
+    MdInputFileNotFoundException,
+)
 
 
 class TestCliArgs(unittest.TestCase):
@@ -76,20 +81,32 @@ class TestCliArgs(unittest.TestCase):
         )
         # Detect not existing files
         file_path_not_found = "not_found.md"
-        self.assertEqual(
-            parse_cli_args([file_path_not_found]).error.md_input_file_path,
-            file_path_not_found,
-            "Error is thrown if file can not be found",
-        )
+        error_file_not_found = parse_cli_args([file_path_not_found]).error
+        if error_file_not_found is not None and isinstance(
+            error_file_not_found, MdInputFileNotFoundException
+        ):
+            self.assertEqual(
+                error_file_not_found.md_input_file_path,
+                file_path_not_found,
+                "Error is thrown if file can not be found",
+            )
+        else:
+            self.fail(f"Expected file not found error ({error_file_not_found=})")
         # Detect not existing additional file directories
         file_dir_not_found = "not_found"
-        self.assertEqual(
-            parse_cli_args(
-                [__file__, "-file-dir", file_dir_not_found]
-            ).error.additional_file_dir_path,
-            file_dir_not_found,
-            "Error is thrown if additional file directory can not be found",
-        )
+        error_file_not_found = parse_cli_args(
+            [__file__, "-file-dir", file_dir_not_found]
+        ).error
+        if error_file_not_found is not None and isinstance(
+            error_file_not_found, AdditionalFileDirNotFoundException
+        ):
+            self.assertEqual(
+                error_file_not_found.additional_file_dir_path,
+                file_dir_not_found,
+                "Error is thrown if additional file directory can not be found",
+            )
+        else:
+            self.fail(f"Expected file not found error ({error_file_not_found=})")
         # Don't throw errors if file exists
         self.assertIsNone(parse_cli_args([*self.valid_args]).error)
         # Don't throw errors if additional file directory exists

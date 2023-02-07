@@ -76,9 +76,14 @@ def update_md_content(md_content: List[str]) -> str:
                 continue
             elif comment_content.startswith(md_comment_begin_end[1]):
                 # Evaluate current comment
-                out += create_md_content(current_comment[0], current_comment[1])
-                current_comment = None
-                continue
+                if current_comment is not None:
+                    out += create_md_content(current_comment[0], current_comment[1])
+                    current_comment = None
+                    continue
+                else:
+                    raise RuntimeError(
+                        f"Found comment end line but no comment was found ({line=}, {current_comment=})"
+                    )
         if current_comment is not None:
             current_comment = current_comment[0], current_comment[1] + line
         else:

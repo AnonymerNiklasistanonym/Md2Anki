@@ -118,10 +118,10 @@ def get_argument_parser() -> argparse.ArgumentParser:
     )
 
     def check_heading_depth(x: str) -> int:
-        x = int(x)
-        if x < 1:
+        x_num = int(x)
+        if x_num < 1:
             raise argparse.ArgumentTypeError("Minimum heading depth is 1")
-        return x
+        return x_num
 
     parser.add_argument(
         "-md-heading-depth",
