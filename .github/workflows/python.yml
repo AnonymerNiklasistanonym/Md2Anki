@@ -13,7 +13,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  run:
 
     strategy:
       matrix:
@@ -67,7 +67,7 @@ jobs:
       run: python -m black --check src setup.py examples tests clean.py main.py update_readme.py
 
 
-  tests:
+  test:
 
     strategy:
       matrix:
@@ -104,7 +104,7 @@ jobs:
       working-directory: tests
 
 
-  type-checks:
+  type-check:
 
     strategy:
       matrix:
@@ -140,8 +140,8 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     needs:
-    - build
-    - tests
+    - run
+    - test
 
     steps:
     - uses: actions/checkout@v3

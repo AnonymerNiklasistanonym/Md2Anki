@@ -59,7 +59,7 @@ def run_subprocess(
 
 
 DEFAULT_CODE_NAME: Final = "MD2ANKI_CODE"
-DEFAULT_CODE_FILE_NAME_START: Final = "DEFAULT_CODE_FILE_NAME_BEGIN="
+DEFAULT_CODE_FILE_NAME_START: Final = "MD2ANKI_CODE_FILE="
 DEFAULT_CUSTOM_PROGRAM: Final[Dict[str, List[Tuple[str, List[str]]]]] = {
     "py": [("python", ["-c", DEFAULT_CODE_NAME])],
     "js": [("node", ["-e", DEFAULT_CODE_NAME])],

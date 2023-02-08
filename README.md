@@ -6,6 +6,8 @@ Convert Markdown formatted documents to anki decks
 
 [//]: <> (END: HEADER)
 
+[![PyPI version](https://badge.fury.io/py/md2anki.svg)](https://badge.fury.io/py/md2anki)
+
 The decks were tested on:
 
 - [Anki (Desktop client, 2.1.56)](https://apps.ankiweb.net/)
@@ -17,7 +19,6 @@ The decks were tested on:
 - [ ] Add tests for anki note generation
 - [ ] Enable code execution to additionally generate:
   - [ ] LaTeX `tikzpicture` Graphs
-- [ ] Add custom overrides of used executables and their args (e.g. custom C compiler that also includes another header file)
 
 ## Features
 
@@ -204,12 +205,11 @@ options:
                         use custom program args for code evaluation (default:
                         [('py', '["-c", "MD2ANKI_CODE"]'), ('js', '["-e",
                         "MD2ANKI_CODE"]'), ('ts',
-                        '["DEFAULT_CODE_FILE_NAME_BEGIN=code.ts"]'), ('cpp',
-                        '["-Wall", "-std=c++20",
-                        "DEFAULT_CODE_FILE_NAME_BEGIN=main.cpp", "-o",
+                        '["MD2ANKI_CODE_FILE=code.ts"]'), ('cpp', '["-Wall",
+                        "-std=c++20", "MD2ANKI_CODE_FILE=main.cpp", "-o",
                         "main.exe"]'), ('cpp', '[]'), ('c', '["-std=c17",
-                        "DEFAULT_CODE_FILE_NAME_BEGIN=main.c", "-o",
-                        "main.exe"]'), ('c', '[]')])
+                        "MD2ANKI_CODE_FILE=main.c", "-o", "main.exe"]'), ('c',
+                        '[]')])
 ```
 
 [//]: <> (END: USAGE)
@@ -218,12 +218,12 @@ options:
 
 ### PyPI
 
-It can be installed using `pip`:
+It can be installed using [`pip`](https://pypi.org/project/md2anki/):
 
 ```sh
-# Install package
+# Install
 pip install md2anki
-# Uninstall package
+# Uninstall
 pip uninstall md2anki
 ```
 
@@ -233,9 +233,9 @@ pip uninstall md2anki
 2. Run:
 
    ```sh
-   # Install package
+   # Install
    pip install md2anki-$CURRENT_VERSION-py3-none-any.whl
-   # Uninstall package
+   # Uninstall
    pip uninstall md2anki
    ```
 
@@ -260,9 +260,9 @@ python -m build
 The wheel (`.whl`) file can be installed and uninstalled via `pip`:
 
 ```sh
-# Install package
+# Install
 python -m pip install dist/md2anki-$CURRENT_VERSION-py3-none-any.whl
-# Uninstall package
+# Uninstall
 python -m pip uninstall md2anki
 ```
 
@@ -324,3 +324,10 @@ python -m pip install --upgrade black
 # Add the option --check to only check if its already in the correct format
 python -m black src setup.py examples tests clean.py main.py update_readme.py
 ```
+
+### Code editors
+
+This project was written using the following code editors (IDEs):
+
+- [PyCharm (Community)](https://www.jetbrains.com/pycharm/download/)
+- [Visual Studio Code](https://code.visualstudio.com/)
