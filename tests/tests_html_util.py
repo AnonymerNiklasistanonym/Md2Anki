@@ -3,6 +3,9 @@ import sys
 from os.path import dirname, join
 from typing import List, Tuple
 
+# Append the module path for md2anki
+sys.path.append(join(dirname(__file__), "..", "src"))
+
 from md2anki.html_util import fix_inline_code_p_tags
 
 

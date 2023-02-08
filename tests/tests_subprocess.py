@@ -1,5 +1,10 @@
 import unittest
+import sys
+from os.path import dirname, join
 from typing import List, Tuple
+
+# Append the module path for md2anki
+sys.path.append(join(dirname(__file__), "..", "src"))
 
 from md2anki.cli import (
     convert_list_to_dict_merged,

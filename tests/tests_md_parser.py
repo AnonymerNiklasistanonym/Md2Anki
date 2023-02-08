@@ -4,6 +4,9 @@ import unittest
 from os.path import dirname, join
 from typing import List, Tuple, Optional
 
+# Append the module path for md2anki
+sys.path.append(join(dirname(__file__), "..", "src"))
+
 from md2anki.anki_deck import AnkiDeck
 from md2anki.anki_note import AnkiNote
 from md2anki.md_parser import (

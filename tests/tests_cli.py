@@ -5,6 +5,9 @@ from os.path import dirname, join
 from pathlib import Path
 from typing import List, Tuple
 
+# Append the module path for md2anki
+sys.path.append(join(dirname(__file__), "..", "src"))
+
 from md2anki.cli import (
     parse_cli_args,
     Md2AnkiArgs,
