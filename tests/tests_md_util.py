@@ -1,10 +1,6 @@
-import sys
 import unittest
-from os.path import dirname, join
+from os import path
 from typing import Set, List, Tuple, Callable, Optional
-
-# Append the module path for md2anki
-sys.path.append(join(dirname(__file__), "..", "src"))
 
 from md2anki.md_util import (
     md_get_used_files,
@@ -59,10 +55,20 @@ class TestMdUpdateLocalFilepaths(unittest.TestCase):
 
         test_data: List[Tuple[str, Callable[[str], str]]] = [
             ("", lambda x: ""),
-            ("![](path1)", lambda x: f"![]({join(x, 'path1')})"),
+            ("![](path1)", lambda x: f"![]({path.join(x, 'path1')})"),
             (
                 "![](path1) ![](path2) ![](https://www.google.com/image.png)",
-                lambda x: f"![]({join(x, 'path1')}) ![]({join(x, 'path2')}) ![](https://www.google.com/image.png)",
+                lambda x: f"![]({path.join(x, 'path1')}) ![]({path.join(x, 'path2')}) ![](https://www.google.com/image.png)",
+            ),
+            (
+                "![](C:\\Users\\graph_1.svg)",
+                lambda x: f"![]({path.join(x, 'graph_1.svg')})",
+            ),
+            (
+                "Question with matplotlib graph\n\n![]("
+                "C:\\Users\\nikla\\AppData\\Local\\Temp\\md2anki_tmp_dir_dynamic_files_anki_output_h0m8w6fy\\graph_1.svg"
+                ")\n",
+                lambda x: f"Question with matplotlib graph\n\n![]({path.join(x, 'graph_1.svg')})\n",
             ),
         ]
 

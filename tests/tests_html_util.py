@@ -1,4 +1,6 @@
 import unittest
+import sys
+from os.path import dirname, join
 from typing import List, Tuple
 
 from md2anki.html_util import fix_inline_code_p_tags

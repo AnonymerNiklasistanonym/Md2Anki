@@ -2,7 +2,7 @@ import glob
 import os
 import shutil
 from dataclasses import dataclass, field
-from typing import Set, Optional, List, Tuple
+from typing import Set, Optional, List, Tuple, Dict
 
 import genanki
 
@@ -46,6 +46,8 @@ class AnkiDeck:
         self,
         anki_card_model: genanki.Model,
         dir_dynamic_files: str,
+        custom_program: Dict[str, List[str]],
+        custom_program_args: Dict[str, List[List[str]]],
         debug=False,
     ) -> genanki.Deck:
         tmp_anki_deck = genanki.Deck(self.guid, self.name)
@@ -54,6 +56,8 @@ class AnkiDeck:
                 note.genanki_create_note(
                     anki_card_model=anki_card_model,
                     dir_dynamic_files=dir_dynamic_files,
+                    custom_program=custom_program,
+                    custom_program_args=custom_program_args,
                     debug=debug,
                 )
             )
@@ -92,15 +96,26 @@ class AnkiDeck:
         return file_list
 
     def genanki_create_anki_deck(
-        self, dir_dynamic_files: str, debug=False
+        self,
+        dir_dynamic_files: str,
+        custom_program: Dict[str, List[str]],
+        custom_program_args: Dict[str, List[List[str]]],
+        debug=False,
     ) -> Tuple[genanki.Deck, List[str]]:
+        """Return anki deck and a list of all media files."""
         genanki_anki_deck = self.genanki_create_deck(
             self.model.genanki_create_model(),
             dir_dynamic_files=dir_dynamic_files,
+            custom_program=custom_program,
+            custom_program_args=custom_program_args,
             debug=debug,
         )
         media_files = self.get_local_files_from_notes(debug=debug)
-        media_files.extend(glob.glob(os.path.join(dir_dynamic_files, "*")))
+        # Add all supported dynamic media files
+        for supported_file_format in [".jpg", ".png", ".svg"]:
+            media_files.extend(
+                glob.glob(os.path.join(dir_dynamic_files, f"*{supported_file_format}"))
+            )
         return genanki_anki_deck, media_files
 
     def create_md_sections(

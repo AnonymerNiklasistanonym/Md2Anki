@@ -50,17 +50,15 @@ def md_update_local_filepaths(
 ) -> str:
     """Update all local filepaths to a custom directory"""
 
-    if new_directory is None:
-        return md_content
-
-    local_filepath_dir: Final[str] = new_directory
-
     def update_local_filepath(regex_group_match: Match):
         filepath = regex_group_match.group(2)
         # Ignore non local filepaths
         if filepath.startswith("https://") or filepath.startswith("http://"):
             return regex_group_match[0]
-        new_filepath = os.path.join(local_filepath_dir, os.path.basename(filepath))
+        if new_directory is None:
+            new_filepath = os.path.basename(filepath)
+        else:
+            new_filepath = os.path.join(new_directory, os.path.basename(filepath))
         return regex_group_match[0].replace(filepath, new_filepath)
 
     return re.sub(REGEX_MD_IMAGE_FILE, update_local_filepath, md_content)

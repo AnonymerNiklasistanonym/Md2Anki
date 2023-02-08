@@ -51,8 +51,11 @@ choco install llvm nodejs
 choco install miktex pandoc rsvg-convert
 ```
 
+(On Windows `rsvg-convert` can sometimes throw errors in combination with `pandoc` but the latest build from [miyako](https://github.com/miyako/console-rsvg-convert/releases) does not throw them so try this one if you get errors)
+
+
 ```sh
-# Both
+# Linux + Windows
 npm install -g ts-node
 # > For matplotlib python graphs (used in some examples):
 python -m pip install numpy matplotlib

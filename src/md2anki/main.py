@@ -65,7 +65,10 @@ def main(args: Md2AnkiArgs) -> int:
             genanki_package_anki_decks_to_file(
                 [
                     anki_deck.genanki_create_anki_deck(
-                        dir_dynamic_files=tmp_dir_dynamic_files, debug=args.debug
+                        dir_dynamic_files=tmp_dir_dynamic_files,
+                        custom_program=args.custom_program,
+                        custom_program_args=args.custom_program_args,
+                        debug=args.debug,
                     )
                     for anki_deck in anki_decks_flat
                 ],
@@ -144,6 +147,8 @@ def main(args: Md2AnkiArgs) -> int:
                     args.pdf_output_file_path,
                     local_assets,
                     dir_dynamic_files=tmp_dir_dynamic_files,
+                    custom_program=args.custom_program,
+                    custom_program_args=args.custom_program_args,
                     debug=args.debug,
                 )
         finally:

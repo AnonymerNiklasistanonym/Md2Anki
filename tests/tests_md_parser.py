@@ -2,14 +2,10 @@ import sys
 import io
 import unittest
 from os.path import dirname, join
-from typing import Set, List, Tuple, Optional
-
-from md2anki.anki_note import AnkiNote
-
-# Append the module path for md2anki
-sys.path.append(join(dirname(__file__), "..", "src"))
+from typing import List, Tuple, Optional
 
 from md2anki.anki_deck import AnkiDeck
+from md2anki.anki_note import AnkiNote
 from md2anki.md_parser import (
     parse_possible_anki_deck_heading,
     parse_possible_anki_note_heading,

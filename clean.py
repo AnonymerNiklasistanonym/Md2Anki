@@ -17,13 +17,14 @@ def rm_file(file_path: Path, dry_run=False):
 
 
 if __name__ == "__main__":
-    dry_run_deletions = True
+    dry_run_deletions = False
 
     dir_root = Path(__file__).parent.resolve()
     dir_dist = dir_root.joinpath("dist")
     dir_examples = dir_root.joinpath("examples")
     dir_src = dir_root.joinpath("src")
     dir_egg_info = dir_src.joinpath("md2anki.egg-info")
+    dir_mypy_cache = dir_root.joinpath(".mypy_cache")
 
     # Remove example files
     for example_backup_dir in dir_examples.rglob("backup_*"):
@@ -38,6 +39,9 @@ if __name__ == "__main__":
 
     # Remove egg-info directory
     rm_dir(dir_egg_info, dry_run=dry_run_deletions)
+
+    # Remove mypy cache directory
+    rm_dir(dir_mypy_cache, dry_run=dry_run_deletions)
 
     # Remove pycache directories
     venv_directories = [

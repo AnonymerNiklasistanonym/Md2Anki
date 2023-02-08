@@ -5,9 +5,6 @@ from os.path import dirname, join
 from pathlib import Path
 from typing import List, Tuple
 
-# Append the module path for md2anki
-sys.path.append(join(dirname(__file__), "..", "src"))
-
 from md2anki.cli import (
     parse_cli_args,
     Md2AnkiArgs,
@@ -33,6 +30,8 @@ class TestCliArgs(unittest.TestCase):
                     anki_output_file_path=os.path.join(
                         os.path.dirname(__file__), Path(__file__).stem + ".apkg"
                     ),
+                    custom_program=parse_cli_args([__file__]).custom_program,
+                    custom_program_args=parse_cli_args([__file__]).custom_program_args,
                 ),
             ),
             (
@@ -44,6 +43,8 @@ class TestCliArgs(unittest.TestCase):
                     anki_output_file_path=os.path.join(
                         os.path.dirname(__file__), Path(__file__).stem + ".apkg"
                     ),
+                    custom_program=parse_cli_args([__file__]).custom_program,
+                    custom_program_args=parse_cli_args([__file__]).custom_program_args,
                 ),
             ),
             (
@@ -60,6 +61,31 @@ class TestCliArgs(unittest.TestCase):
                     anki_output_file_path=os.path.join(
                         os.path.dirname(__file__), Path(__file__).stem + ".apkg"
                     ),
+                    custom_program=parse_cli_args([__file__]).custom_program,
+                    custom_program_args=parse_cli_args([__file__]).custom_program_args,
+                ),
+            ),
+            (
+                [
+                    __file__,
+                    "-custom-program",
+                    "py",
+                    "python3.8",
+                    "-custom-program",
+                    "cpp",
+                    "gcc",
+                ],
+                Md2AnkiArgs(
+                    md_input_file_paths=[__file__],
+                    md_output_file_paths=[__file__],
+                    anki_output_file_path=os.path.join(
+                        os.path.dirname(__file__), Path(__file__).stem + ".apkg"
+                    ),
+                    custom_program={
+                        **parse_cli_args([__file__]).custom_program,
+                        **{"py": ["python3.8"], "cpp": ["gcc"]},
+                    },
+                    custom_program_args=parse_cli_args([__file__]).custom_program_args,
                 ),
             ),
         ]

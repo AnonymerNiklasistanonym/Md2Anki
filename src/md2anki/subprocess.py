@@ -3,20 +3,10 @@ import os
 import shutil
 import subprocess
 import tempfile
-from typing import List, Optional, Final
-from enum import Enum
+from typing import List, Optional, Final, Dict, Tuple
 
 from md2anki.info import md2anki_name
 from md2anki.print import debug_print
-
-
-class SubprocessPrograms(str, Enum):
-    PYTHON = ("python",)
-    JAVASCRIPT = ("javascript",)
-    TYPESCRIPT = ("typescript",)
-    JUPYTER_NOTEBOOK_MATPLOTLIB = ("jupyter_notebook_matplotlib",)
-    CPP = ("cpp",)
-    C = ("c",)
 
 
 class UnableToEvaluateCodeException(Exception):
@@ -43,7 +33,13 @@ def run_subprocess(
     cwd: Optional[str] = None,
     debug=False,
 ):
-    command_path: Final = shutil.which(command)
+    command_path_global: Final = shutil.which(command)
+    command_path_local: Final = (
+        command_path_global if cwd is None else shutil.which(os.path.join(cwd, command))
+    )
+    command_path: Final = (
+        command_path_local if command_path_local is not None else command_path_global
+    )
     if command_path is None:
         raise ProgramNotFoundException(f"{command=} could not be found")
     if arguments is None:
@@ -62,31 +58,93 @@ def run_subprocess(
     return p.stdout
 
 
+DEFAULT_CODE_NAME: Final = "MD2ANKI_CODE"
+DEFAULT_CODE_FILE_NAME_START: Final = "DEFAULT_CODE_FILE_NAME_BEGIN="
+DEFAULT_CUSTOM_PROGRAM: Final[Dict[str, List[Tuple[str, List[str]]]]] = {
+    "py": [("python", ["-c", DEFAULT_CODE_NAME])],
+    "js": [("node", ["-e", DEFAULT_CODE_NAME])],
+    "ts": [("ts-node", [f"{DEFAULT_CODE_FILE_NAME_START}code.ts"])],
+    "cpp": [
+        (
+            "clang++",
+            [
+                "-Wall",
+                "-std=c++20",
+                f"{DEFAULT_CODE_FILE_NAME_START}main.cpp",
+                "-o",
+                "main.exe",
+            ],
+        ),
+        ("main.exe", []),
+    ],
+    "c": [
+        (
+            "clang",
+            ["-std=c17", f"{DEFAULT_CODE_FILE_NAME_START}main.c", "-o", "main.exe"],
+        ),
+        ("main.exe", []),
+    ],
+}
+
+
 def evaluate_code(
-    program: str, code: str, debug=False, dir_dynamic_files: Optional[str] = None
-):
+    program: str,
+    code: str,
+    custom_program: Dict[str, List[str]],
+    custom_program_args: Dict[str, List[List[str]]],
+    dir_dynamic_files: Optional[str] = None,
+    debug=False,
+) -> Tuple[List[str], List[str]]:
+    """Return the command outputs and the found images."""
     dir_path_temp = tempfile.mkdtemp(prefix=f"{md2anki_name}_evaluate_code_")
+
+    if program in custom_program:
+        program_binaries = custom_program[program]
+    else:
+        raise UnableToEvaluateCodeException(f"Unsupported {program=} ({code=})")
+    if program in custom_program_args:
+
+        def insert_code_or_code_file(program_bin_arg: str) -> str:
+            if program_bin_arg == DEFAULT_CODE_NAME:
+                return code
+            if program_bin_arg.startswith(DEFAULT_CODE_FILE_NAME_START):
+                code_file_name = program_bin_arg[len(DEFAULT_CODE_FILE_NAME_START) :]
+                if len(code_file_name) == 0:
+                    raise RuntimeError(
+                        f"Custom code file name had 0 length: {program_bin_arg!r}"
+                    )
+                with open(
+                    os.path.join(dir_path_temp, code_file_name), "w"
+                ) as temp_file:
+                    temp_file.write(code)
+                return code_file_name
+            return program_bin_arg
+
+        def update_list(program_bin_arg_dict_entry: List[str]) -> List[str]:
+            return list(map(insert_code_or_code_file, program_bin_arg_dict_entry))
+
+        program_binaries_args: List[List[str]] = list(
+            map(update_list, custom_program_args[program])
+        )
+    else:
+        program_binaries_args = list()
+    while len(program_binaries_args) < len(program_binaries):
+        program_binaries_args.append(list())
+
     try:
-        if program == SubprocessPrograms.PYTHON:
-            return run_subprocess(
-                "python", ["-c", code], cwd=dir_path_temp, debug=debug
+        results: List[str] = list()
+        for program_binary, program_binary_args in zip(
+            program_binaries, program_binaries_args, strict=True
+        ):
+            results.append(
+                run_subprocess(
+                    program_binary, program_binary_args, cwd=dir_path_temp, debug=debug
+                )
             )
-        elif program == SubprocessPrograms.JAVASCRIPT:
-            return run_subprocess("node", ["-e", code], cwd=dir_path_temp, debug=debug)
-        elif program == SubprocessPrograms.TYPESCRIPT:
-            return run_subprocess(
-                "ts-node",
-                ["-e", code.replace("\n", ";")],
-                cwd=dir_path_temp,
-                debug=debug,
-            )
-        elif program == SubprocessPrograms.JUPYTER_NOTEBOOK_MATPLOTLIB:
-            result = run_subprocess(
-                "python", ["-c", code], cwd=dir_path_temp, debug=debug
-            )
+        images_list = list()
+        if dir_dynamic_files:
             pwd = os.getcwd()
             os.chdir(dir_path_temp)
-            images_output = ""
             for glob_file in (
                 glob.glob("*.svg") + glob.glob("*.png") + glob.glob("*.pdf")
             ):
@@ -97,44 +155,11 @@ def evaluate_code(
                     debug=debug,
                 )
                 shutil.copy2(glob_file, dir_dynamic_files)
-                images_output += (
-                    f"\n![]({os.path.join(dir_dynamic_files, glob_file)})\n"
-                )
+                images_list.append(os.path.join(dir_dynamic_files, glob_file))
             os.chdir(pwd)
-            debug_print(f"{images_output=} {result=}", debug=debug)
-            return images_output if len(images_output) > 0 else result
-        elif program == SubprocessPrograms.CPP:
-            with open(os.path.join(dir_path_temp, "main.cpp"), "w") as file:
-                file.write(code)
-            run_subprocess(
-                "clang++",
-                ["-Wall", "-std=c++20", "main.cpp", "-o", "main.exe"],
-                cwd=dir_path_temp,
-                debug=debug,
-            )
-            return run_subprocess(
-                os.path.join(dir_path_temp, "main.exe"),
-                [],
-                cwd=dir_path_temp,
-                debug=debug,
-            )
-        elif program == SubprocessPrograms.C:
-            with open(os.path.join(dir_path_temp, "main.c"), "w") as file:
-                file.write(code)
-            run_subprocess(
-                "clang",
-                ["-std=c17", "main.c", "-o", "main.exe"],
-                cwd=dir_path_temp,
-                debug=debug,
-            )
-            return run_subprocess(
-                os.path.join(dir_path_temp, "main.exe"),
-                [],
-                cwd=dir_path_temp,
-                debug=debug,
-            )
-        else:
-            raise UnableToEvaluateCodeException(f"Unsupported {program=} ({code=})")
+            debug_print(f"{images_list=} {results=}", debug=debug)
+        return results, images_list
+
     finally:
         if not debug:
             shutil.rmtree(dir_path_temp)

@@ -1,10 +1,12 @@
 import argparse
 import os
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional, List, Dict, Final, Tuple, TypeVar, Generic, Callable
+import json
 
 from md2anki.info import md2anki_version, md2anki_name
 from md2anki.note_models import AnkiCardModelId
+from md2anki.subprocess import DEFAULT_CUSTOM_PROGRAM
 
 
 class MdInputFileNotFoundException(Exception):
@@ -57,6 +59,12 @@ class Md2AnkiArgs:
     """The output file path of the anki deck."""
     md_heading_depth: int = 1
     """The default heading depth for the anki deck heading (increases for each subdeck/question by 1)."""
+    custom_program: Dict[str, List[str]] = field(default_factory=lambda: dict())
+    """Custom programs for languages used for code evaluation."""
+    custom_program_args: Dict[str, List[List[str]]] = field(
+        default_factory=lambda: dict()
+    )
+    """Custom program args for languages used for code evaluation."""
 
     debug = False
     """Enable debugging."""
@@ -66,11 +74,51 @@ class Md2AnkiArgs:
     """Error message in case there was an error parsing CLI args."""
 
 
+T = TypeVar("T")
+U = TypeVar("U")
+
+
+def convert_list_to_dict_merged(
+    list_object: List[Tuple[str, T]],
+    value_func: Callable[[T], U],
+) -> Dict[str, List[U]]:
+    dict_object: Dict[str, List[U]] = dict()
+    for key, value in list_object:
+        dict_object.setdefault(key, []).append(value_func(value))
+    return dict_object
+
+
+DEFAULT_CUSTOM_PROGRAMS: Final = [
+    (key, program)
+    for key, values in DEFAULT_CUSTOM_PROGRAM.items()
+    for program, program_args in values
+]
+DEFAULT_CUSTOM_PROGRAM_ARGS: Final = [
+    (key, json.dumps(program_args))
+    for key, values in DEFAULT_CUSTOM_PROGRAM.items()
+    for program, program_args in values
+]
+
+
+def str_to_str(a: str) -> str:
+    return a
+
+
+def json_str_to_str_list(a: str) -> List[str]:
+    possible_list: List[str] = json.loads(a)
+    if not all(isinstance(elem, str) for elem in possible_list):
+        raise RuntimeError(
+            f"Custom program args need to be a JSON string list ({possible_list!r})"
+        )
+    return possible_list
+
+
 def get_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog=md2anki_name,
         description="Create an anki deck file (.apkg) from one or more Markdown documents. "
         "If no custom output path is given the file name of the document (+ .apkg) is used.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "-v", "--version", action="version", version=f"%(prog)s {md2anki_version}"
@@ -84,10 +132,13 @@ def get_argument_parser() -> argparse.ArgumentParser:
         default=AnkiCardModelId.DEFAULT,
         choices=list(AnkiCardModelId),
         metavar="MODEL_ID",
-        help=f"custom anki card model (%(choices)s) [default: %(default)s]",
+        help=f"custom anki card model (%(choices)s)",
     )
     parser.add_argument(
-        "-o-anki", metavar="APKG_FILE", help="custom anki deck (.apkg) output file path"
+        "-o-anki",
+        metavar="APKG_FILE",
+        help="custom anki deck (.apkg) output file path [if not given: md input file "
+        "name + .apkg]",
     )
     parser.add_argument(
         "-o-md",
@@ -128,7 +179,25 @@ def get_argument_parser() -> argparse.ArgumentParser:
         metavar="HEADING_DEPTH",
         type=check_heading_depth,
         default=1,
-        help="use a custom Markdown heading depth (>=1) [default: %(default)s]",
+        help="use a custom Markdown heading depth (>=1)",
+    )
+    parser.add_argument(
+        "-custom-program",
+        metavar=("language", "program"),
+        nargs=2,
+        action="append",
+        type=str,
+        default=DEFAULT_CUSTOM_PROGRAMS,
+        help="use custom program for code evaluation",
+    )
+    parser.add_argument(
+        "-custom-program-args",
+        metavar=("language", "program-args"),
+        nargs=2,
+        action="append",
+        type=str,
+        default=DEFAULT_CUSTOM_PROGRAM_ARGS,
+        help="use custom program args for code evaluation",
     )
     parser.add_argument(
         "md_input_files",
@@ -161,6 +230,32 @@ def parse_cli_args(cli_args: List[str]) -> Md2AnkiArgs:
     parsed_args.md_input_file_paths = args.md_input_files
     parsed_args.backup_output_dir_path = args.o_backup_dir
     parsed_args.pdf_output_file_path = args.o_pdf
+
+    temp_custom_program = convert_list_to_dict_merged(
+        args.custom_program[: len(DEFAULT_CUSTOM_PROGRAMS)], str_to_str
+    )
+    if args.custom_program is not None:
+        parsed_args.custom_program = convert_list_to_dict_merged(
+            args.custom_program[len(DEFAULT_CUSTOM_PROGRAMS) :], str_to_str
+        )
+    parsed_args.custom_program = {
+        **temp_custom_program,
+        **parsed_args.custom_program,
+    }
+
+    temp_custom_program_args = convert_list_to_dict_merged(
+        args.custom_program_args[: len(DEFAULT_CUSTOM_PROGRAM_ARGS)],
+        json_str_to_str_list,
+    )
+    if args.custom_program_args is not None:
+        parsed_args.custom_program_args = convert_list_to_dict_merged(
+            args.custom_program_args[len(DEFAULT_CUSTOM_PROGRAM_ARGS) :],
+            json_str_to_str_list,
+        )
+    parsed_args.custom_program_args = {
+        **temp_custom_program_args,
+        **parsed_args.custom_program_args,
+    }
 
     # If an input file is not found throw error
     for md_input_file_path in parsed_args.md_input_file_paths:

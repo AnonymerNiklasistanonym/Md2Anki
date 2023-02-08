@@ -1,8 +1,8 @@
 # Example 'Code Run' (1093972916)
 
-## Run inline code `print(6 * 6)`{=python} (90e43264-471a-4da9-b340-0b519f80f1b9)
+## Run inline code `print(6 * 6)`{=py} (90e43264-471a-4da9-b340-0b519f80f1b9)
 
-Answer with `print('inline')`{=python} code
+Answer with `print('inline')`{=py} code
 
 ## Question with code block that resolves to output text: (fc59dd82-0535-4e5a-8927-3b2dbab902b7)
 
@@ -16,7 +16,7 @@ int main() {
 }
 ```
 
-```{=typescript}
+```{=ts}
 let message: string = 'Hello, World! (typescript)';
 console.log(message);
 ```
@@ -37,7 +37,7 @@ int main() {
 
 ## Question with matplotlib graph (d49a8734-1ab7-4b18-a717-c68d6304658d)
 
-```{=jupyter_notebook_matplotlib}
+```{=py}
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -66,7 +66,7 @@ plt.savefig("graph_2.svg")
 
 Answer
 
-```{=jupyter_notebook_matplotlib}
+```{=py}
 import numpy as np
 import matplotlib.pyplot as plt
 

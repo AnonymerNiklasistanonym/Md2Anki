@@ -1,43 +1,49 @@
-import sys
 import unittest
-from os.path import dirname, join
-from typing import Set, List, Tuple
+from typing import List, Tuple
 
-# Append the module path for md2anki
-sys.path.append(join(dirname(__file__), "..", "src"))
-
-from md2anki.subprocess import evaluate_code, SubprocessPrograms
+from md2anki.cli import (
+    convert_list_to_dict_merged,
+    DEFAULT_CUSTOM_PROGRAMS,
+    DEFAULT_CUSTOM_PROGRAM_ARGS,
+    str_to_str,
+    json_str_to_str_list,
+)
+from md2anki.subprocess import evaluate_code
 
 
 class TestEvaluateCode(unittest.TestCase):
     def setUp(self):
-        self.code: List[Tuple[SubprocessPrograms, str]] = list()
-        self.results: List[str] = list()
-        self.expected: List[str] = list()
+        self.code: List[Tuple[str, str]] = list()
+        self.results: List[Tuple[List[str], List[str]]] = list()
+        self.expected: List[Tuple[List[str], List[str]]] = list()
 
-        test_data: List[Tuple[str, SubprocessPrograms, str]] = [
-            ("", SubprocessPrograms.PYTHON, ""),
-            ('print("Hello world!")', SubprocessPrograms.PYTHON, "Hello world!\n"),
+        test_data: List[Tuple[str, str, Tuple[List[str], List[str]]]] = [
+            ("", "py", ([""], [])),
+            (
+                'print("Hello world!")',
+                "py",
+                (["Hello world!\n"], []),
+            ),
             (
                 "a = 42\n" 'print(f"The answer is {a}")',
-                SubprocessPrograms.PYTHON,
-                "The answer is 42\n",
+                "py",
+                (["The answer is 42\n"], []),
             ),
-            ("", SubprocessPrograms.JAVASCRIPT, ""),
+            ("", "js", ([""], [])),
             (
                 'console.log("Hello world!")',
-                SubprocessPrograms.JAVASCRIPT,
-                "Hello world!\n",
+                "js",
+                (["Hello world!\n"], []),
             ),
             (
                 "const a = 42\n" "console.log(`The answer is ${a}`)",
-                SubprocessPrograms.JAVASCRIPT,
-                "The answer is 42\n",
+                "js",
+                (["The answer is 42\n"], []),
             ),
             (
                 'let message: string = "Hello world!"\nconsole.log(message)',
-                SubprocessPrograms.TYPESCRIPT,
-                "Hello world!\n",
+                "ts",
+                (["Hello world!\n"], []),
             ),
             (
                 "#include<stdio.h>\n"
@@ -45,8 +51,8 @@ class TestEvaluateCode(unittest.TestCase):
                 '	printf("Hello world!\\n");\n'
                 "	return 0;\n"
                 "}",
-                SubprocessPrograms.C,
-                "Hello world!\n",
+                "c",
+                (["", "Hello world!\n"], []),
             ),
             (
                 "#include <iostream>\n"
@@ -54,14 +60,25 @@ class TestEvaluateCode(unittest.TestCase):
                 '	std::cout << "Hello world!" << std::endl;\n'
                 "	return 0;\n"
                 "}",
-                SubprocessPrograms.CPP,
-                "Hello world!\n",
+                "cpp",
+                (["", "Hello world!\n"], []),
             ),
         ]
 
         for test_input, test_program, test_expected in test_data:
             self.code.append((test_program, test_input))
-            self.results.append(evaluate_code(test_program, test_input))
+            self.results.append(
+                evaluate_code(
+                    test_program,
+                    test_input,
+                    custom_program=convert_list_to_dict_merged(
+                        DEFAULT_CUSTOM_PROGRAMS, str_to_str
+                    ),
+                    custom_program_args=convert_list_to_dict_merged(
+                        DEFAULT_CUSTOM_PROGRAM_ARGS, json_str_to_str_list
+                    ),
+                )
+            )
             self.expected.append(test_expected)
 
     def test_evaluated_code_output_matches(self):

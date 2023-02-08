@@ -2,7 +2,7 @@ import html
 import re
 import sys
 from dataclasses import dataclass, field
-from typing import Set, Optional, Dict
+from typing import Set, Optional, Dict, List
 
 import genanki
 import markdown
@@ -16,7 +16,6 @@ from md2anki.print import debug_print, warn_print
 from md2anki.subprocess import (
     evaluate_code,
     UnableToEvaluateCodeException,
-    SubprocessPrograms,
 )
 from md2anki.create_id import create_unique_id
 from md2anki.md_util import (
@@ -89,6 +88,8 @@ class AnkiNote:
         self,
         anki_card_model: genanki.Model,
         dir_dynamic_files: str,
+        custom_program: Dict[str, List[str]],
+        custom_program_args: Dict[str, List[List[str]]],
         debug=False,
     ) -> genanki.Note:
         """
@@ -113,18 +114,24 @@ class AnkiNote:
             # Detect executable code
             try:
                 if language is not None and language.startswith("="):
-                    code_output = evaluate_code(
+                    code_output, image_list = evaluate_code(
                         language[1:],
                         code,
                         dir_dynamic_files=dir_dynamic_files,
+                        custom_program=custom_program,
+                        custom_program_args=custom_program_args,
                         debug=debug,
                     )
-                    debug_print(f"> Evaluate {code=}: {code_output=}", debug=debug)
-                    return html.escape(code_output)
+                    debug_print(
+                        f"> Evaluate {code=}: {code_output=}, {image_list=}",
+                        debug=debug,
+                    )
+                    if len(image_list) > 0:
+                        return "".join(map(lambda x: f"![]({x})\n", image_list))
+                    else:
+                        return html.escape("".join(code_output))
             except UnableToEvaluateCodeException as err:
                 print(err, file=sys.stderr)
-            if language == SubprocessPrograms.JUPYTER_NOTEBOOK_MATPLOTLIB.name:
-                language = SubprocessPrograms.PYTHON.name
             if language is None:
                 language = "text"
             try:

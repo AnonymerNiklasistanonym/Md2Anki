@@ -2,7 +2,7 @@ import html
 import os
 import sys
 import tempfile
-from typing import List, Optional
+from typing import List, Optional, Dict
 import shutil
 
 from md2anki.info import md2anki_name
@@ -11,7 +11,6 @@ from md2anki.md_util import md_update_code_parts
 from md2anki.subprocess import (
     evaluate_code,
     UnableToEvaluateCodeException,
-    SubprocessPrograms,
     run_subprocess,
 )
 
@@ -32,6 +31,8 @@ def create_pdf_from_md_content(
     md_content: str,
     output_file_path: str,
     local_assets: List[str],
+    custom_program: Dict[str, List[str]],
+    custom_program_args: Dict[str, List[List[str]]],
     dir_dynamic_files: str,
     debug=False,
 ):
@@ -43,18 +44,23 @@ def create_pdf_from_md_content(
         # Detect executable code
         try:
             if language is not None and language.startswith("="):
-                code_output = evaluate_code(
+                code_output, image_list = evaluate_code(
                     language[1:],
                     code,
                     debug=debug,
                     dir_dynamic_files=dir_dynamic_files,
+                    custom_program=custom_program,
+                    custom_program_args=custom_program_args,
                 )
-                debug_print(f"> Evaluate {code=}: {code_output=}", debug=debug)
-                return html.escape(code_output)
+                debug_print(
+                    f"> Evaluate {code=}: {code_output=}, {image_list=}", debug=debug
+                )
+                if len(image_list) > 0:
+                    return "".join(map(lambda x: f"![]({x})\n", image_list))
+                else:
+                    return html.escape("".join(code_output))
         except UnableToEvaluateCodeException as err:
             print(err, file=sys.stderr)
-        if language == SubprocessPrograms.JUPYTER_NOTEBOOK_MATPLOTLIB.name:
-            language = SubprocessPrograms.PYTHON.name
         if code_block:
             return f"```{language}\n{code}```\n"
         else:
