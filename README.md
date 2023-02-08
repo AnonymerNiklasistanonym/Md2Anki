@@ -160,6 +160,8 @@ usage: md2anki [-h] [-v] [-d] [-anki-model MODEL_ID] [-o-anki APKG_FILE]
                [-o-md MD_FILE] [-o-md-dir MD_DIR] [-o-backup-dir BACKUP_DIR]
                [-o-pdf PDF_FILE] [-file-dir [FILE_DIR ...]]
                [-md-heading-depth HEADING_DEPTH]
+               [-custom-program language program]
+               [-custom-program-args language program-args]
                MD_INPUT_FILE [MD_INPUT_FILE ...]
 
 Create an anki deck file (.apkg) from one or more Markdown documents. If no
@@ -172,24 +174,42 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   -v, --version         show program's version number and exit
-  -d, --debug           enable debug output
+  -d, --debug           enable debug output (default: False)
   -anki-model MODEL_ID  custom anki card model (md2anki_default,
-                        md2anki_type_answer) [default: md2anki_default]
-  -o-anki APKG_FILE     custom anki deck (.apkg) output file path
+                        md2anki_type_answer) (default: md2anki_default)
+  -o-anki APKG_FILE     custom anki deck (.apkg) output file path [if not
+                        given: md input file name + .apkg] (default: None)
   -o-md MD_FILE         custom updated (and merged if multiple input files)
                         Markdown (.md) output file path for all input files
+                        (default: None)
   -o-md-dir MD_DIR      custom output directory for all updated Markdown (.md)
-                        input files
+                        input files (default: None)
   -o-backup-dir BACKUP_DIR
                         create a backup of the anki deck (i.e. merges input
                         files and copies external files) in a directory
+                        (default: None)
   -o-pdf PDF_FILE       create a PDF (.pdf) file of the anki deck (i.e. merges
-                        input files and removes IDs)
+                        input files and removes IDs) (default: None)
   -file-dir [FILE_DIR ...]
                         add directories that should be checked for referenced
-                        files (like relative path images)
+                        files (like relative path images) (default: [])
   -md-heading-depth HEADING_DEPTH
-                        use a custom Markdown heading depth (>=1) [default: 1]
+                        use a custom Markdown heading depth (>=1) (default: 1)
+  -custom-program language program
+                        use custom program for code evaluation (default:
+                        [('py', 'python'), ('js', 'node'), ('ts', 'ts-node'),
+                        ('cpp', 'clang++'), ('cpp', 'main.exe'), ('c',
+                        'clang'), ('c', 'main.exe')])
+  -custom-program-args language program-args
+                        use custom program args for code evaluation (default:
+                        [('py', '["-c", "MD2ANKI_CODE"]'), ('js', '["-e",
+                        "MD2ANKI_CODE"]'), ('ts',
+                        '["DEFAULT_CODE_FILE_NAME_BEGIN=code.ts"]'), ('cpp',
+                        '["-Wall", "-std=c++20",
+                        "DEFAULT_CODE_FILE_NAME_BEGIN=main.cpp", "-o",
+                        "main.exe"]'), ('cpp', '[]'), ('c', '["-std=c17",
+                        "DEFAULT_CODE_FILE_NAME_BEGIN=main.c", "-o",
+                        "main.exe"]'), ('c', '[]')])
 ```
 
 [//]: <> (END: USAGE)
