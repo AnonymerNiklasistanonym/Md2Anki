@@ -1,12 +1,17 @@
+#!/usr/bin/env python3
+
+# Internal packages
 import unittest
 import sys
-import os
-from os.path import dirname, join
-from typing import Set, List, Tuple, Callable, Optional
+from os import name
+from pathlib import Path
+from typing import Set, List, Tuple, Callable, Optional, Final
+from urllib.parse import urlparse, ParseResult
 
 # Append the module path for md2anki
-sys.path.append(join(dirname(__file__), "..", "src"))
+sys.path.append(str(Path(__file__).parent.parent.joinpath("src")))
 
+# Local modules
 from md2anki.md_util import (
     md_get_used_files,
     md_get_used_md2anki_tags,
@@ -20,18 +25,22 @@ from md2anki.md_util import (
 class TestMdGetUsedFiles(unittest.TestCase):
     def setUp(self):
         self.md_content_list: List[str] = list()
-        self.results: List[Set[str]] = list()
-        self.expected: List[Set[str]] = list()
+        self.results: List[Set[Path | ParseResult]] = list()
+        self.expected: List[Set[Path | ParseResult]] = list()
 
-        test_data: List[Tuple[str, Set[str]]] = [
+        test_data: List[Tuple[str, Set[Path | ParseResult]]] = [
             ("", set()),
-            ("![](path1)", {"path1"}),
-            ("hi\n![](path1)", {"path1"}),
-            ("hi\n![](path1)\n![](path2)", {"path1", "path2"}),
-            ("![](path1) ![](path2)", {"path1", "path2"}),
+            ("![](path1)", {Path("path1")}),
+            ("hi\n![](path1)", {Path("path1")}),
+            ("hi\n![](path1)\n![](path2)", {Path("path1"), Path("path2")}),
+            ("![](path1) ![](path2)", {Path("path1"), Path("path2")}),
             (
                 "![](path1) ![](path2) ![](https://www.google.com/image.png)",
-                {"path1", "path2", "https://www.google.com/image.png"},
+                {
+                    Path("path1"),
+                    Path("path2"),
+                    urlparse("https://www.google.com/image.png"),
+                },
             ),
         ]
 
@@ -56,23 +65,23 @@ class TestMdUpdateLocalFilepaths(unittest.TestCase):
         self.results: List[str] = list()
         self.expected: List[str] = list()
 
-        new_directory = "new_dir"
+        new_directory: Final = Path("new_dir")
+        absolute_path: Final = Path(
+            "C:\\Users\\user\\Documents\\Md2Anki\\abs_graph.svg"
+            if name == "nt"
+            else "/mnt/c/Users/user/Documents/Md2Anki/abs_graph.svg"
+        )
 
-        if os.name == 'nt':
-            absolute_path = 'C:\\Users\\user\\Documents\\Md2Anki\\abs_graph.svg'
-        else:
-            absolute_path = '/mnt/c/Users/user/Documents/Md2Anki/abs_graph.svg'
-
-        test_data: List[Tuple[str, Callable[[str], str]]] = [
+        test_data: List[Tuple[str, Callable[[Path], str]]] = [
             ("", lambda x: ""),
-            ("![](path1)", lambda x: f"![]({join(x, 'path1')})"),
+            ("![](path1)", lambda x: f"![]({x.joinpath('path1')})"),
             (
                 "![](path1) ![](path2) ![](https://www.google.com/image.png)",
-                lambda x: f"![]({join(x, 'path1')}) ![]({join(x, 'path2')}) ![](https://www.google.com/image.png)",
+                lambda x: f"![]({x.joinpath('path1')}) ![]({x.joinpath('path2')}) ![](https://www.google.com/image.png)",
             ),
             (
                 f"Question with matplotlib graph\n\n![]({absolute_path})\n",
-                lambda x: f"Question with matplotlib graph\n\n![]({join(x, 'abs_graph.svg')})\n",
+                lambda x: f"Question with matplotlib graph\n\n![]({x.joinpath('abs_graph.svg')})\n",
             ),
         ]
 

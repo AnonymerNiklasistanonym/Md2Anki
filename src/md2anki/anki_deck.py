@@ -1,11 +1,15 @@
-import glob
-import os
+#!/usr/bin/env python3
+
+# Internal packages
 import shutil
 from dataclasses import dataclass, field
-from typing import Set, Optional, List, Tuple, Dict
+from pathlib import Path
+from typing import Set, Optional, List, Tuple, Dict, Final
 
+# Installed packages
 import genanki
 
+# Local modules
 from md2anki.anki_model import AnkiModel
 from md2anki.anki_note import AnkiNote, MdSection
 from md2anki.create_id import create_unique_id_int
@@ -17,6 +21,8 @@ from md2anki.info import (
     MD_ANKI_DECK_HEADING_SUBDECK_PREFIX,
 )
 from md2anki.md_util import md_get_used_md2anki_tags
+
+ANKI_SUPPORTED_FILE_FORMATS: Final = [".jpg", ".png", ".svg"]
 
 
 @dataclass
@@ -35,7 +41,7 @@ class AnkiDeck:
     """Description of anki deck"""
     notes: List[AnkiNote] = field(default_factory=lambda: list())
     """List of anki notes"""
-    additional_file_dirs: List[str] = field(default_factory=lambda: list())
+    additional_file_dirs: List[Path] = field(default_factory=lambda: list())
     """List of additional file dirs that should be searched for missing files used in notes"""
     tags: Set[str] = field(default_factory=lambda: set())
     """List of anki tags"""
@@ -45,7 +51,7 @@ class AnkiDeck:
     def genanki_create_deck(
         self,
         anki_card_model: genanki.Model,
-        dir_dynamic_files: str,
+        dir_dynamic_files: Path,
         custom_program: Dict[str, List[str]],
         custom_program_args: Dict[str, List[List[str]]],
         debug=False,
@@ -67,41 +73,39 @@ class AnkiDeck:
         """Get the used global tags of the anki deck"""
         return self.tags.union(md_get_used_md2anki_tags(self.description))
 
-    def get_local_files_from_notes(self, debug=False) -> List[str]:
-        files: Set[str] = set()
+    def get_local_files_from_notes(self, debug=False) -> List[Path]:
+        files: Set[Path] = set()
         for note in self.notes:
             files.update(note.get_used_local_files())
-        file_list: List[str] = list()
+        file_list: List[Path] = list()
         for file in files:
             # Check if every file can be found
-            if os.path.isfile(file):
+            if file.is_file():
                 file_list.append(file)
             else:
                 file_found = False
                 # Check if file is located in one of the additional file dirs
                 for additional_file_dir in self.additional_file_dirs:
-                    new_file_path = os.path.join(additional_file_dir, file)
+                    file_path = additional_file_dir.joinpath(file)
                     if debug:
                         print(
-                            f"file not found check in additional file dirs: '{new_file_path}'"
+                            f"{file=} not found check in {additional_file_dir=}: {file_path=}"
                         )
-                    if os.path.isfile(new_file_path):
-                        file_list.append(new_file_path)
+                    if file_path.is_file():
+                        file_list.append(file_path)
                         file_found = True
                         break
                 if not file_found:
-                    raise Exception(
-                        f"File was not found: {file} ({self.additional_file_dirs=})"
-                    )
+                    raise Exception(f"{file=} not found ({self.additional_file_dirs=})")
         return file_list
 
     def genanki_create_anki_deck(
         self,
-        dir_dynamic_files: str,
+        dir_dynamic_files: Path,
         custom_program: Dict[str, List[str]],
         custom_program_args: Dict[str, List[List[str]]],
         debug=False,
-    ) -> Tuple[genanki.Deck, List[str]]:
+    ) -> Tuple[genanki.Deck, List[Path]]:
         """Return anki deck and a list of all media files."""
         genanki_anki_deck = self.genanki_create_deck(
             self.model.genanki_create_model(),
@@ -112,14 +116,12 @@ class AnkiDeck:
         )
         media_files = self.get_local_files_from_notes(debug=debug)
         # Add all supported dynamic media files
-        for supported_file_format in [".jpg", ".png", ".svg"]:
-            media_files.extend(
-                glob.glob(os.path.join(dir_dynamic_files, f"*{supported_file_format}"))
-            )
+        for supported_file_format in ANKI_SUPPORTED_FILE_FORMATS:
+            media_files.extend(dir_dynamic_files.rglob(f"*{supported_file_format}"))
         return genanki_anki_deck, media_files
 
     def create_md_sections(
-        self, local_asset_dir_path: Optional[str] = None
+        self, local_asset_dir_path: Optional[Path] = None
     ) -> Tuple[MdSection, List[MdSection]]:
         output: List[MdSection] = []
         for note in self.notes:
@@ -133,7 +135,9 @@ class AnkiDeck:
 
 
 def genanki_package_anki_decks_to_file(
-    anki_decks: List[Tuple[genanki.Deck, List[str]]], output_file_path: str, debug=False
+    anki_decks: List[Tuple[genanki.Deck, List[Path]]],
+    output_file_path: Path,
+    debug=False,
 ):
     anki_deck_package = genanki.Package([a[0] for a in anki_decks])
     media_files = [a[1] for a in anki_decks]
@@ -150,8 +154,8 @@ def genanki_package_anki_decks_to_file(
 
 def md_merge_anki_decks_to_md_file(
     anki_decks: List[AnkiDeck],
-    output_file_path: str,
-    local_asset_dir_path: Optional[str] = None,
+    output_file_path: Path,
+    local_asset_dir_path: Optional[Path] = None,
     initial_heading_depth: int = 1,
     remove_ids=False,
     debug=False,
@@ -233,41 +237,41 @@ def md_merge_anki_decks_to_md_file(
 
 def backup_anki_decks_to_dir(
     anki_decks_list: List[List[AnkiDeck]],
-    output_dir_path: str,
+    output_dir_path: Path,
     initial_heading_depth: int = 1,
     debug=False,
 ):
-    if not os.path.isdir(output_dir_path):
-        os.mkdir(output_dir_path)
-    asset_dir_path = os.path.join(output_dir_path, "assets")
-    local_asset_dir_path = os.path.relpath(asset_dir_path, output_dir_path)
-    local_assets: List[str] = []
+    if not output_dir_path.exists():
+        output_dir_path.mkdir()
+    asset_dir_path_relative = Path("assets")
+    asset_dir_path = output_dir_path.joinpath(asset_dir_path_relative)
+    local_asset_dir_path = asset_dir_path.joinpath(output_dir_path)
+    local_assets: List[Path] = []
 
     # Backup each anki deck
     for index, anki_decks in enumerate(anki_decks_list):
-        if len(anki_decks_list) > 1:
-            document_name = f"document_part_{index + 1:02}.md"
-        else:
-            document_name = "document.md"
+        document_name = (
+            f"document_part_{index + 1:02}.md"
+            if len(anki_decks_list) > 1
+            else "document.md"
+        )
         md_merge_anki_decks_to_md_file(
             anki_decks,
-            output_file_path=os.path.join(output_dir_path, document_name),
+            output_file_path=output_dir_path.joinpath(document_name),
             initial_heading_depth=initial_heading_depth,
-            local_asset_dir_path=local_asset_dir_path,
+            local_asset_dir_path=asset_dir_path_relative,
             debug=debug,
         )
         for anki_deck in anki_decks:
             local_assets.extend(anki_deck.get_local_files_from_notes(debug=debug))
 
     if len(local_assets) > 0:
-        if not os.path.isdir(asset_dir_path):
-            os.mkdir(asset_dir_path)
+        if not asset_dir_path.exists():
+            asset_dir_path.mkdir()
         for local_asset in local_assets:
-            shutil.copyfile(
-                local_asset, os.path.join(asset_dir_path, os.path.basename(local_asset))
-            )
-    bash_build = os.path.join(output_dir_path, "build.sh")
-    pwsh_build = os.path.join(output_dir_path, "build.ps1")
+            shutil.copyfile(local_asset, asset_dir_path.joinpath(local_asset.stem))
+    bash_build: Final = output_dir_path.joinpath("build.sh")
+    pwsh_build: Final = output_dir_path.joinpath("build.ps1")
     with open(bash_build, "w", encoding="utf-8") as bash_file, open(
         pwsh_build, "w", encoding="utf-8"
     ) as pwsh_file:

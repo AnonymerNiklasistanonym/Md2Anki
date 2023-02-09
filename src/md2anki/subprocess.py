@@ -1,10 +1,13 @@
-import glob
-import os
+#!/usr/bin/env python3
+
+# Internal packages
 import shutil
 import subprocess
 import tempfile
+from pathlib import Path
 from typing import List, Optional, Final, Dict, Tuple
 
+# Local modules
 from md2anki.info import md2anki_name
 from md2anki.print import debug_print
 
@@ -30,12 +33,12 @@ class ProgramExitedWithWarningsException(Exception):
 def run_subprocess(
     command: str,
     arguments: Optional[List[str]] = None,
-    cwd: Optional[str] = None,
+    cwd: Optional[Path] = None,
     debug=False,
 ):
     command_path_global: Final = shutil.which(command)
     command_path_local: Final = (
-        command_path_global if cwd is None else shutil.which(os.path.join(cwd, command))
+        command_path_global if cwd is None else shutil.which(str(cwd.joinpath(command)))
     )
     command_path: Final = (
         command_path_local if command_path_local is not None else command_path_global
@@ -92,11 +95,11 @@ def evaluate_code(
     code: str,
     custom_program: Dict[str, List[str]],
     custom_program_args: Dict[str, List[List[str]]],
-    dir_dynamic_files: Optional[str] = None,
+    dir_dynamic_files: Optional[Path] = None,
     debug=False,
-) -> Tuple[List[str], List[str]]:
+) -> Tuple[List[str], List[Path]]:
     """Return the command outputs and the found images."""
-    dir_path_temp = tempfile.mkdtemp(prefix=f"{md2anki_name}_evaluate_code_")
+    dir_path_temp = Path(tempfile.mkdtemp(prefix=f"{md2anki_name}_evaluate_code_"))
 
     if program in custom_program:
         program_binaries = custom_program[program]
@@ -113,9 +116,7 @@ def evaluate_code(
                     raise RuntimeError(
                         f"Custom code file name had 0 length: {program_bin_arg!r}"
                     )
-                with open(
-                    os.path.join(dir_path_temp, code_file_name), "w"
-                ) as temp_file:
+                with open(dir_path_temp.joinpath(code_file_name), "w") as temp_file:
                     temp_file.write(code)
                 return code_file_name
             return program_bin_arg
@@ -142,21 +143,15 @@ def evaluate_code(
                 )
             )
         images_list = list()
-        if dir_dynamic_files:
-            pwd = os.getcwd()
-            os.chdir(dir_path_temp)
-            for glob_file in (
-                glob.glob("*.svg") + glob.glob("*.png") + glob.glob("*.pdf")
-            ):
-                if dir_dynamic_files is None:
-                    raise RuntimeError("Directory for dynamic files is None")
-                debug_print(
-                    f"Copy created file {glob_file=} to {dir_dynamic_files=}",
-                    debug=debug,
-                )
-                shutil.copy2(glob_file, dir_dynamic_files)
-                images_list.append(os.path.join(dir_dynamic_files, glob_file))
-            os.chdir(pwd)
+        if dir_dynamic_files is not None:
+            for supported_media_files in [".svg", ".png", ".jpg"]:
+                for glob_file in dir_path_temp.rglob(f"*{supported_media_files}"):
+                    debug_print(
+                        f"Copy created file {glob_file=} to {dir_dynamic_files=}",
+                        debug=debug,
+                    )
+                    shutil.copy2(glob_file, dir_dynamic_files)
+                    images_list.append(dir_dynamic_files.joinpath(glob_file.name))
             debug_print(f"{images_list=} {results=}", debug=debug)
         return results, images_list
 

@@ -2,11 +2,17 @@ import sys
 import io
 import unittest
 from os.path import dirname, join
+
+# !/usr/bin/env python3
+
+# Internal packages
+from pathlib import Path
 from typing import List, Tuple, Optional
 
 # Append the module path for md2anki
-sys.path.append(join(dirname(__file__), "..", "src"))
+sys.path.append(str(Path(__file__).parent.parent.joinpath("src")))
 
+# Local modules
 from md2anki.anki_deck import AnkiDeck
 from md2anki.anki_note import AnkiNote
 from md2anki.md_parser import (

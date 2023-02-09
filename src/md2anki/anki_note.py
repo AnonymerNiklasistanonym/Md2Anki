@@ -1,9 +1,15 @@
+#!/usr/bin/env python3
+
+# Internal packages
 import html
 import re
 import sys
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Set, Optional, Dict, List
+from urllib.parse import ParseResult
 
+# Installed packages
 import genanki
 import markdown
 from pygments import highlight
@@ -11,13 +17,9 @@ from pygments.lexers import get_lexer_by_name
 from pygments.formatters import get_formatter_by_name
 from pygments.util import ClassNotFound
 
-from md2anki.html_util import fix_inline_code_p_tags
-from md2anki.print import debug_print, warn_print
-from md2anki.subprocess import (
-    evaluate_code,
-    UnableToEvaluateCodeException,
-)
+# Local modules
 from md2anki.create_id import create_unique_id
+from md2anki.html_util import fix_inline_code_p_tags
 from md2anki.md_util import (
     md_get_used_files,
     md_get_used_md2anki_tags,
@@ -25,6 +27,11 @@ from md2anki.md_util import (
     md_update_code_parts,
     md_update_images,
     md_update_math_sections,
+)
+from md2anki.print import debug_print, warn_print
+from md2anki.subprocess import (
+    evaluate_code,
+    UnableToEvaluateCodeException,
 )
 
 
@@ -68,14 +75,14 @@ class AnkiNote:
     guid: str = create_unique_id()
     """Unique id"""
 
-    def get_used_local_files(self) -> Set[str]:
+    def get_used_local_files(self) -> Set[Path]:
         return set(
             [
                 file
                 for file in md_get_used_files(self.question).union(
                     md_get_used_files(self.answer)
                 )
-                if not file.startswith("https://") and not file.startswith("http://")
+                if not isinstance(file, ParseResult)
             ]
         )
 
@@ -87,7 +94,7 @@ class AnkiNote:
     def genanki_create_note(
         self,
         anki_card_model: genanki.Model,
-        dir_dynamic_files: str,
+        dir_dynamic_files: Path,
         custom_program: Dict[str, List[str]],
         custom_program_args: Dict[str, List[List[str]]],
         debug=False,
@@ -165,6 +172,10 @@ class AnkiNote:
         # Update local file paths to root directory
         tmp_question = md_update_local_filepaths(tmp_question)
         tmp_answer = md_update_local_filepaths(tmp_answer)
+
+        if debug:
+            print(f">> tmp_question_local_filepaths_fix: {tmp_question!r}")
+            print(f">> tmp_answer_local_filepaths_fix:   {tmp_answer!r}")
 
         # Fix multi line TeX commands (otherwise broken on Website)
         regex_math_block = re.compile(r"\$\$([\S\s\n]+?)\$\$", flags=re.MULTILINE)
@@ -268,7 +279,7 @@ class AnkiNote:
         )
 
     def create_md_section(
-        self, local_asset_dir_path: Optional[str] = None
+        self, local_asset_dir_path: Optional[Path] = None
     ) -> MdSection:
         newline_count_question = len(self.question.splitlines())
         question_header: str = self.question.splitlines()[0].rstrip()

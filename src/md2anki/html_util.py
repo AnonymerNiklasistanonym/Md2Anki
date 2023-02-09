@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+
+# Installed packages
 from bs4 import BeautifulSoup
 
 

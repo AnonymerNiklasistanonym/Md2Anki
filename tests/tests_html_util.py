@@ -1,11 +1,15 @@
+#!/usr/bin/env python3
+
+# Internal packages
 import unittest
 import sys
-from os.path import dirname, join
+from pathlib import Path
 from typing import List, Tuple
 
 # Append the module path for md2anki
-sys.path.append(join(dirname(__file__), "..", "src"))
+sys.path.append(str(Path(__file__).parent.parent.joinpath("src")))
 
+# Local modules
 from md2anki.html_util import fix_inline_code_p_tags
 
 

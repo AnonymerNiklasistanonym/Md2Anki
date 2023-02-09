@@ -1,13 +1,18 @@
+#!/usr/bin/env python3
+
+# Internal packages
 import html
-import os
+import shutil
 import sys
 import tempfile
-from typing import List, Optional, Dict
-import shutil
+from os import fdopen
+from pathlib import Path
+from typing import List, Optional, Dict, Final
 
+# Local modules
 from md2anki.info import md2anki_name
-from md2anki.print import debug_print
 from md2anki.md_util import md_update_code_parts
+from md2anki.print import debug_print
 from md2anki.subprocess import (
     evaluate_code,
     UnableToEvaluateCodeException,
@@ -29,11 +34,11 @@ pandoc_args_pdf: List[str] = [
 
 def create_pdf_from_md_content(
     md_content: str,
-    output_file_path: str,
-    local_assets: List[str],
+    output_file_path: Path,
+    local_assets: List[Path],
     custom_program: Dict[str, List[str]],
     custom_program_args: Dict[str, List[List[str]]],
-    dir_dynamic_files: str,
+    dir_dynamic_files: Path,
     debug=False,
 ):
     # Evaluate code before running pandoc on it
@@ -70,22 +75,25 @@ def create_pdf_from_md_content(
 
     md_content = md_update_code_parts(md_content, md_code_replacer)
 
-    fd, md_file_path_temp = tempfile.mkstemp(f"{md2anki_name}_tmp_file_pandoc_md_")
-    asset_dir_path_temp = tempfile.mkdtemp(f"{md2anki_name}_tmp_file_pandoc_md_assets_")
+    fd, md_file_path_temp_str = tempfile.mkstemp(f"{md2anki_name}_tmp_file_pandoc_md_")
+    md_file_path_temp: Final = Path(md_file_path_temp_str)
+    asset_dir_path_temp: Final = Path(
+        tempfile.mkdtemp(f"{md2anki_name}_tmp_file_pandoc_md_assets_")
+    )
     try:
         for local_asset in local_assets:
             debug_print(f"> Copy {local_asset=} to {asset_dir_path_temp=}", debug=debug)
             shutil.copy2(local_asset, asset_dir_path_temp)
-        with os.fdopen(fd, "w") as tmp:
+        with fdopen(fd, "w") as tmp:
             tmp.write(md_content)
         pandoc = "pandoc"
         cli_args: List[str] = [
             *pandoc_args_pdf,
             "-f",
             "markdown",
-            md_file_path_temp,
+            str(md_file_path_temp),
             "-o",
-            output_file_path,
+            str(output_file_path),
         ]
         if debug:
             cli_args.append("--verbose")
@@ -100,5 +108,5 @@ def create_pdf_from_md_content(
             f"Don't remove {md_file_path_temp=}, {asset_dir_path_temp}", debug=debug
         )
         if not debug:
-            os.remove(md_file_path_temp)
+            md_file_path_temp.unlink()
             shutil.rmtree(asset_dir_path_temp)

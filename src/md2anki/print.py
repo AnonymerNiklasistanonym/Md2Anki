@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+
+# TODO Replace with logging someday
+
+# Internal packages
 import sys
 from typing import Optional
 from enum import Enum

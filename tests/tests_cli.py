@@ -1,13 +1,15 @@
-import os.path
+#!/usr/bin/env python3
+
+# Internal packages
 import sys
 import unittest
-from os.path import dirname, join
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Final
 
 # Append the module path for md2anki
-sys.path.append(join(dirname(__file__), "..", "src"))
+sys.path.append(str(Path(__file__).parent.parent.joinpath("src")))
 
+# Local modules
 from md2anki.cli import (
     parse_cli_args,
     Md2AnkiArgs,
@@ -28,41 +30,41 @@ class TestCliArgs(unittest.TestCase):
             (
                 [__file__],
                 Md2AnkiArgs(
-                    md_input_file_paths=[__file__],
-                    md_output_file_paths=[__file__],
-                    anki_output_file_path=os.path.join(
-                        os.path.dirname(__file__), Path(__file__).stem + ".apkg"
+                    md_input_file_paths=[Path(__file__)],
+                    md_output_file_paths=[Path(__file__)],
+                    anki_output_file_path=Path(__file__).parent.joinpath(
+                        f"{Path(__file__).stem}.apkg"
                     ),
                     custom_program=parse_cli_args([__file__]).custom_program,
                     custom_program_args=parse_cli_args([__file__]).custom_program_args,
                 ),
             ),
             (
-                [__file__, "-file-dir", os.path.dirname(__file__)],
+                [__file__, "-file-dir", str(Path(__file__).parent)],
                 Md2AnkiArgs(
-                    md_input_file_paths=[__file__],
-                    md_output_file_paths=[__file__],
-                    additional_file_dirs=[os.path.dirname(__file__)],
-                    anki_output_file_path=os.path.join(
-                        os.path.dirname(__file__), Path(__file__).stem + ".apkg"
+                    md_input_file_paths=[Path(__file__)],
+                    md_output_file_paths=[Path(__file__)],
+                    additional_file_dirs=[Path(__file__).parent],
+                    anki_output_file_path=Path(__file__).parent.joinpath(
+                        f"{Path(__file__).stem}.apkg"
                     ),
                     custom_program=parse_cli_args([__file__]).custom_program,
                     custom_program_args=parse_cli_args([__file__]).custom_program_args,
                 ),
             ),
             (
-                [__file__, os.path.join(os.path.dirname(__file__), "__init__.py")],
+                [__file__, str(Path(__file__).parent.joinpath("__init__.py"))],
                 Md2AnkiArgs(
                     md_input_file_paths=[
-                        __file__,
-                        os.path.join(os.path.dirname(__file__), "__init__.py"),
+                        Path(__file__),
+                        Path(__file__).parent.joinpath("__init__.py"),
                     ],
                     md_output_file_paths=[
-                        __file__,
-                        os.path.join(os.path.dirname(__file__), "__init__.py"),
+                        Path(__file__),
+                        Path(__file__).parent.joinpath("__init__.py"),
                     ],
-                    anki_output_file_path=os.path.join(
-                        os.path.dirname(__file__), Path(__file__).stem + ".apkg"
+                    anki_output_file_path=Path(__file__).parent.joinpath(
+                        f"{Path(__file__).stem}.apkg"
                     ),
                     custom_program=parse_cli_args([__file__]).custom_program,
                     custom_program_args=parse_cli_args([__file__]).custom_program_args,
@@ -79,10 +81,10 @@ class TestCliArgs(unittest.TestCase):
                     "gcc",
                 ],
                 Md2AnkiArgs(
-                    md_input_file_paths=[__file__],
-                    md_output_file_paths=[__file__],
-                    anki_output_file_path=os.path.join(
-                        os.path.dirname(__file__), Path(__file__).stem + ".apkg"
+                    md_input_file_paths=[Path(__file__)],
+                    md_output_file_paths=[Path(__file__)],
+                    anki_output_file_path=Path(__file__).parent.joinpath(
+                        f"{Path(__file__).stem}.apkg"
                     ),
                     custom_program={
                         **parse_cli_args([__file__]).custom_program,
@@ -109,8 +111,8 @@ class TestCliArgs(unittest.TestCase):
             "Debug flag --debug enables debugging",
         )
         # Detect not existing files
-        file_path_not_found = "not_found.md"
-        error_file_not_found = parse_cli_args([file_path_not_found]).error
+        file_path_not_found: Final = Path("not_found.md")
+        error_file_not_found: Final = parse_cli_args([str(file_path_not_found)]).error
         if error_file_not_found is not None and isinstance(
             error_file_not_found, MdInputFileNotFoundException
         ):
@@ -122,15 +124,15 @@ class TestCliArgs(unittest.TestCase):
         else:
             self.fail(f"Expected file not found error ({error_file_not_found=})")
         # Detect not existing additional file directories
-        file_dir_not_found = "not_found"
-        error_file_not_found = parse_cli_args(
-            [__file__, "-file-dir", file_dir_not_found]
+        file_dir_not_found: Final = Path("not_found")
+        error_file_dir_not_found: Final = parse_cli_args(
+            [__file__, "-file-dir", str(file_dir_not_found)]
         ).error
-        if error_file_not_found is not None and isinstance(
-            error_file_not_found, AdditionalFileDirNotFoundException
+        if error_file_dir_not_found is not None and isinstance(
+            error_file_dir_not_found, AdditionalFileDirNotFoundException
         ):
             self.assertEqual(
-                error_file_not_found.additional_file_dir_path,
+                error_file_dir_not_found.additional_file_dir_path,
                 file_dir_not_found,
                 "Error is thrown if additional file directory can not be found",
             )
@@ -141,7 +143,7 @@ class TestCliArgs(unittest.TestCase):
         # Don't throw errors if additional file directory exists
         self.assertIsNone(
             parse_cli_args(
-                [*self.valid_args, "-file-dir", os.path.dirname(__file__)]
+                [*self.valid_args, "-file-dir", str(Path(__file__).parent)]
             ).error
         )
 

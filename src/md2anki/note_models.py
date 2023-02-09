@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 # Internal packages
-import os
 from enum import Enum
+from pathlib import Path
+from typing import Final
 
 # Local modules
 from md2anki.anki_deck import AnkiModel
@@ -12,10 +13,10 @@ from md2anki.info import (
     RELATIVE_CSS_FILE_PATH_TYPE_ANSWER,
 )
 
-CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-CSS_FILE_PATH = os.path.join(CURRENT_DIR, RELATIVE_CSS_FILE_PATH)
-CSS_FILE_PATH_TYPE_ANSWER = os.path.join(
-    CURRENT_DIR, RELATIVE_CSS_FILE_PATH_TYPE_ANSWER
+CURRENT_DIR: Final = Path(__file__).parent
+CSS_FILE_PATH: Final = CURRENT_DIR.joinpath(RELATIVE_CSS_FILE_PATH)
+CSS_FILE_PATH_TYPE_ANSWER: Final = CURRENT_DIR.joinpath(
+    RELATIVE_CSS_FILE_PATH_TYPE_ANSWER
 )
 
 

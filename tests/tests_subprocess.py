@@ -1,11 +1,15 @@
+#!/usr/bin/env python3
+
+# Internal packages
 import unittest
 import sys
-from os.path import dirname, join
+from pathlib import Path
 from typing import List, Tuple
 
 # Append the module path for md2anki
-sys.path.append(join(dirname(__file__), "..", "src"))
+sys.path.append(str(Path(__file__).parent.parent.joinpath("src")))
 
+# Local modules
 from md2anki.cli import (
     convert_list_to_dict_merged,
     DEFAULT_CUSTOM_PROGRAMS,
@@ -19,10 +23,10 @@ from md2anki.subprocess import evaluate_code
 class TestEvaluateCode(unittest.TestCase):
     def setUp(self):
         self.code: List[Tuple[str, str]] = list()
-        self.results: List[Tuple[List[str], List[str]]] = list()
-        self.expected: List[Tuple[List[str], List[str]]] = list()
+        self.results: List[Tuple[List[str], List[Path]]] = list()
+        self.expected: List[Tuple[List[str], List[Path]]] = list()
 
-        test_data: List[Tuple[str, str, Tuple[List[str], List[str]]]] = [
+        test_data: List[Tuple[str, str, Tuple[List[str], List[Path]]]] = [
             ("", "py", ([""], [])),
             (
                 'print("Hello world!")',

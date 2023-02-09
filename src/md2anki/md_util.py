@@ -1,8 +1,13 @@
-import os
+#!/usr/bin/env python3
+
+# Internal packages
 import re
+from pathlib import Path
 from re import Match
 from typing import Callable, Final, Optional, Set
+from urllib.parse import urlparse, ParseResult, ParseResultBytes
 
+# Local modules
 from md2anki.print import warn_print
 
 REGEX_MD_TAG: Final = re.compile(r"`{=:(.*?):=}`")
@@ -31,14 +36,18 @@ REGEX_MATH_SECTION: Final = re.compile(r"\${2}((?:[^$]|\n)+?)\${2}|\$(.+?)\$")
 # TODO Add update (inline) code blocks method
 
 
-def md_get_used_files(md_content: str) -> Set[str]:
+def md_get_used_files(md_content: str) -> Set[Path | ParseResult]:
     """Get the used files of a Markdown text"""
-    files: Final[Set[str]] = set()
+    files: Final[Set[Path | ParseResult]] = set()
 
     def add_used_files(regex_group_match: Match) -> str:
         """Detect and add all image paths to the created set"""
         filepath = regex_group_match.group(2)
-        files.add(filepath)
+        possible_url = urlparse(filepath)
+        if possible_url.scheme == "http" or "https":
+            files.add(possible_url)
+        else:
+            files.add(Path(filepath))
         return ""
 
     re.sub(REGEX_MD_IMAGE_FILE, add_used_files, md_content)
@@ -46,7 +55,7 @@ def md_get_used_files(md_content: str) -> Set[str]:
 
 
 def md_update_local_filepaths(
-    md_content: str, new_directory: Optional[str] = None
+    md_content: str, new_directory: Optional[Path] = None
 ) -> str:
     """Update all local filepaths to a custom directory"""
 
@@ -55,11 +64,13 @@ def md_update_local_filepaths(
         # Ignore non local filepaths
         if filepath.startswith("https://") or filepath.startswith("http://"):
             return regex_group_match[0]
-        if new_directory is None:
-            new_filepath = os.path.basename(filepath)
-        else:
-            new_filepath = os.path.join(new_directory, os.path.basename(filepath))
-        return regex_group_match[0].replace(filepath, new_filepath)
+        file_name = Path(filepath).name
+        return regex_group_match[0].replace(
+            filepath,
+            file_name
+            if new_directory is None
+            else str(new_directory.joinpath(file_name)),
+        )
 
     return re.sub(REGEX_MD_IMAGE_FILE, update_local_filepath, md_content)
 

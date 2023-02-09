@@ -1,11 +1,10 @@
-import io
-import os
 import sys
 import tempfile
-from typing import Optional, Tuple, List
+from pathlib import Path
+from typing import Optional, Tuple, List, Final
 
 # Append the module path for md2anki
-sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
+sys.path.append(str(Path(__file__).parent.joinpath("src")))
 
 from md2anki.cli import get_argument_parser
 from md2anki.info import (
@@ -13,25 +12,27 @@ from md2anki.info import (
     md2anki_description,
 )
 
-md_comment = ("[//]: <> (", ")")
-md_comment_begin_end = ("BEGIN: ", "END: ")
-md_code_block = ("```", "```")
+md_comment: Final = ("[//]: <> (", ")")
+md_comment_begin_end: Final = ("BEGIN: ", "END: ")
+md_code_block: Final = ("```", "```")
 
-ROOT_DIR_FILE_PATH = os.path.dirname(__file__)
-README_FILE_PATH = os.path.join(ROOT_DIR_FILE_PATH, "README.md")
-EXAMPLE_BASIC_FILE_PATH = os.path.join(
-    ROOT_DIR_FILE_PATH, "examples", "basic_example.md"
+ROOT_DIR_FILE_PATH: Final = Path(__file__).parent
+README_FILE_PATH: Final = ROOT_DIR_FILE_PATH.joinpath("README.md")
+EXAMPLE_BASIC_FILE_PATH: Final = ROOT_DIR_FILE_PATH.joinpath(
+    "examples", "basic_example.md"
 )
-EXAMPLE_SUBDECK_FILE_PATH = os.path.join(
-    ROOT_DIR_FILE_PATH, "examples", "subdeck_example.md"
+EXAMPLE_SUBDECK_FILE_PATH: Final = ROOT_DIR_FILE_PATH.joinpath(
+    "examples", "subdeck_example.md"
 )
 
 
-def create_md_content(id: str, old_content: str) -> str:
-    out: str = md_comment[0] + md_comment_begin_end[0] + id + md_comment[1] + "\n\n"
-    if id == "HEADER":
+def create_md_content(section_id: str, old_content: str) -> str:
+    out: str = (
+        md_comment[0] + md_comment_begin_end[0] + section_id + md_comment[1] + "\n\n"
+    )
+    if section_id == "HEADER":
         out += f"# {md2anki_name}\n\n{md2anki_description}\n"
-    elif id == "EXAMPLES":
+    elif section_id == "EXAMPLES":
         out += f"{md_code_block[0]}markdown\n"
         with open(EXAMPLE_BASIC_FILE_PATH, "r") as example_basic:
             out += example_basic.read()
@@ -40,7 +41,7 @@ def create_md_content(id: str, old_content: str) -> str:
         with open(EXAMPLE_SUBDECK_FILE_PATH, "r") as example_subdeck:
             out += example_subdeck.read()
         out += f"{md_code_block[1]}\n"
-    elif id == "USAGE":
+    elif section_id == "USAGE":
         out += f"{md_code_block[0]}text\n"
         path = tempfile.mktemp(prefix=f"{md2anki_name}_capture_help_")
         try:
@@ -49,12 +50,18 @@ def create_md_content(id: str, old_content: str) -> str:
             with open(path, "r") as tmp:
                 out += tmp.read()
         finally:
-            os.remove(path)
+            Path(path).unlink()
         out += f"{md_code_block[1]}\n"
     else:
-        raise RuntimeError(f"Unsupported md content creation id ({id=})")
+        raise RuntimeError(f"Unsupported md content creation id ({section_id=})")
     return (
-        out + "\n" + md_comment[0] + md_comment_begin_end[1] + id + md_comment[1] + "\n"
+        out
+        + "\n"
+        + md_comment[0]
+        + md_comment_begin_end[1]
+        + section_id
+        + md_comment[1]
+        + "\n"
     )
 
 

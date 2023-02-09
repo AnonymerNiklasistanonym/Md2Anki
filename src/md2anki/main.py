@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 
 # Internal packages
-import os.path
 import shutil
 import tempfile
-from typing import List, Final
+from pathlib import Path
+from typing import Final, List
 
 # Local modules
-from md2anki.cli import Md2AnkiArgs, AnkiCardModelId
 from md2anki.anki_deck import (
     AnkiDeck,
     genanki_package_anki_decks_to_file,
     md_merge_anki_decks_to_md_file,
     backup_anki_decks_to_dir,
 )
+from md2anki.cli import Md2AnkiArgs, AnkiCardModelId
 from md2anki.info import md2anki_name
 from md2anki.md_parser import parse_md_content_to_anki_deck_list
 from md2anki.md_to_pdf import create_pdf_from_md_content
@@ -58,14 +58,16 @@ def main(args: Md2AnkiArgs) -> int:
     ]
 
     if args.anki_output_file_path is not None:
-        tmp_dir_dynamic_files = tempfile.mkdtemp(
-            prefix=f"{md2anki_name}_tmp_dir_dynamic_files_anki_output_"
+        tmp_dir_dynamic_files_anki = Path(
+            tempfile.mkdtemp(
+                prefix=f"{md2anki_name}_tmp_dir_dynamic_files_anki_output_"
+            )
         )
         try:
             genanki_package_anki_decks_to_file(
                 [
                     anki_deck.genanki_create_anki_deck(
-                        dir_dynamic_files=tmp_dir_dynamic_files,
+                        dir_dynamic_files=tmp_dir_dynamic_files_anki,
                         custom_program=args.custom_program,
                         custom_program_args=args.custom_program_args,
                         debug=args.debug,
@@ -77,7 +79,7 @@ def main(args: Md2AnkiArgs) -> int:
             )
         finally:
             if not args.debug:
-                shutil.rmtree(tmp_dir_dynamic_files)
+                shutil.rmtree(tmp_dir_dynamic_files_anki)
 
     if args.md_output_file_paths is not None:
         # Don't update local file paths when merging or updating files
@@ -99,17 +101,14 @@ def main(args: Md2AnkiArgs) -> int:
                     debug=args.debug,
                 )
     if args.md_output_dir_path is not None:
-        if not os.path.isdir(args.md_output_dir_path):
-            os.mkdir(args.md_output_dir_path)
+        if not args.md_output_dir_path.exists():
+            args.md_output_dir_path.mkdir()
         for anki_deck_list, md_input_file_path in zip(
             anki_decks, args.md_input_file_paths
         ):
-            anki_output_file_path = os.path.join(
-                args.md_output_dir_path, os.path.basename(md_input_file_path)
-            )
             md_merge_anki_decks_to_md_file(
                 anki_deck_list,
-                anki_output_file_path,
+                args.md_output_dir_path.joinpath(f"{md_input_file_path.stem}.apkg"),
                 initial_heading_depth=args.md_heading_depth,
                 debug=args.debug,
             )
@@ -123,11 +122,11 @@ def main(args: Md2AnkiArgs) -> int:
         )
 
     if args.pdf_output_file_path is not None:
-        tmp_dir_dynamic_files = tempfile.mkdtemp(
-            prefix=f"{md2anki_name}_tmp_dir_dynamic_files_pdf_output_"
+        tmp_dir_dynamic_files_pdf: Final = Path(
+            tempfile.mkdtemp(prefix=f"{md2anki_name}_tmp_dir_dynamic_files_pdf_output_")
         )
-        tmp_file_path_md_merge = tempfile.mktemp(
-            prefix=f"{md2anki_name}_tmp_file_md_merge_pdf_output_"
+        tmp_file_path_md_merge: Final = Path(
+            tempfile.mktemp(prefix=f"{md2anki_name}_tmp_file_md_merge_pdf_output_")
         )
         try:
             md_merge_anki_decks_to_md_file(
@@ -136,7 +135,7 @@ def main(args: Md2AnkiArgs) -> int:
                 remove_ids=True,
                 debug=args.debug,
             )
-            local_assets: List[str] = []
+            local_assets: List[Path] = []
             for anki_deck in anki_decks_flat:
                 local_assets.extend(
                     anki_deck.get_local_files_from_notes(debug=args.debug)
@@ -146,14 +145,14 @@ def main(args: Md2AnkiArgs) -> int:
                     reader.read(),
                     args.pdf_output_file_path,
                     local_assets,
-                    dir_dynamic_files=tmp_dir_dynamic_files,
+                    dir_dynamic_files=tmp_dir_dynamic_files_pdf,
                     custom_program=args.custom_program,
                     custom_program_args=args.custom_program_args,
                     debug=args.debug,
                 )
         finally:
             if not args.debug:
-                os.remove(tmp_file_path_md_merge)
-                shutil.rmtree(tmp_dir_dynamic_files)
+                tmp_file_path_md_merge.unlink()
+                shutil.rmtree(tmp_dir_dynamic_files_pdf)
 
     return 0

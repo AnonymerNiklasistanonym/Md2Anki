@@ -1,11 +1,14 @@
-import os
+#!/usr/bin/env python3
+
+# Internal packages
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Final
 
-RELATIVE_RES_DIR: Final = "res"
-RELATIVE_CSS_FILE_PATH: Final = os.path.join(RELATIVE_RES_DIR, "stylesheet.css")
-RELATIVE_CSS_FILE_PATH_TYPE_ANSWER: Final = os.path.join(
-    RELATIVE_RES_DIR, "stylesheet_type_answer.css"
+RELATIVE_RES_DIR: Final = Path("res")
+RELATIVE_CSS_FILE_PATH: Final = RELATIVE_RES_DIR.joinpath("stylesheet.css")
+RELATIVE_CSS_FILE_PATH_TYPE_ANSWER: Final = RELATIVE_RES_DIR.joinpath(
+    "stylesheet_type_answer.css"
 )
 
 

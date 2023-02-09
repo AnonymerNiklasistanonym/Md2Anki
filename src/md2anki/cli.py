@@ -1,9 +1,13 @@
-import argparse
-import os
-from dataclasses import dataclass, field
-from typing import Optional, List, Dict, Final, Tuple, TypeVar, Generic, Callable
-import json
+#!/usr/bin/env python3
 
+# Internal packages
+import argparse
+import json
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Optional, List, Dict, Final, Tuple, TypeVar, Callable
+
+# Local modules
 from md2anki.info import md2anki_version, md2anki_name
 from md2anki.note_models import AnkiCardModelId
 from md2anki.subprocess import DEFAULT_CUSTOM_PROGRAM
@@ -12,10 +16,10 @@ from md2anki.subprocess import DEFAULT_CUSTOM_PROGRAM
 class MdInputFileNotFoundException(Exception):
     """Raised when a markdown input file is not found"""
 
-    md_input_file_path: str
+    md_input_file_path: Final[Path]
 
-    def __init__(self, md_input_file_path: str):
-        absolute_path = os.path.abspath(md_input_file_path)
+    def __init__(self, md_input_file_path: Path):
+        absolute_path: Final = md_input_file_path.absolute()
         super().__init__(
             f"Markdown input file was not found ({md_input_file_path!r}, {absolute_path=})"
         )
@@ -25,10 +29,10 @@ class MdInputFileNotFoundException(Exception):
 class AdditionalFileDirNotFoundException(Exception):
     """Raised when an additional file directory is not found"""
 
-    additional_file_dir_path: str
+    additional_file_dir_path: Final[Path]
 
-    def __init__(self, additional_file_dir_path: str):
-        absolute_path = os.path.abspath(additional_file_dir_path)
+    def __init__(self, additional_file_dir_path: Path):
+        absolute_path: Final = additional_file_dir_path.absolute()
         super().__init__(
             f"Additional file directory was not found ({additional_file_dir_path!r}, {absolute_path=})"
         )
@@ -41,21 +45,21 @@ class Md2AnkiArgs:
     Contains all information of the md2anki command line arguments.
     """
 
-    additional_file_dirs: List[str] = field(default_factory=lambda: list())
+    additional_file_dirs: List[Path] = field(default_factory=lambda: list())
     """Additional file directories for external file references (i.e. images)."""
     anki_card_model: AnkiCardModelId = AnkiCardModelId.DEFAULT
     """Anki card model."""
-    md_input_file_paths: List[str] = field(default_factory=lambda: list())
+    md_input_file_paths: List[Path] = field(default_factory=lambda: list())
     """The markdown input file paths."""
-    md_output_file_paths: Optional[List[str]] = None
+    md_output_file_paths: Optional[List[Path]] = None
     """The optional output file paths of the updated markdown files (i.e. with added IDs)."""
-    md_output_dir_path: Optional[str] = None
+    md_output_dir_path: Optional[Path] = None
     """The optional output dir path of the updated markdown files (i.e. with added IDs)."""
-    anki_output_file_path: Optional[str] = None
+    anki_output_file_path: Optional[Path] = None
     """The output file path of the anki deck output file."""
-    backup_output_dir_path: Optional[str] = None
+    backup_output_dir_path: Optional[Path] = None
     """The output dir path of the backup of the anki deck."""
-    pdf_output_file_path: Optional[str] = None
+    pdf_output_file_path: Optional[Path] = None
     """The output file path of the anki deck."""
     md_heading_depth: int = 1
     """The default heading depth for the anki deck heading (increases for each subdeck/question by 1)."""
@@ -115,10 +119,10 @@ def json_str_to_str_list(a: str) -> List[str]:
 
 def get_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog=md2anki_name,
         description="Create an anki deck file (.apkg) from one or more Markdown documents. "
         "If no custom output path is given the file name of the document (+ .apkg) is used.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        prog=md2anki_name,
     )
     parser.add_argument(
         "-v", "--version", action="version", version=f"%(prog)s {md2anki_version}"
@@ -128,43 +132,50 @@ def get_argument_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "-anki-model",
-        type=AnkiCardModelId,
-        default=AnkiCardModelId.DEFAULT,
-        choices=list(AnkiCardModelId),
         metavar="MODEL_ID",
+        type=AnkiCardModelId,
+        choices=list(AnkiCardModelId),
+        default=AnkiCardModelId.DEFAULT,
         help=f"custom anki card model (%(choices)s)",
     )
     parser.add_argument(
         "-o-anki",
         metavar="APKG_FILE",
+        type=Path,
         help="custom anki deck (.apkg) output file path [if not given: md input file "
         "name + .apkg]",
     )
     parser.add_argument(
         "-o-md",
         metavar="MD_FILE",
+        type=Path,
         help="custom updated (and merged if multiple input files) Markdown (.md) output file path for all input files",
     )
     parser.add_argument(
         "-o-md-dir",
         metavar="MD_DIR",
+        type=Path,
         help="custom output directory for all updated Markdown (.md) input files",
     )
     parser.add_argument(
         "-o-backup-dir",
         metavar="BACKUP_DIR",
+        type=Path,
         help="create a backup of the anki deck (i.e. merges input files and copies external files) in a directory",
     )
     parser.add_argument(
         "-o-pdf",
         metavar="PDF_FILE",
+        type=Path,
         help="create a PDF (.pdf) file of the anki deck (i.e. merges input files and removes IDs)",
     )
     parser.add_argument(
         "-file-dir",
+        metavar="FILE_DIR",
+        type=Path,
         action="extend",
-        default=[],
         nargs="*",
+        default=[],
         help="add directories that should be checked for referenced files (like relative path images)",
     )
 
@@ -184,24 +195,25 @@ def get_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-custom-program",
         metavar=("language", "program"),
-        nargs=2,
-        action="append",
         type=str,
+        action="append",
+        nargs=2,
         default=DEFAULT_CUSTOM_PROGRAMS,
         help="use custom program for code evaluation",
     )
     parser.add_argument(
         "-custom-program-args",
         metavar=("language", "program-args"),
-        nargs=2,
-        action="append",
         type=str,
+        action="append",
+        nargs=2,
         default=DEFAULT_CUSTOM_PROGRAM_ARGS,
         help="use custom program args for code evaluation",
     )
     parser.add_argument(
         "md_input_files",
         metavar="MD_INPUT_FILE",
+        type=Path,
         nargs="+",
         help="Markdown (.md) input file that contains anki deck notes",
     )
@@ -259,22 +271,21 @@ def parse_cli_args(cli_args: List[str]) -> Md2AnkiArgs:
 
     # If an input file is not found throw error
     for md_input_file_path in parsed_args.md_input_file_paths:
-        if not os.path.isfile(md_input_file_path):
+        if not md_input_file_path.is_file():
             parsed_args.error = MdInputFileNotFoundException(md_input_file_path)
             return parsed_args
 
     # If an additional file directory is not found throw error
     for additional_file_dir in parsed_args.additional_file_dirs:
-        if not os.path.isdir(additional_file_dir):
+        if not additional_file_dir.is_dir():
             parsed_args.error = AdditionalFileDirNotFoundException(additional_file_dir)
             return parsed_args
 
     parsed_args.anki_output_file_path = (
         args.o_anki
         if args.o_anki
-        else os.path.join(
-            os.path.dirname(parsed_args.md_input_file_paths[0]),
-            f"{os.path.splitext(os.path.basename(parsed_args.md_input_file_paths[0]))[0]}.apkg",
+        else parsed_args.md_input_file_paths[0].parent.joinpath(
+            f"{parsed_args.md_input_file_paths[0].stem}.apkg"
         )
     )
 

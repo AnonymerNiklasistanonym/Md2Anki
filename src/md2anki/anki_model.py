@@ -1,8 +1,13 @@
+#!/usr/bin/env python3
+
+# Internal packages
 from dataclasses import dataclass
 from typing import Optional, Tuple
 
+# Installed packages
 import genanki
 
+# Local modules
 from md2anki.create_id import create_unique_id_int
 
 

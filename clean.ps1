@@ -1,19 +1,19 @@
 #!/usr/bin/env pwsh
 
-$CALL_DIR = $PWD
-
 # Make script stop when an error happens
 $ErrorActionPreference = "Stop"
 
-# Go to script directory even when run from another one
+# Run python clean script
+$CALL_DIR = $PWD
 Set-Location -Path $PSScriptRoot
-
 python -m clean
-$files = Get-ChildItem -Recurse -Directory -Include 'venv_*'
-foreach ($file in $files) {
-    Write-Output "Remove directory '$($file.FullName)'"
-    Remove-Item -Recurse -Force $file.FullName
+Set-Location -Path $CALL_DIR
+
+# Remove python virtual environments
+$VenvDirs = Get-ChildItem -Path $PSScriptRoot -Directory -Filter "venv_*"
+foreach ($VenvDir in $VenvDirs) {
+    Write-Output "Remove directory '$($VenvDir.FullName)'"
+    Remove-Item -Recurse -Force $VenvDir
 }
 
-# Go back to original directory
-Set-Location -Path $CALL_DIR
+

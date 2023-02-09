@@ -1,8 +1,12 @@
+#!/usr/bin/env python3
+
+# Internal packages
 import copy
 import re
 from enum import Enum
 from typing import Optional, TextIO, List, Tuple, Final
 
+# Local modules
 from md2anki.anki_deck import AnkiDeck, AnkiNote
 from md2anki.create_id import create_unique_id_int, create_unique_id
 from md2anki.info import (
@@ -12,13 +16,13 @@ from md2anki.info import (
 )
 from md2anki.print import debug_print, TerminalColors, warn_print
 
-REGEX_MD_ANKI_DECK_HEADING = re.compile(r"^(#+)\s+(.+?)(?:\s+\((\d+)\))?\s*$")
+REGEX_MD_ANKI_DECK_HEADING: Final = re.compile(r"^(#+)\s+(.+?)(?:\s+\((\d+)\))?\s*$")
 """
 Group 1: anki deck heading depth
 Group 2: anki deck heading text
 Group 3: anki deck id (optional)
 """
-REGEX_MD_ANKI_NOTE_QUESTION_HEADING = re.compile(
+REGEX_MD_ANKI_NOTE_QUESTION_HEADING: Final = re.compile(
     r"^(##+)\s+(.+?)(?:\s+\(([^()\s]+?)\))?\s*$"
 )
 """

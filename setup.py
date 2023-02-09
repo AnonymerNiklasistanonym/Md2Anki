@@ -1,10 +1,9 @@
-import os
 import sys
-
+from pathlib import Path
 from setuptools import setup, find_packages
 
 # Append the module path for md2anki
-sys.path.append(os.path.join(os.path.dirname(__file__), "src", "md2anki"))
+sys.path.append(str(Path(__file__).parent.joinpath("src", "md2anki")))
 
 from info import (
     md2anki_version,
