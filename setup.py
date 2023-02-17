@@ -30,7 +30,7 @@ setup(
     url=md2anki_url,
     package_dir={"": "src"},
     packages=find_packages(where="src"),
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     install_requires=[
         "beautifulsoup4>=4.11.2",
         "genanki>=0.13.0",

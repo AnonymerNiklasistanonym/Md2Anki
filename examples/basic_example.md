@@ -14,6 +14,21 @@ Answer that has multiple lines.
 
 **Basic** *Markdown* and <ins>HTML</ins> <del>formatting</del> is supported.
 
+List:
+
+- a
+- b
+  - c
+  - d
+    - e
+
+New list:
+
+1. abc
+2. def
+   - a
+     1. maximum depth
+
 ## Question with multiple (parenthesis) (is) (possible) (b7b85393-b76d-43e6-965a-d86108bf5b09)
 
 Answer

@@ -2,8 +2,10 @@
 
 # Internal packages
 import copy
+import logging
 import re
 from enum import Enum
+from pathlib import Path
 from typing import Optional, TextIO, List, Tuple, Final
 
 # Local modules
@@ -14,7 +16,6 @@ from md2anki.info import (
     MD_ANKI_DECK_HEADING_SUBDECK_PREFIX,
     MD_ANKI_NOTE_QUESTION_ANSWER_SEPARATOR,
 )
-from md2anki.print import debug_print, TerminalColors, warn_print
 
 REGEX_MD_ANKI_DECK_HEADING: Final = re.compile(r"^(#+)\s+(.+?)(?:\s+\((\d+)\))?\s*$")
 """
@@ -30,6 +31,8 @@ Group 1: anki note question heading depth
 Group 2: anki note question heading text
 Group 3: anki note id (optional)
 """
+
+log = logging.getLogger(__name__)
 
 
 class NoAnkiDeckFoundException(Exception):
@@ -98,8 +101,8 @@ def parse_possible_anki_deck_heading(
         )
         if anki_deck_is_subdeck:
             if parent_deck_name is None:
-                warn_print(
-                    f"Found {anki_deck_name=} heading that is a subdeck but no parent deck name",
+                log.warning(
+                    f"Found {anki_deck_name=} heading that is a subdeck but no parent deck name"
                 )
             anki_deck_name = anki_deck_name[len(MD_ANKI_DECK_HEADING_SUBDECK_PREFIX) :]
         if parent_deck_name is not None:
@@ -134,19 +137,18 @@ def parse_possible_anki_note_heading(
 
 
 def parse_md_content_to_anki_deck_list(
-    md_file: TextIO, initial_heading_depth: int = 1, debug=False
+    md_file: TextIO, md_file_dirs: List[Path], initial_heading_depth: int = 1
 ) -> List[AnkiDeck]:
     """
     Parse a Markdown file to an anki deck.
 
-    @param initial_heading_depth: The initial Markdown heading depth.
     @param md_file: The Markdown file content.
-    @param debug: Enable debug output.
+    @param md_file_dirs: The Markdown file directories of that file.
+    @param initial_heading_depth: The initial Markdown heading depth.
     @return: Anki deck object list (in case sub decks are found).
     """
-    # Parse variables to save information between lines
-    anki_deck_document_order_index_counter: int = 0
-    """A counter to preserve the order of read anki decks headings"""
+    anki_deck_order_index: int = 0
+    """A counter to preserve the order of read anki deck headings"""
     empty_lines: int = 0
     """The amount of empty lines read"""
     parse_state: ParseStateMarkdownDocument = (
@@ -156,51 +158,36 @@ def parse_md_content_to_anki_deck_list(
     anki_decks: Final[List[AnkiDeck]] = []
     """Final list of anki decks"""
     anki_decks_stack: Final[List[AnkiDeck]] = []
-    """The current anki deck stack"""
-
-    debug_print("-----------------------", debug=debug, color=TerminalColors.FAIL)
+    """The current anki decks stack"""
 
     for line in md_file:
-        debug_print(
-            f"{line=!r} ({parse_state=},{empty_lines=},{anki_decks_stack=})",
-            debug=debug,
-            color=TerminalColors.OKBLUE,
-        )
-
+        log.debug(f"{line=!r} ({parse_state=},{empty_lines=},{anki_decks_stack=})")
         line_stripped = line.strip()
+
         if len(line_stripped) == 0:
-            # Skip empty lines but keep track of them
+            # 1. Skip empty lines but keep track of them
             empty_lines += 1
-            debug_print(
-                f"=> Found empty line ({empty_lines=})",
-                color=TerminalColors.OKGREEN,
-                debug=debug,
-            )
+            log.debug(f"=> Found {empty_lines=}")
         elif parse_state == ParseStateMarkdownDocument.LOOKING_FOR_ANKI_DECK_HEADING:
-            # Look for a root anki deck heading
+            # 2. Look for a root anki deck heading
             possible_anki_deck = parse_possible_anki_deck_heading(line)
             if possible_anki_deck is not None:
                 root_anki_deck, heading_depth, is_subdeck = possible_anki_deck
-                debug_print(
-                    f"=> Found {root_anki_deck=}",
-                    color=TerminalColors.OKGREEN,
-                    debug=debug,
-                )
+                log.debug(f"=> Found {root_anki_deck=}")
                 if heading_depth != initial_heading_depth:
-                    debug_print(
-                        f"   -> Ignore anki deck because ({heading_depth=}!={initial_heading_depth=})",
-                        debug=debug,
-                        color=TerminalColors.WARNING,
+                    # Ignore root headings that are not in the specified initial depth
+                    log.warning(
+                        f"   -> Ignore {root_anki_deck=} because ({heading_depth=}!={initial_heading_depth=})"
                     )
                 elif is_subdeck:
+                    # Raise error if root heading is a subdeck
                     raise RootAnkiDeckWasSubdeckException(
                         f"The root anki deck heading can't be a subdeck ({line!r})"
                     )
                 else:
-                    root_anki_deck.md_document_order = (
-                        anki_deck_document_order_index_counter
-                    )
-                    anki_deck_document_order_index_counter += 1
+                    # Add root anki deck to the stack
+                    root_anki_deck.md_document_order = anki_deck_order_index
+                    anki_deck_order_index += 1
                     anki_decks_stack.append(root_anki_deck)
                     # Change parse state to indicate that a root anki deck was found
                     parse_state = ParseStateMarkdownDocument.INSIDE_ANKI_DECK
@@ -209,7 +196,7 @@ def parse_md_content_to_anki_deck_list(
             or parse_state == ParseStateMarkdownDocument.ANKI_NOTE_QUESTION
             or parse_state == ParseStateMarkdownDocument.ANKI_NOTE_ANSWER
         ):
-            # Searching for an anki subdeck heading or anki note question heading
+            # 3. Searching for an anki subdeck heading or anki note question heading
             # - INSIDE_ANKI_DECK: or an existing anki deck description
             # - ANKI_NOTE_QUESTION: or an existing anki note answer / question (if separator is found)
             # - ANKI_NOTE_ANSWER: or an existing anki note answer
@@ -224,11 +211,7 @@ def parse_md_content_to_anki_deck_list(
                     heading_depth,
                     is_subdeck,
                 ) = possible_anki_sub_deck
-                debug_print(
-                    f">> Detected {anki_subdeck=}",
-                    color=TerminalColors.BOLD,
-                    debug=debug,
-                )
+                log.debug(f">> Detected {anki_subdeck=}")
                 # If there is a change in heading depth pop subdecks from the stack that won't be referenced again
                 if len(anki_decks_stack) > (heading_depth - initial_heading_depth):
                     deck_was_moved = False
@@ -239,11 +222,9 @@ def parse_md_content_to_anki_deck_list(
                         heading_depth - initial_heading_depth
                     ):
                         anki_decks.append(anki_decks_stack.pop())
-                        debug_print(
+                        log.debug(
                             f"<= [anki decks] Append {anki_decks[-1]!r} "
                             f"[{len(anki_decks_stack)=}>{heading_depth - initial_heading_depth=}]",
-                            debug=debug,
-                            color=TerminalColors.OKCYAN,
                         )
                         deck_was_moved = True
                     # Refresh sub deck name in case that the previous parent deck was removed from the stack
@@ -251,10 +232,8 @@ def parse_md_content_to_anki_deck_list(
                         anki_subdeck.name = anki_subdeck.name.replace(
                             old_anki_parentdeck_name, anki_decks_stack[-1].name, 1
                         )
-                        debug_print(
-                            f">> Update {anki_subdeck.name=} ({old_anki_parentdeck_name=} was removed from the stack)",
-                            debug=debug,
-                            color=TerminalColors.WARNING,
+                        log.debug(
+                            f">> Update {anki_subdeck.name=} ({old_anki_parentdeck_name=} was removed from the stack)"
                         )
                 # Check if the subdeck heading depth is at the expected depth
                 if len(anki_decks_stack) != (heading_depth - initial_heading_depth):
@@ -269,21 +248,17 @@ def parse_md_content_to_anki_deck_list(
                 anki_subdeck.tags = anki_subdeck.tags.union(
                     anki_decks_stack[-1].get_used_global_tags()
                 )
-                anki_subdeck.md_document_order = anki_deck_document_order_index_counter
-                anki_deck_document_order_index_counter += 1
+                anki_subdeck.md_document_order = anki_deck_order_index
+                anki_deck_order_index += 1
                 anki_decks_stack.append(anki_subdeck)
-                debug_print(
+                log.debug(
                     f"<= [anki deck stack] Append {anki_subdeck=}",
-                    color=TerminalColors.OKCYAN,
-                    debug=debug,
                 )
                 parse_state = ParseStateMarkdownDocument.INSIDE_ANKI_DECK
             elif possible_anki_note is not None:
                 # A note was detected
                 anki_note, heading_depth = possible_anki_note
-                debug_print(
-                    f">> Detected {anki_note=}", debug=debug, color=TerminalColors.BOLD
-                )
+                log.debug(f">> Detected {anki_note=}")
                 # Check if the note heading depth is at a supported depth
                 if heading_depth > (len(anki_decks_stack) + 1) or heading_depth < (
                     initial_heading_depth + 1
@@ -297,38 +272,28 @@ def parse_md_content_to_anki_deck_list(
                 while len(anki_decks_stack) > (heading_depth - initial_heading_depth):
                     anki_subdeck = anki_decks_stack.pop()
                     anki_decks.append(anki_subdeck)
-                    debug_print(
+                    log.debug(
                         f"<= [anki decks | new anki note at smaller heading depth] Append {anki_subdeck=}",
-                        color=TerminalColors.OKCYAN,
-                        debug=debug,
                     )
                     parent_deck_removed = True
                 # If a parent deck was removed create a copy of the deck to preserve order
                 if parent_deck_removed:
                     anki_subdeck = anki_decks_stack.pop()
                     anki_decks.append(anki_subdeck)
-                    debug_print(
+                    log.debug(
                         f"<= [anki decks | parent deck was removed] Append {anki_subdeck=}",
-                        color=TerminalColors.OKCYAN,
-                        debug=debug,
                     )
                     anki_deck = copy.deepcopy(anki_subdeck)
                     anki_deck.notes = []
-                    anki_deck.md_document_order = anki_deck_document_order_index_counter
-                    anki_deck_document_order_index_counter += 1
+                    anki_deck.md_document_order = anki_deck_order_index
+                    anki_deck_order_index += 1
                     anki_decks_stack.append(anki_deck)
-                    debug_print(
-                        f"<= [anki deck stack] Append {anki_deck=}",
-                        color=TerminalColors.OKCYAN,
-                        debug=debug,
-                    )
+                    log.debug(f"<= [anki deck stack] Append {anki_deck=}")
                 # Append the note to the current anki deck
                 anki_deck = anki_decks_stack[-1]
                 anki_deck.notes.append(anki_note)
-                debug_print(
+                log.debug(
                     f"<= [anki deck | new anki note] Append {anki_note=} ({anki_deck.name=}, {anki_deck.guid=})",
-                    debug=debug,
-                    color=TerminalColors.OKCYAN,
                 )
                 parse_state = ParseStateMarkdownDocument.ANKI_NOTE_QUESTION
             elif parse_state == ParseStateMarkdownDocument.INSIDE_ANKI_DECK:
@@ -336,10 +301,8 @@ def parse_md_content_to_anki_deck_list(
                 anki_deck = anki_decks_stack[-1]
                 anki_deck.description += empty_lines * "\n" + line
                 empty_lines = 0
-                debug_print(
+                log.debug(
                     f"=> Found/Update {anki_deck.description=} ({anki_deck.name=}, {anki_deck.guid=})",
-                    debug=debug,
-                    color=TerminalColors.OKGREEN,
                 )
             elif (
                 parse_state == ParseStateMarkdownDocument.ANKI_NOTE_QUESTION
@@ -351,10 +314,8 @@ def parse_md_content_to_anki_deck_list(
                     f"{anki_note.question.rstrip()}\n\n{anki_note.answer.lstrip()}"
                 )
                 anki_note.answer = ""
-                debug_print(
+                log.debug(
                     f"=> Found question answer seperator/Update {anki_note.question=} ({anki_note.guid=})",
-                    color=TerminalColors.OKGREEN,
-                    debug=debug,
                 )
                 # Switch parse state to make sure future separators are being kept in the answer
                 parse_state = ParseStateMarkdownDocument.ANKI_NOTE_ANSWER
@@ -365,26 +326,19 @@ def parse_md_content_to_anki_deck_list(
                 anki_note = anki_decks_stack[-1].notes[-1]
                 anki_note.answer += empty_lines * "\n" + line
                 empty_lines = 0
-                debug_print(
-                    f"=> Found/Update {anki_note.answer=}",
-                    color=TerminalColors.OKGREEN,
-                    debug=debug,
-                )
+                log.debug(f"=> Found/Update {anki_note.answer=}")
 
     # Append yet not appended anki decks (in the correct order!)
     for anki_deck in anki_decks_stack:
         anki_decks.append(anki_deck)
-        debug_print(
-            f"<= [anki decks | reached eof] Append {anki_deck=}",
-            color=TerminalColors.OKCYAN,
-            debug=debug,
-        )
+        log.debug(f"<= [anki decks | reached eof] Append {anki_deck=}")
 
     if parse_state == ParseStateMarkdownDocument.LOOKING_FOR_ANKI_DECK_HEADING:
         raise NoAnkiDeckFoundException
 
     # Clean up descriptions of all anki decks as well as their notes
     for parent_anki_deck in anki_decks:
+        parent_anki_deck.additional_file_dirs.extend(md_file_dirs)
         parent_anki_deck.description = parent_anki_deck.description.strip()
         for anki_note in parent_anki_deck.notes:
             anki_note.tags = anki_note.tags.union(
@@ -396,10 +350,8 @@ def parse_md_content_to_anki_deck_list(
     # Sort anki decks in order of their document order
     anki_decks.sort(key=lambda x: x.md_document_order)
 
-    debug_print(
+    log.debug(
         f"=> Return anki decks: ({', '.join([f'{a.name} ({len(a.notes)})' for a in anki_decks])})",
-        debug=debug,
     )
-    debug_print("-----------------------", debug=debug, color=TerminalColors.FAIL)
 
     return anki_decks

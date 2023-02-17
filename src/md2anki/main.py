@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Internal packages
+import logging
 import shutil
 import tempfile
 from pathlib import Path
@@ -21,17 +22,19 @@ from md2anki.note_models import (
     create_default_anki_deck_model,
     create_type_answer_anki_deck_model,
 )
-from md2anki.print import debug_print
+
+log = logging.getLogger(__name__)
 
 
 def main(args: Md2AnkiArgs) -> int:
-    if args.debug:
-        print(f"> Args: {args}")
+    log.debug(f"{args=}")
 
+    # Check if there were any critical errors when parsing the CLI args
     if args.error is not None:
-        print(f"Error: {args.error}")
+        log.error(args.error)
         return 1
 
+    # Create the Anki card model
     if args.anki_card_model == AnkiCardModelId.DEFAULT:
         anki_deck_model = create_default_anki_deck_model()
     elif args.anki_card_model == AnkiCardModelId.TYPE_ANSWER:
@@ -39,17 +42,18 @@ def main(args: Md2AnkiArgs) -> int:
     else:
         raise RuntimeError(f"Unknown anki card model ID '{args.anki_card_model}'")
 
+    # Parse all Markdown input files to Anki decks
     anki_decks: Final[List[List[AnkiDeck]]] = []
     for md_input_file_path in args.md_input_file_paths:
+        log.debug(f"Parse {md_input_file_path!r} to anki deck list...")
         with open(md_input_file_path, "r", encoding="utf-8") as md_file:
-            debug_print(
-                f"> Parse {md_input_file_path!r} to anki deck list", debug=args.debug
-            )
             anki_deck_list = parse_md_content_to_anki_deck_list(
-                md_file, initial_heading_depth=args.md_heading_depth, debug=args.debug
+                md_file,
+                [md_input_file_path.parent],
+                initial_heading_depth=args.md_heading_depth,
             )
             for anki_deck in anki_deck_list:
-                anki_deck.additional_file_dirs = args.additional_file_dirs
+                anki_deck.additional_file_dirs.extend(args.additional_file_dirs)
                 anki_deck.model = anki_deck_model
             anki_decks.append(anki_deck_list)
 
@@ -58,6 +62,7 @@ def main(args: Md2AnkiArgs) -> int:
     ]
 
     if args.anki_output_file_path is not None:
+        log.debug(f"Create anki deck file {args.anki_output_file_path!r}...")
         tmp_dir_dynamic_files_anki = Path(
             tempfile.mkdtemp(
                 prefix=f"{md2anki_name}_tmp_dir_dynamic_files_anki_output_"
@@ -70,37 +75,45 @@ def main(args: Md2AnkiArgs) -> int:
                         dir_dynamic_files=tmp_dir_dynamic_files_anki,
                         custom_program=args.custom_program,
                         custom_program_args=args.custom_program_args,
-                        debug=args.debug,
+                        evaluate_code=args.evaluate_code,
+                        keep_temp_files=args.keep_temp_files,
                     )
                     for anki_deck in anki_decks_flat
                 ],
                 args.anki_output_file_path,
-                debug=args.debug,
             )
+        except Exception as err:
+            log.error(err)
+            raise err
         finally:
-            if not args.debug:
+            if not args.keep_temp_files:
                 shutil.rmtree(tmp_dir_dynamic_files_anki)
 
     if args.md_output_file_paths is not None:
+        log.debug(f"Create markdown file {args.md_output_file_paths!r}...")
         # Don't update local file paths when merging or updating files
         if len(args.md_output_file_paths) == 1:
             md_merge_anki_decks_to_md_file(
                 anki_decks_flat,
                 args.md_output_file_paths[0],
                 initial_heading_depth=args.md_heading_depth,
-                debug=args.debug,
             )
         elif len(args.md_output_file_paths) > 1:
+            if len(args.md_output_file_paths) != len(anki_decks):
+                raise RuntimeError(
+                    f"Output file path ({len(args.md_output_file_paths)}) and anki deck list ({len(anki_decks)}) had different sizes"
+                )
             for output_file_path, anki_deck_list in zip(
-                args.md_output_file_paths, anki_decks, strict=True
+                args.md_output_file_paths, anki_decks
             ):
                 md_merge_anki_decks_to_md_file(
                     anki_deck_list,
                     output_file_path,
                     initial_heading_depth=args.md_heading_depth,
-                    debug=args.debug,
                 )
+
     if args.md_output_dir_path is not None:
+        log.debug(f"Create markdown files in {args.md_output_dir_path!r}...")
         if not args.md_output_dir_path.exists():
             args.md_output_dir_path.mkdir()
         for anki_deck_list, md_input_file_path in zip(
@@ -110,18 +123,18 @@ def main(args: Md2AnkiArgs) -> int:
                 anki_deck_list,
                 args.md_output_dir_path.joinpath(f"{md_input_file_path.stem}.apkg"),
                 initial_heading_depth=args.md_heading_depth,
-                debug=args.debug,
             )
 
     if args.backup_output_dir_path is not None:
+        log.debug(f"Create backup in {args.backup_output_dir_path!r}...")
         backup_anki_decks_to_dir(
             anki_decks,
             args.backup_output_dir_path,
             initial_heading_depth=args.md_heading_depth,
-            debug=args.debug,
         )
 
     if args.pdf_output_file_path is not None:
+        log.debug(f"Create pdf in {args.backup_output_dir_path!r}...")
         tmp_dir_dynamic_files_pdf: Final = Path(
             tempfile.mkdtemp(prefix=f"{md2anki_name}_tmp_dir_dynamic_files_pdf_output_")
         )
@@ -133,13 +146,10 @@ def main(args: Md2AnkiArgs) -> int:
                 anki_decks_flat,
                 tmp_file_path_md_merge,
                 remove_ids=True,
-                debug=args.debug,
             )
             local_assets: List[Path] = []
             for anki_deck in anki_decks_flat:
-                local_assets.extend(
-                    anki_deck.get_local_files_from_notes(debug=args.debug)
-                )
+                local_assets.extend(anki_deck.get_local_files_from_notes())
             with open(tmp_file_path_md_merge, "r") as reader:
                 create_pdf_from_md_content(
                     reader.read(),
@@ -148,10 +158,13 @@ def main(args: Md2AnkiArgs) -> int:
                     dir_dynamic_files=tmp_dir_dynamic_files_pdf,
                     custom_program=args.custom_program,
                     custom_program_args=args.custom_program_args,
-                    debug=args.debug,
+                    evaluate_code=args.evaluate_code,
                 )
+        except Exception as err:
+            log.error(err)
+            raise err
         finally:
-            if not args.debug:
+            if not args.keep_temp_files:
                 tmp_file_path_md_merge.unlink()
                 shutil.rmtree(tmp_dir_dynamic_files_pdf)
 

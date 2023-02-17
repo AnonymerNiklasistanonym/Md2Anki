@@ -355,7 +355,7 @@ class TestParseMdContentToAnkiDeckList(unittest.TestCase):
             else:
                 self.md_content_list.append(test_input)
                 self.results.append(
-                    parse_md_content_to_anki_deck_list(io.StringIO(test_input))
+                    parse_md_content_to_anki_deck_list(io.StringIO(test_input), [])
                 )
                 self.expected.append(test_expected)
 
@@ -424,4 +424,5 @@ class TestParseMdContentToAnkiDeckList(unittest.TestCase):
                     expected_exception,
                     parse_md_content_to_anki_deck_list,
                     io.StringIO(md_content),
+                    [],
                 )

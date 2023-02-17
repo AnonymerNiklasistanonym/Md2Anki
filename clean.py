@@ -34,6 +34,8 @@ if __name__ == "__main__":
         rm_file(example_apkg, dry_run=dry_run_deletions)
     for example_pdf in dir_examples.rglob("*.pdf"):
         rm_file(example_pdf, dry_run=dry_run_deletions)
+    for example_log in dir_examples.rglob("*.log"):
+        rm_file(example_log, dry_run=dry_run_deletions)
 
     # Remove dist directory
     rm_dir(dir_dist, dry_run=dry_run_deletions)

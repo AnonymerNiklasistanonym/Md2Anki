@@ -13,7 +13,6 @@ sys.path.append(str(Path(__file__).parent.parent.joinpath("src")))
 from md2anki.cli import (
     parse_cli_args,
     Md2AnkiArgs,
-    AdditionalFileDirNotFoundException,
     MdInputFileNotFoundException,
 )
 
@@ -101,15 +100,6 @@ class TestCliArgs(unittest.TestCase):
             self.expected.append(test_expected)
 
     def test_cli_logic(self):
-        # Debug flag
-        self.assertTrue(
-            parse_cli_args(["-d", *self.valid_args]).debug,
-            "Debug flag -d enables debugging",
-        )
-        self.assertTrue(
-            parse_cli_args(["--debug", *self.valid_args]).debug,
-            "Debug flag --debug enables debugging",
-        )
         # Detect not existing files
         file_path_not_found: Final = Path("not_found.md")
         error_file_not_found: Final = parse_cli_args([str(file_path_not_found)]).error
@@ -128,16 +118,6 @@ class TestCliArgs(unittest.TestCase):
         error_file_dir_not_found: Final = parse_cli_args(
             [__file__, "-file-dir", str(file_dir_not_found)]
         ).error
-        if error_file_dir_not_found is not None and isinstance(
-            error_file_dir_not_found, AdditionalFileDirNotFoundException
-        ):
-            self.assertEqual(
-                error_file_dir_not_found.additional_file_dir_path,
-                file_dir_not_found,
-                "Error is thrown if additional file directory can not be found",
-            )
-        else:
-            self.fail(f"Expected file not found error ({error_file_not_found=})")
         # Don't throw errors if file exists
         self.assertIsNone(parse_cli_args([*self.valid_args]).error)
         # Don't throw errors if additional file directory exists

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Internal packages
+import logging
 import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -23,6 +24,8 @@ from md2anki.info import (
 from md2anki.md_util import md_get_used_md2anki_tags
 
 ANKI_SUPPORTED_FILE_FORMATS: Final = [".jpg", ".png", ".svg"]
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -54,7 +57,8 @@ class AnkiDeck:
         dir_dynamic_files: Path,
         custom_program: Dict[str, List[str]],
         custom_program_args: Dict[str, List[List[str]]],
-        debug=False,
+        evaluate_code: bool,
+        keep_temp_files: bool,
     ) -> genanki.Deck:
         tmp_anki_deck = genanki.Deck(self.guid, self.name)
         for note in self.notes:
@@ -64,7 +68,8 @@ class AnkiDeck:
                     dir_dynamic_files=dir_dynamic_files,
                     custom_program=custom_program,
                     custom_program_args=custom_program_args,
-                    debug=debug,
+                    evaluate_code=evaluate_code,
+                    keep_temp_files=keep_temp_files,
                 )
             )
         return tmp_anki_deck
@@ -73,7 +78,7 @@ class AnkiDeck:
         """Get the used global tags of the anki deck"""
         return self.tags.union(md_get_used_md2anki_tags(self.description))
 
-    def get_local_files_from_notes(self, debug=False) -> List[Path]:
+    def get_local_files_from_notes(self) -> List[Path]:
         files: Set[Path] = set()
         for note in self.notes:
             files.update(note.get_used_local_files())
@@ -87,10 +92,9 @@ class AnkiDeck:
                 # Check if file is located in one of the additional file dirs
                 for additional_file_dir in self.additional_file_dirs:
                     file_path = additional_file_dir.joinpath(file)
-                    if debug:
-                        print(
-                            f"{file=} not found check in {additional_file_dir=}: {file_path=}"
-                        )
+                    log.debug(
+                        f"{file=} not found check in {additional_file_dir=}: {file_path=}"
+                    )
                     if file_path.is_file():
                         file_list.append(file_path)
                         file_found = True
@@ -104,7 +108,8 @@ class AnkiDeck:
         dir_dynamic_files: Path,
         custom_program: Dict[str, List[str]],
         custom_program_args: Dict[str, List[List[str]]],
-        debug=False,
+        evaluate_code: bool,
+        keep_temp_files: bool,
     ) -> Tuple[genanki.Deck, List[Path]]:
         """Return anki deck and a list of all media files."""
         genanki_anki_deck = self.genanki_create_deck(
@@ -112,9 +117,10 @@ class AnkiDeck:
             dir_dynamic_files=dir_dynamic_files,
             custom_program=custom_program,
             custom_program_args=custom_program_args,
-            debug=debug,
+            evaluate_code=evaluate_code,
+            keep_temp_files=keep_temp_files,
         )
-        media_files = self.get_local_files_from_notes(debug=debug)
+        media_files = self.get_local_files_from_notes()
         # Add all supported dynamic media files
         for supported_file_format in ANKI_SUPPORTED_FILE_FORMATS:
             media_files.extend(dir_dynamic_files.rglob(f"*{supported_file_format}"))
@@ -135,9 +141,7 @@ class AnkiDeck:
 
 
 def genanki_package_anki_decks_to_file(
-    anki_decks: List[Tuple[genanki.Deck, List[Path]]],
-    output_file_path: Path,
-    debug=False,
+    anki_decks: List[Tuple[genanki.Deck, List[Path]]], output_file_path: Path
 ):
     anki_deck_package = genanki.Package([a[0] for a in anki_decks])
     media_files = [a[1] for a in anki_decks]
@@ -145,11 +149,10 @@ def genanki_package_anki_decks_to_file(
         item for sublist in media_files for item in sublist
     ]
     anki_deck_package.write_to_file(output_file_path)
-    if debug:
-        print(
-            f"Write anki decks {', '.join([a[0].name + ' (' + str(len(a[0].notes)) + ')' for a in anki_decks])} to "
-            f"'{output_file_path}' [.apkg]"
-        )
+    log.debug(
+        f"Write anki decks {', '.join([a[0].name + ' (' + str(len(a[0].notes)) + ')' for a in anki_decks])} to "
+        f"'{output_file_path}' [.apkg]"
+    )
 
 
 def md_merge_anki_decks_to_md_file(
@@ -158,7 +161,6 @@ def md_merge_anki_decks_to_md_file(
     local_asset_dir_path: Optional[Path] = None,
     initial_heading_depth: int = 1,
     remove_ids=False,
-    debug=False,
 ):
     """Merge anki decks to a single markdown output file"""
     heading_stack: List[Tuple[str, str]] = []
@@ -228,24 +230,21 @@ def md_merge_anki_decks_to_md_file(
                         with_heading_id=not remove_ids,
                     )
                 )
-    if debug:
-        print(
-            f"Write anki decks {', '.join([a.name + ' (' + str(len(a.notes)) + ')' for a in anki_decks])} to "
-            f"'{output_file_path}' [.md]"
-        )
+    log.debug(
+        f"Write anki decks {', '.join([a.name + ' (' + str(len(a.notes)) + ')' for a in anki_decks])} to "
+        f"'{output_file_path}' [.md]"
+    )
 
 
 def backup_anki_decks_to_dir(
     anki_decks_list: List[List[AnkiDeck]],
     output_dir_path: Path,
     initial_heading_depth: int = 1,
-    debug=False,
 ):
     if not output_dir_path.exists():
         output_dir_path.mkdir()
     asset_dir_path_relative = Path("assets")
     asset_dir_path = output_dir_path.joinpath(asset_dir_path_relative)
-    local_asset_dir_path = asset_dir_path.joinpath(output_dir_path)
     local_assets: List[Path] = []
 
     # Backup each anki deck
@@ -260,16 +259,15 @@ def backup_anki_decks_to_dir(
             output_file_path=output_dir_path.joinpath(document_name),
             initial_heading_depth=initial_heading_depth,
             local_asset_dir_path=asset_dir_path_relative,
-            debug=debug,
         )
         for anki_deck in anki_decks:
-            local_assets.extend(anki_deck.get_local_files_from_notes(debug=debug))
+            local_assets.extend(anki_deck.get_local_files_from_notes())
 
     if len(local_assets) > 0:
         if not asset_dir_path.exists():
             asset_dir_path.mkdir()
         for local_asset in local_assets:
-            shutil.copyfile(local_asset, asset_dir_path.joinpath(local_asset.stem))
+            shutil.copyfile(local_asset, asset_dir_path.joinpath(local_asset.name))
     bash_build: Final = output_dir_path.joinpath("build.sh")
     pwsh_build: Final = output_dir_path.joinpath("build.ps1")
     with open(bash_build, "w", encoding="utf-8") as bash_file, open(
@@ -315,5 +313,4 @@ def backup_anki_decks_to_dir(
         bash_file.write(f' -o-anki "{anki_deck_name}.apkg" "$@"\n')
         pwsh_file.write(f' -o-anki `"{anki_deck_name}.apkg`" $args"\n')
 
-    if debug:
-        print(f"Write anki deck backup to '{output_dir_path}'")
+    log.debug(f"Write anki deck backup to '{output_dir_path}'")

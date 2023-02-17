@@ -85,6 +85,21 @@ Answer that has multiple lines.
 
 **Basic** *Markdown* and <ins>HTML</ins> <del>formatting</del> is supported.
 
+List:
+
+- a
+- b
+  - c
+  - d
+    - e
+
+New list:
+
+1. abc
+2. def
+   - a
+     1. maximum depth
+
 ## Question with multiple (parenthesis) (is) (possible) (b7b85393-b76d-43e6-965a-d86108bf5b09)
 
 Answer
@@ -157,9 +172,10 @@ Answer
 [//]: <> (BEGIN: USAGE)
 
 ```text
-usage: md2anki [-h] [-v] [-d] [-anki-model MODEL_ID] [-o-anki APKG_FILE]
-               [-o-md MD_FILE] [-o-md-dir MD_DIR] [-o-backup-dir BACKUP_DIR]
-               [-o-pdf PDF_FILE] [-file-dir [FILE_DIR ...]]
+usage: md2anki [-h] [-v] [-d [{DEBUG,INFO,WARNING,ERROR,CRITICAL}]] [-e] [-k]
+               [-anki-model MODEL_ID] [-o-anki APKG_FILE] [-o-md MD_FILE]
+               [-o-md-dir MD_DIR] [-o-backup-dir BACKUP_DIR] [-o-pdf PDF_FILE]
+               [-log-file LOG_FILE] [-file-dir [FILE_DIR ...]]
                [-md-heading-depth HEADING_DEPTH]
                [-custom-program language program]
                [-custom-program-args language program-args]
@@ -173,34 +189,14 @@ positional arguments:
                         notes
 
 options:
-  -h, --help            show this help message and exit
-  -v, --version         show program's version number and exit
-  -d, --debug           enable debug output (default: False)
   -anki-model MODEL_ID  custom anki card model (md2anki_default,
                         md2anki_type_answer) (default: md2anki_default)
-  -o-anki APKG_FILE     custom anki deck (.apkg) output file path [if not
-                        given: md input file name + .apkg] (default: None)
-  -o-md MD_FILE         custom updated (and merged if multiple input files)
-                        Markdown (.md) output file path for all input files
-                        (default: None)
-  -o-md-dir MD_DIR      custom output directory for all updated Markdown (.md)
-                        input files (default: None)
-  -o-backup-dir BACKUP_DIR
-                        create a backup of the anki deck (i.e. merges input
-                        files and copies external files) in a directory
-                        (default: None)
-  -o-pdf PDF_FILE       create a PDF (.pdf) file of the anki deck (i.e. merges
-                        input files and removes IDs) (default: None)
-  -file-dir [FILE_DIR ...]
-                        add directories that should be checked for referenced
-                        files (like relative path images) (default: [])
-  -md-heading-depth HEADING_DEPTH
-                        use a custom Markdown heading depth (>=1) (default: 1)
   -custom-program language program
                         use custom program for code evaluation (default:
                         [('py', 'python'), ('js', 'node'), ('ts', 'ts-node'),
                         ('cpp', 'clang++'), ('cpp', 'main.exe'), ('c',
-                        'clang'), ('c', 'main.exe')])
+                        'clang'), ('c', 'main.exe'), ('pandoc_pdf',
+                        'pandoc')])
   -custom-program-args language program-args
                         use custom program args for code evaluation (default:
                         [('py', '["-c", "MD2ANKI_CODE"]'), ('js', '["-e",
@@ -209,7 +205,37 @@ options:
                         "-std=c++20", "MD2ANKI_CODE_FILE=main.cpp", "-o",
                         "main.exe"]'), ('cpp', '[]'), ('c', '["-std=c17",
                         "MD2ANKI_CODE_FILE=main.c", "-o", "main.exe"]'), ('c',
-                        '[]')])
+                        '[]'), ('pandoc_pdf', '["-t", "pdf", "-V",
+                        "geometry:a4paper", "-V", "geometry:margin=2cm", "--
+                        pdf-engine=xelatex", "--pdf-engine-opt=-shell-
+                        escape"]')])
+  -d [{DEBUG,INFO,WARNING,ERROR,CRITICAL}], --debug [{DEBUG,INFO,WARNING,ERROR,CRITICAL}]
+                        custom log level to the console (default: INFO)
+  -e, --evaluate-code   evaluate code parts that start with an '=' like
+                        '`print(1+1)`{=python} (default: False)
+  -file-dir [FILE_DIR ...]
+                        add directories that should be checked for referenced
+                        files (like relative path images) (default: [])
+  -h, --help            show this help message and exit
+  -k, --keep-temp-files
+                        keep temporary files (default: False)
+  -log-file LOG_FILE    log all messages to a text file (.log) (default: None)
+  -md-heading-depth HEADING_DEPTH
+                        use a custom Markdown heading depth (>=1) (default: 1)
+  -o-anki APKG_FILE     custom anki deck (.apkg) output file path [if not
+                        given: md input file name + .apkg] (default: None)
+  -o-backup-dir BACKUP_DIR
+                        create a backup of the anki deck (i.e. merges input
+                        files and copies external files) in a directory
+                        (default: None)
+  -o-md MD_FILE         custom updated (and merged if multiple input files)
+                        Markdown (.md) output file path for all input files
+                        (default: None)
+  -o-md-dir MD_DIR      custom output directory for all updated Markdown (.md)
+                        input files (default: None)
+  -o-pdf PDF_FILE       create a PDF (.pdf) file of the anki deck (i.e. merges
+                        input files and removes IDs) (default: None)
+  -v, --version         show program's version number and exit
 ```
 
 [//]: <> (END: USAGE)

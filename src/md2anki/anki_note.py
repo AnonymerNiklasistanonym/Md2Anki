@@ -2,6 +2,7 @@
 
 # Internal packages
 import html
+import logging
 import re
 import sys
 from dataclasses import dataclass, field
@@ -28,11 +29,12 @@ from md2anki.md_util import (
     md_update_images,
     md_update_math_sections,
 )
-from md2anki.print import debug_print, warn_print
 from md2anki.subprocess import (
-    evaluate_code,
+    subprocess_evaluate_code,
     UnableToEvaluateCodeException,
 )
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -97,7 +99,8 @@ class AnkiNote:
         dir_dynamic_files: Path,
         custom_program: Dict[str, List[str]],
         custom_program_args: Dict[str, List[List[str]]],
-        debug=False,
+        evaluate_code: bool = False,
+        keep_temp_files: bool = False,
     ) -> genanki.Note:
         """
         Args:
@@ -110,72 +113,83 @@ class AnkiNote:
         tmp_question = self.question
         tmp_answer = self.answer
 
-        if debug:
-            print(f"{tmp_question=}")
-            print(f"{tmp_answer=}")
+        log.debug(f">> Create note")
+        log.debug(f"   > {tmp_question=}")
+        log.debug(f"   > {tmp_answer=}")
 
-        # Fix source code blocks
-        def md_code_replacer(language: Optional[str], code: str, code_block: bool):
+        # Find and store all code sections so that they won't be changed by other changes
+        code_sections: Dict[int, str] = dict()
+        placeholder_code_section = "placeholder"
+
+        def md_code_replacer(code: str, code_block: bool, language: Optional[str]):
             if language is not None and language.startswith("."):
                 language = language[1:]
             # Detect executable code
+            code_section = None
+            image_section = None
             try:
-                if language is not None and language.startswith("="):
-                    code_output, image_list = evaluate_code(
+                if evaluate_code and language is not None and language.startswith("="):
+                    code_output, image_list = subprocess_evaluate_code(
                         language[1:],
                         code,
                         dir_dynamic_files=dir_dynamic_files,
                         custom_program=custom_program,
                         custom_program_args=custom_program_args,
-                        debug=debug,
+                        keep_temp_files=keep_temp_files,
                     )
-                    debug_print(
+                    log.debug(
                         f"> Evaluate {code=}: {code_output=}, {image_list=}",
-                        debug=debug,
                     )
                     if len(image_list) > 0:
-                        return "".join(map(lambda x: f"![]({x})\n", image_list))
+                        image_section = "".join(
+                            map(lambda x: f"![]({x})\n", image_list)
+                        )
                     else:
-                        return html.escape("".join(code_output))
+                        code_section = html.escape("".join(code_output))
+                elif language is not None and language.startswith("="):
+                    # If there is no code update values
+                    language = language[1:]
+                    log.warning(
+                        f"[CARD={self.guid}] Code ({language!r}) for evaluation was found but evaluation is disabled!",
+                    )
             except UnableToEvaluateCodeException as err:
                 print(err, file=sys.stderr)
-            if language is None:
-                language = "text"
-            try:
-                language_lexer = get_lexer_by_name(language)
-            except ClassNotFound as err:
-                warn_print(f"Default to text lexer ({language=}, {err=})")
-                language_lexer = get_lexer_by_name("text")
-            html_formatter = get_formatter_by_name("html", noclasses=True)
-            pygments_html_output = highlight(
-                code, language_lexer, html_formatter
-            ).replace("background: #f8f8f8", "")
-            if code_block:
-                return pygments_html_output.replace(
-                    'class="highlight"', 'class="highlight highlight_block"'
-                )
-            else:
-                return (
-                    pygments_html_output.replace("\n", " ")
-                    .replace("\r", "")
-                    .replace('class="highlight"', 'class="highlight highlight_inline"')
-                    .rstrip()
-                )
+            if image_section is not None:
+                return image_section
+            elif code_section is None:
+                if language is None:
+                    language = "text"
+                try:
+                    language_lexer = get_lexer_by_name(language)
+                except ClassNotFound as err:
+                    log.warning(
+                        f"[CARD={self.guid}] Default to text lexer ({language=}, {err=})",
+                    )
+                    language_lexer = get_lexer_by_name("text")
+                html_formatter = get_formatter_by_name("html", noclasses=True)
+                pygments_html_output = highlight(
+                    code, language_lexer, html_formatter
+                ).replace("background: #f8f8f8", "")
+                if code_block:
+                    code_section = pygments_html_output.replace(
+                        'class="highlight"', 'class="highlight highlight_block"'
+                    )
+                else:
+                    code_section = (
+                        pygments_html_output.replace("\n", " ")
+                        .replace("\r", "")
+                        .replace(
+                            'class="highlight"', 'class="highlight highlight_inline"'
+                        )
+                        .rstrip()
+                    )
+
+            code_section_index = len(code_sections)
+            code_sections[code_section_index] = code_section
+            return f"`{placeholder_code_section}{code_section_index}`"
 
         tmp_question = md_update_code_parts(tmp_question, md_code_replacer)
         tmp_answer = md_update_code_parts(tmp_answer, md_code_replacer)
-
-        if debug:
-            print(f">> tmp_question_code_fix: {tmp_question!r}")
-            print(f">> tmp_answer_code_fix:   {tmp_answer!r}")
-
-        # Update local file paths to root directory
-        tmp_question = md_update_local_filepaths(tmp_question)
-        tmp_answer = md_update_local_filepaths(tmp_answer)
-
-        if debug:
-            print(f">> tmp_question_local_filepaths_fix: {tmp_question!r}")
-            print(f">> tmp_answer_local_filepaths_fix:   {tmp_answer!r}")
 
         # Fix multi line TeX commands (otherwise broken on Website)
         regex_math_block = re.compile(r"\$\$([\S\s\n]+?)\$\$", flags=re.MULTILINE)
@@ -189,6 +203,29 @@ class AnkiNote:
         tmp_answer = re.sub(
             regex_math_block, lambda_math_block_to_single_line, tmp_answer
         )
+
+        # Collect all math sections to later overwrite them again
+        math_sections: Dict[int, str] = dict()
+        placeholder_math_section = "placeholder"
+
+        def update_math_section_placeholder(math_section: str, block: bool) -> str:
+            math_section_index = len(math_sections)
+            math_sections[math_section_index] = math_section
+            if block:
+                return f"$${placeholder_math_section}{math_section_index}$$"
+            else:
+                return f"${placeholder_math_section}{math_section_index}$"
+
+        tmp_question = md_update_math_sections(
+            tmp_question, update_math_section_placeholder
+        )
+        tmp_answer = md_update_math_sections(
+            tmp_answer, update_math_section_placeholder
+        )
+
+        # Update local (image) file paths to root directory
+        tmp_question = md_update_local_filepaths(tmp_question)
+        tmp_answer = md_update_local_filepaths(tmp_answer)
 
         # Extract files that this card requests and update paths
         def update_image(
@@ -207,30 +244,7 @@ class AnkiNote:
         tmp_question = md_update_images(tmp_question, update_image)
         tmp_answer = md_update_images(tmp_answer, update_image)
 
-        if debug:
-            print(f">> tmp_question_image_fix: {tmp_question!r}")
-            print(f">> tmp_answer_image_fix:   {tmp_answer!r}")
-
-        # Collect all math sections to later overwrite them again
-        math_sections: Dict[int, str] = dict()
-        placeholder_content = "placeholder"
-
-        def update_math_section_placeholder(math_section: str, block: bool) -> str:
-            math_section_index = len(math_sections)
-            math_sections[math_section_index] = math_section
-            if block:
-                return f"$${placeholder_content}{math_section_index}$$"
-            else:
-                return f"${placeholder_content}{math_section_index}$"
-
-        tmp_question = md_update_math_sections(
-            tmp_question, update_math_section_placeholder
-        )
-        tmp_answer = md_update_math_sections(
-            tmp_answer, update_math_section_placeholder
-        )
-
-        # Render tables
+        # Render many elements like tables by converting MD to HTML
         tmp_question = markdown.markdown(
             tmp_question,
             extensions=["markdown.extensions.extra"],
@@ -242,34 +256,32 @@ class AnkiNote:
             tab_length=2,
         )
 
-        if debug:
-            print(f">> tmp_question_html_conversion: {tmp_question!r}")
-            print(f">> tmp_answer_html_conversion:   {tmp_answer!r}")
+        log.debug(">> Render markdown to HTML")
+        log.debug(f"   > {tmp_question=}")
+        log.debug(f"   > {tmp_answer=}")
+
+        # Insert all code sections again
+        def update_code_section_stored(code_sec: str, _, __) -> str:
+            return code_sections[int(code_sec[len(placeholder_code_section) :])]
+
+        tmp_question = md_update_code_parts(tmp_question, update_code_section_stored)
+        tmp_answer = md_update_code_parts(tmp_answer, update_code_section_stored)
 
         # Insert all math sections again
-        def update_math_section_stored(math_section: str, block: bool) -> str:
-            math_section_str = math_sections[
-                int(math_section[len(placeholder_content) :])
-            ]
-            if block:
-                return f"\\[{math_section_str}\\]"
-            else:
-                return f"\\({math_section_str}\\)"
+        def update_math_section_stored(math_sec: str, block: bool) -> str:
+            math_sec_str = math_sections[int(math_sec[len(placeholder_math_section) :])]
+            return f"\\[{math_sec_str}\\]" if block else f"\\({math_sec_str}\\)"
 
         tmp_question = md_update_math_sections(tmp_question, update_math_section_stored)
         tmp_answer = md_update_math_sections(tmp_answer, update_math_section_stored)
 
-        if debug:
-            print(f">> tmp_question_math_fix: {tmp_question!r}")
-            print(f">> tmp_answer_math_fix:   {tmp_answer!r}")
+        log.debug(">> Update placeholder sections")
+        log.debug(f"   > {tmp_question=}")
+        log.debug(f"   > {tmp_answer=}")
 
-        # Explicitly render line breaks
+        # Postfix for HTML p tags in front of inline code
         tmp_question = fix_inline_code_p_tags(tmp_question)
         tmp_answer = fix_inline_code_p_tags(tmp_answer)
-
-        if debug:
-            print(f">> tmp_question_newline_fix: {tmp_question!r}")
-            print(f">> tmp_answer_newline_fix:   {tmp_answer!r}")
 
         return genanki.Note(
             guid=self.guid,
@@ -290,11 +302,17 @@ class AnkiNote:
             question_body = (
                 f"\n{''.join(self.question.splitlines(keepends=True)[1:])}\n\n---"
             )
-        question_header = md_update_local_filepaths(
-            question_header, local_asset_dir_path
-        )
-        question_body = md_update_local_filepaths(question_body, local_asset_dir_path)
-        answer = md_update_local_filepaths(self.answer, local_asset_dir_path)
+        if local_asset_dir_path is not None:
+            question_header = md_update_local_filepaths(
+                question_header, local_asset_dir_path
+            )
+            question_body = md_update_local_filepaths(
+                question_body, local_asset_dir_path
+            )
+            answer = md_update_local_filepaths(self.answer, local_asset_dir_path)
+        else:
+            answer = self.answer
+
         return MdSection(
             question_header, self.guid, f"{question_body}\n\n{answer}".strip()
         )

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Internal packages
+import logging
 import shutil
 import subprocess
 import tempfile
@@ -9,7 +10,8 @@ from typing import List, Optional, Final, Dict, Tuple
 
 # Local modules
 from md2anki.info import md2anki_name
-from md2anki.print import debug_print
+
+log = logging.getLogger(__name__)
 
 
 class UnableToEvaluateCodeException(Exception):
@@ -31,10 +33,7 @@ class ProgramExitedWithWarningsException(Exception):
 
 
 def run_subprocess(
-    command: str,
-    arguments: Optional[List[str]] = None,
-    cwd: Optional[Path] = None,
-    debug=False,
+    command: str, arguments: Optional[List[str]] = None, cwd: Optional[Path] = None
 ):
     command_path_global: Final = shutil.which(command)
     command_path_local: Final = (
@@ -47,9 +46,7 @@ def run_subprocess(
         raise ProgramNotFoundException(f"{command=} could not be found")
     if arguments is None:
         arguments = list()
-    debug_print(
-        f"Run subprocess {command=}/{command_path=} {arguments=} ({cwd=})", debug=debug
-    )
+    log.debug(f"Run subprocess {command=}/{command_path=} {arguments=} ({cwd=})")
     p = subprocess.run(
         [command_path, *arguments], capture_output=True, text=True, cwd=cwd
     )
@@ -90,13 +87,13 @@ DEFAULT_CUSTOM_PROGRAM: Final[Dict[str, List[Tuple[str, List[str]]]]] = {
 }
 
 
-def evaluate_code(
+def subprocess_evaluate_code(
     program: str,
     code: str,
     custom_program: Dict[str, List[str]],
     custom_program_args: Dict[str, List[List[str]]],
     dir_dynamic_files: Optional[Path] = None,
-    debug=False,
+    keep_temp_files: bool = False,
 ) -> Tuple[List[str], List[Path]]:
     """Return the command outputs and the found images."""
     dir_path_temp = Path(tempfile.mkdtemp(prefix=f"{md2anki_name}_evaluate_code_"))
@@ -134,27 +131,28 @@ def evaluate_code(
 
     try:
         results: List[str] = list()
+        if len(program_binaries) != len(program_binaries_args):
+            raise RuntimeError(
+                f"Program binary ({len(program_binaries)}) and args list ({len(program_binaries_args)}) had different sizes"
+            )
         for program_binary, program_binary_args in zip(
-            program_binaries, program_binaries_args, strict=True
+            program_binaries, program_binaries_args
         ):
             results.append(
-                run_subprocess(
-                    program_binary, program_binary_args, cwd=dir_path_temp, debug=debug
-                )
+                run_subprocess(program_binary, program_binary_args, cwd=dir_path_temp)
             )
         images_list = list()
         if dir_dynamic_files is not None:
             for supported_media_files in [".svg", ".png", ".jpg"]:
                 for glob_file in dir_path_temp.rglob(f"*{supported_media_files}"):
-                    debug_print(
+                    log.debug(
                         f"Copy created file {glob_file=} to {dir_dynamic_files=}",
-                        debug=debug,
                     )
                     shutil.copy2(glob_file, dir_dynamic_files)
                     images_list.append(dir_dynamic_files.joinpath(glob_file.name))
-            debug_print(f"{images_list=} {results=}", debug=debug)
+            log.debug(f"{images_list=} {results=}")
         return results, images_list
 
     finally:
-        if not debug:
+        if not keep_temp_files:
             shutil.rmtree(dir_path_temp)

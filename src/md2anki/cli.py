@@ -1,16 +1,29 @@
 #!/usr/bin/env python3
 
+# Future import to support Python 3.9
+from __future__ import annotations
+
 # Internal packages
 import argparse
 import json
+import logging
+import sys
 from dataclasses import dataclass, field
+from operator import attrgetter
 from pathlib import Path
 from typing import Optional, List, Dict, Final, Tuple, TypeVar, Callable
 
 # Local modules
 from md2anki.info import md2anki_version, md2anki_name
+from md2anki.md_to_pdf import PANDOC_ARGS_PDF
 from md2anki.note_models import AnkiCardModelId
 from md2anki.subprocess import DEFAULT_CUSTOM_PROGRAM
+
+
+class SortedArgumentDefaultsHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
+    def add_arguments(self, actions):
+        actions = sorted(actions, key=attrgetter("option_strings"))
+        super(argparse.ArgumentDefaultsHelpFormatter, self).add_arguments(actions)
 
 
 class MdInputFileNotFoundException(Exception):
@@ -24,19 +37,6 @@ class MdInputFileNotFoundException(Exception):
             f"Markdown input file was not found ({md_input_file_path!r}, {absolute_path=})"
         )
         self.md_input_file_path = md_input_file_path
-
-
-class AdditionalFileDirNotFoundException(Exception):
-    """Raised when an additional file directory is not found"""
-
-    additional_file_dir_path: Final[Path]
-
-    def __init__(self, additional_file_dir_path: Path):
-        absolute_path: Final = additional_file_dir_path.absolute()
-        super().__init__(
-            f"Additional file directory was not found ({additional_file_dir_path!r}, {absolute_path=})"
-        )
-        self.additional_file_dir_path = additional_file_dir_path
 
 
 @dataclass
@@ -70,11 +70,11 @@ class Md2AnkiArgs:
     )
     """Custom program args for languages used for code evaluation."""
 
-    debug = False
-    """Enable debugging."""
-    error: Optional[
-        MdInputFileNotFoundException | AdditionalFileDirNotFoundException
-    ] = None
+    evaluate_code = False
+    """Evaluate code."""
+    keep_temp_files = False
+    """Remove temporary files."""
+    error: Optional[MdInputFileNotFoundException] = None
     """Error message in case there was an error parsing CLI args."""
 
 
@@ -95,13 +95,19 @@ def convert_list_to_dict_merged(
 DEFAULT_CUSTOM_PROGRAMS: Final = [
     (key, program)
     for key, values in DEFAULT_CUSTOM_PROGRAM.items()
-    for program, program_args in values
-]
+    for program, _ in values
+] + [(key, program) for key, values in PANDOC_ARGS_PDF.items() for program, _ in values]
 DEFAULT_CUSTOM_PROGRAM_ARGS: Final = [
     (key, json.dumps(program_args))
     for key, values in DEFAULT_CUSTOM_PROGRAM.items()
-    for program, program_args in values
+    for _, program_args in values
+] + [
+    (key, json.dumps(program_args))
+    for key, values in PANDOC_ARGS_PDF.items()
+    for _, program_args in values
 ]
+
+log = logging.getLogger(__name__)
 
 
 def str_to_str(a: str) -> str:
@@ -121,14 +127,36 @@ def get_argument_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Create an anki deck file (.apkg) from one or more Markdown documents. "
         "If no custom output path is given the file name of the document (+ .apkg) is used.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        formatter_class=SortedArgumentDefaultsHelpFormatter,
         prog=md2anki_name,
     )
     parser.add_argument(
         "-v", "--version", action="version", version=f"%(prog)s {md2anki_version}"
     )
+
     parser.add_argument(
-        "-d", "--debug", action="store_true", help="enable debug output"
+        "-d",
+        "--debug",
+        dest="log_level",
+        const="DEBUG",
+        default="INFO",
+        action="store",
+        nargs="?",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        help="custom log level to the console",
+    )
+
+    parser.add_argument(
+        "-e",
+        "--evaluate-code",
+        action="store_true",
+        help="evaluate code parts that start with an '=' like '`print(1+1)`{=python}",
+    )
+    parser.add_argument(
+        "-k",
+        "--keep-temp-files",
+        action="store_true",
+        help="keep temporary files",
     )
     parser.add_argument(
         "-anki-model",
@@ -168,6 +196,12 @@ def get_argument_parser() -> argparse.ArgumentParser:
         metavar="PDF_FILE",
         type=Path,
         help="create a PDF (.pdf) file of the anki deck (i.e. merges input files and removes IDs)",
+    )
+    parser.add_argument(
+        "-log-file",
+        metavar="LOG_FILE",
+        type=Path,
+        help="log all messages to a text file (.log)",
     )
     parser.add_argument(
         "-file-dir",
@@ -220,6 +254,21 @@ def get_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
+class FormatterCleanInfo(logging.Formatter):
+    def format(self, record):
+        if record.levelno == logging.INFO:
+            self._style._fmt = "%(message)s"
+        else:
+            self._style._fmt = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+        return super().format(record)
+
+
+class Formatter(logging.Formatter):
+    def format(self, record):
+        self._style._fmt = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+        return super().format(record)
+
+
 def parse_cli_args(cli_args: List[str]) -> Md2AnkiArgs:
     """
     Parse the supplied CLI arguments.
@@ -230,11 +279,40 @@ def parse_cli_args(cli_args: List[str]) -> Md2AnkiArgs:
     args = parser.parse_args(cli_args)
     parsed_args = Md2AnkiArgs()
 
-    if args.debug:
-        parsed_args.debug = True
-        print("> Debugging was enabled")
-        print(f"> CLI args: {cli_args}")
-        print(f"> Argparse args: {args}")
+    handlers: List[logging.FileHandler | logging.StreamHandler] = []
+
+    # Create a logging handler to stdout only for info
+    hdlr_info = logging.StreamHandler(sys.stdout)
+    hdlr_info.setFormatter(FormatterCleanInfo())
+    hdlr_info.setLevel(getattr(logging, args.log_level))
+    hdlr_info.addFilter(lambda record: record.levelno < logging.WARNING)
+    handlers.append(hdlr_info)
+
+    # Create a logging handler to stderr for warnings and errors
+    hdlr_warn_err = logging.StreamHandler(sys.stderr)
+    hdlr_warn_err.setFormatter(Formatter())
+    hdlr_warn_err.setLevel(logging.WARNING)
+    hdlr_warn_err.addFilter(lambda record: record.levelno >= logging.WARNING)
+    handlers.append(hdlr_warn_err)
+
+    if args.log_file is not None:
+        # Create a logging handler to a file for everything
+        hdlr_file = logging.FileHandler(args.log_file, mode="w")
+        hdlr_file.setFormatter(Formatter())
+        hdlr_file.setLevel(logging.DEBUG)
+        handlers.append(hdlr_file)
+
+    # This is necessary to fix the file handler
+    logging.root.handlers = []
+
+    # Setup global logging
+    logging.basicConfig(
+        level=logging.DEBUG,
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=handlers,
+    )
+
+    log.debug(f"{cli_args=}, {args=}")
 
     parsed_args.additional_file_dirs = args.file_dir
     parsed_args.anki_card_model = args.anki_model
@@ -242,6 +320,10 @@ def parse_cli_args(cli_args: List[str]) -> Md2AnkiArgs:
     parsed_args.md_input_file_paths = args.md_input_files
     parsed_args.backup_output_dir_path = args.o_backup_dir
     parsed_args.pdf_output_file_path = args.o_pdf
+    parsed_args.evaluate_code = args.evaluate_code
+
+    if args.keep_temp_files is not None:
+        parsed_args.keep_temp_files = args.keep_temp_files
 
     temp_custom_program = convert_list_to_dict_merged(
         args.custom_program[: len(DEFAULT_CUSTOM_PROGRAMS)], str_to_str
@@ -278,8 +360,10 @@ def parse_cli_args(cli_args: List[str]) -> Md2AnkiArgs:
     # If an additional file directory is not found throw error
     for additional_file_dir in parsed_args.additional_file_dirs:
         if not additional_file_dir.is_dir():
-            parsed_args.error = AdditionalFileDirNotFoundException(additional_file_dir)
-            return parsed_args
+            log.warning(
+                f"Ignore {additional_file_dir=!r} because it's not a directory!"
+            )
+            parsed_args.additional_file_dirs.remove(additional_file_dir)
 
     parsed_args.anki_output_file_path = (
         args.o_anki

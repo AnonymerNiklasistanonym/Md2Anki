@@ -17,7 +17,7 @@ from md2anki.cli import (
     str_to_str,
     json_str_to_str_list,
 )
-from md2anki.subprocess import evaluate_code
+from md2anki.subprocess import subprocess_evaluate_code
 
 
 class TestEvaluateCode(unittest.TestCase):
@@ -77,7 +77,7 @@ class TestEvaluateCode(unittest.TestCase):
         for test_input, test_program, test_expected in test_data:
             self.code.append((test_program, test_input))
             self.results.append(
-                evaluate_code(
+                subprocess_evaluate_code(
                     test_program,
                     test_input,
                     custom_program=convert_list_to_dict_merged(

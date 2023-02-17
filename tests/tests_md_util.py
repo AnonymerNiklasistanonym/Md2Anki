@@ -127,7 +127,7 @@ class TestMdUpdateCodeParts(unittest.TestCase):
             ),
         ]
 
-        def update_code_part(language: Optional[str], code: str, code_block: bool):
+        def update_code_part(code: str, code_block: bool, language: Optional[str]):
             if language is not None:
                 language = f"a{language}b"
             code = f"c{code}d"

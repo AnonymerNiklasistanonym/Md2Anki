@@ -17,18 +17,24 @@ from md2anki.main import main
 
 def run_example(
     input_files: List[Path],
+    anki_model: Optional[AnkiCardModelId] = None,
+    debug: Optional[bool] = False,
+    evaluate_code: Optional[bool] = None,
+    file_dirs: Optional[List[Path]] = None,
+    log_file: Optional[Path] = None,
     o_anki: Optional[Path] = None,
+    o_backup_dir: Optional[Path] = None,
     o_md: Optional[Path] = None,
     o_md_dir: Optional[Path] = None,
     o_pdf: Optional[Path] = None,
-    file_dirs: Optional[List[Path]] = None,
-    o_backup_dir: Optional[Path] = None,
-    anki_model: Optional[AnkiCardModelId] = None,
-    debug: Optional[bool] = False,
 ):
     args: List[str] = [str(input_file) for input_file in input_files]
     if debug is True:
-        args.append("-d")
+        args.append("--debug")
+    if evaluate_code is True:
+        args.append("--evaluate-code")
+    if log_file is not None:
+        args.extend(["-log-file", str(log_file)])
     if o_anki is not None:
         args.extend(["-o-anki", str(o_anki)])
     if o_md is not None:
@@ -53,18 +59,45 @@ def run_example_glob(
     glob_str: str,
     anki_model: Optional[AnkiCardModelId] = None,
     debug: Optional[bool] = False,
+    evaluate_code: Optional[bool] = None,
+    file_dirs: Optional[List[Path]] = None,
 ):
     for glob_file in dir_path.glob(glob_str):
         run_example(
             [glob_file],
+            anki_model=anki_model,
+            debug=debug,
+            evaluate_code=evaluate_code,
+            file_dirs=file_dirs,
+            log_file=glob_file.parent.joinpath(f"{glob_file.stem}.log"),
             o_anki=glob_file.parent.joinpath(f"{glob_file.stem}.apkg"),
+            o_backup_dir=glob_file.parent.joinpath(f"backup_{glob_file.stem}"),
             o_md=glob_file.parent.joinpath(f"{glob_file.stem}.md"),
             o_md_dir=glob_file.parent,
-            anki_model=anki_model,
-            file_dirs=[glob_file.parent],
-            o_backup_dir=glob_file.parent.joinpath(f"backup_{glob_file.stem}"),
-            debug=debug,
         )
+
+
+def run_example_glob_multi_part(
+    dir_path: Path,
+    multi_part_name: str,
+    anki_model: Optional[AnkiCardModelId] = None,
+    debug: Optional[bool] = False,
+    evaluate_code: Optional[bool] = None,
+    file_dirs: Optional[List[Path]] = None,
+):
+    all_parts = list(dir_path.glob(f"{multi_part_name}_part_*.md"))
+    all_parts.sort()
+    run_example(
+        all_parts,
+        anki_model=anki_model,
+        debug=debug,
+        evaluate_code=evaluate_code,
+        file_dirs=file_dirs,
+        log_file=dir_path.joinpath(f"{multi_part_name}_all_parts.log"),
+        o_anki=dir_path.joinpath(f"{multi_part_name}_all_parts.apkg"),
+        o_backup_dir=dir_path.joinpath(f"backup_{multi_part_name}"),
+        o_md=dir_path.joinpath(f"{multi_part_name}_all_parts.md"),
+    )
 
 
 EXAMPLE_DIR = Path(__file__).parent.resolve()
@@ -74,57 +107,71 @@ if __name__ == "__main__":
     debug_examples = "-d" in sys.argv[1:] or "--debug" in sys.argv[1:]
 
     # Make it easy to only run a small subset of examples
-    multi_part_examples = True
-    single_part_examples = True
-    pdf_examples = True
+    toggle_multi_part_examples = True
+    toggle_single_part_examples = True
+    toggle_pdf_examples = True
+    toggle_evaluate_code = True
 
-    if multi_part_examples:
+    example_file_dirs: List[Path] = [EXAMPLE_DIR.joinpath("res")]
+
+    if toggle_multi_part_examples:
         # Merge multi part examples
-        run_example(
-            list(EXAMPLE_DIR.glob("multi_page_example_part_*.md")),
-            o_anki=EXAMPLE_DIR.joinpath("multi_page_example.apkg"),
-            o_md=EXAMPLE_DIR.joinpath("multi_page_all_parts_example.md"),
-            o_md_dir=EXAMPLE_DIR,
-            file_dirs=[EXAMPLE_DIR],
-            o_backup_dir=EXAMPLE_DIR.joinpath("backup_multi_page_example"),
+        run_example_glob_multi_part(
+            EXAMPLE_DIR,
+            "multi_page_example",
             debug=debug_examples,
+            evaluate_code=toggle_evaluate_code,
+            file_dirs=example_file_dirs,
         )
-        run_example(
-            list(EXAMPLE_DIR.glob("subdeck_multi_page_example_part_*.md")),
-            o_anki=EXAMPLE_DIR.joinpath("subdeck_multi_page_example.apkg"),
-            o_md=EXAMPLE_DIR.joinpath("subdeck_multi_page_all_parts_example.md"),
-            o_md_dir=EXAMPLE_DIR,
-            file_dirs=[EXAMPLE_DIR],
-            o_backup_dir=EXAMPLE_DIR.joinpath("backup_subdeck_multi_page_example"),
+        run_example_glob_multi_part(
+            EXAMPLE_DIR,
+            "subdeck_multi_page_example",
             debug=debug_examples,
+            evaluate_code=toggle_evaluate_code,
+            file_dirs=example_file_dirs,
         )
 
-    if single_part_examples:
+    if toggle_single_part_examples:
         # Run all examples
-        run_example_glob(EXAMPLE_DIR, "*_example.md", debug=debug_examples)
+        run_example_glob(
+            EXAMPLE_DIR,
+            "*_example.md",
+            debug=debug_examples,
+            evaluate_code=toggle_evaluate_code,
+            file_dirs=example_file_dirs,
+        )
         run_example_glob(
             EXAMPLE_DIR,
             "*_example_type_answer.md",
             anki_model=AnkiCardModelId.TYPE_ANSWER,
             debug=debug_examples,
+            evaluate_code=toggle_evaluate_code,
+            file_dirs=example_file_dirs,
         )
 
         # Rerun all created backups
         for backup_dir in EXAMPLE_DIR.glob("backup_*"):
             run_example(
                 list(backup_dir.glob("*.md")),
+                anki_model=AnkiCardModelId.TYPE_ANSWER
+                if backup_dir.stem.endswith("_type_answer")
+                else None,
+                debug=debug_examples,
+                evaluate_code=toggle_evaluate_code,
+                file_dirs=[backup_dir.joinpath("assets")],
+                log_file=backup_dir.joinpath(f"{backup_dir.stem}.log"),
                 o_anki=backup_dir.joinpath(f"{backup_dir.stem}.apkg"),
                 o_md=backup_dir.joinpath("document.md"),
-                o_md_dir=backup_dir,
-                file_dirs=[backup_dir],
-                debug=debug_examples,
             )
 
-    if pdf_examples:
+    if toggle_pdf_examples:
         # Create PDFs
         for pdf_example in ["basic", "code", "code_run", "images"]:
             run_example(
                 [EXAMPLE_DIR.joinpath(f"{pdf_example}_example.md")],
-                o_pdf=EXAMPLE_DIR.joinpath(f"{pdf_example}_example.pdf"),
                 debug=debug_examples,
+                evaluate_code=toggle_evaluate_code,
+                file_dirs=example_file_dirs,
+                log_file=EXAMPLE_DIR.joinpath(f"{pdf_example}_example_pdf.log"),
+                o_pdf=EXAMPLE_DIR.joinpath(f"{pdf_example}_example.pdf"),
             )

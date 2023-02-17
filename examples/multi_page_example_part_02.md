@@ -40,4 +40,4 @@ Answer to that question
 
 Answer that has an image that is linked through a local SVG file path:
 
-![Local SVG image](wikipedia_svg_demo.svg)
+![Local SVG image](res/wikipedia_svg_demo.svg)

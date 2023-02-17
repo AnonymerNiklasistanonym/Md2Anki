@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
+# Future import to support Python 3.9
+from __future__ import annotations
+
 # Internal packages
+import logging
 import re
 from pathlib import Path
 from re import Match
 from typing import Callable, Final, Optional, Set
-from urllib.parse import urlparse, ParseResult, ParseResultBytes
+from urllib.parse import urlparse, ParseResult
 
-# Local modules
-from md2anki.print import warn_print
 
 REGEX_MD_TAG: Final = re.compile(r"`{=:(.*?):=}`")
 """
@@ -32,6 +34,8 @@ REGEX_INLINE_CODE: Final = re.compile(r"(?<!\S)`([^`]+?)`(?:\{(.+?)})?(?!\S)")
 
 REGEX_MATH_SECTION: Final = re.compile(r"\${2}((?:[^$]|\n)+?)\${2}|\$(.+?)\$")
 
+log = logging.getLogger(__name__)
+
 # TODO Add update local files method
 # TODO Add update (inline) code blocks method
 
@@ -44,7 +48,7 @@ def md_get_used_files(md_content: str) -> Set[Path | ParseResult]:
         """Detect and add all image paths to the created set"""
         filepath = regex_group_match.group(2)
         possible_url = urlparse(filepath)
-        if possible_url.scheme == "http" or "https":
+        if possible_url.scheme == "http" or possible_url.scheme == "https":
             files.add(possible_url)
         else:
             files.add(Path(filepath))
@@ -93,22 +97,22 @@ def md_update_images(
 
 def md_update_code_parts(
     md_content: str,
-    code_replacer: Callable[[Optional[str], str, bool], str],
+    code_replacer: Callable[[str, bool, Optional[str]], str],
 ) -> str:
-    """Update code parts `replacer(language, code, code_block): updated code str`"""
+    """Update code parts `replacer(code, code_block, language): updated code str`"""
 
     def code_block_replace(regex_group_match: Match):
         language_normal = regex_group_match.group(1)
         language_pandoc = regex_group_match.group(2)
         return code_replacer(
-            language_normal if language_normal is not None else language_pandoc,
             regex_group_match.group(3),
             True,
+            language_normal if language_normal is not None else language_pandoc,
         )
 
     def inline_code_replace(regex_group_match: Match):
         return code_replacer(
-            regex_group_match.group(2), regex_group_match.group(1), False
+            regex_group_match.group(1), False, regex_group_match.group(2)
         )
 
     md_content = re.sub(REGEX_CODE_BLOCK, code_block_replace, md_content)
@@ -129,7 +133,7 @@ def md_get_used_md2anki_tags(md_content: str) -> Set[str]:
             if " " in tag:
                 old_tag = tag
                 tag = tag.replace(" ", "_")
-                warn_print(f"A tag with spaces {old_tag!r} was rewritten to {tag!r}")
+                log.warning(f"A tag with spaces {old_tag!r} was rewritten to {tag!r}")
             if len(tag) > 0:
                 tags.add(tag)
         return ""
