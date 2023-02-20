@@ -39,8 +39,8 @@ setup(
     ],
     package_data={
         md2anki_name: [
-            RELATIVE_CSS_FILE_PATH,
-            RELATIVE_CSS_FILE_PATH_TYPE_ANSWER,
+            str(RELATIVE_CSS_FILE_PATH),
+            str(RELATIVE_CSS_FILE_PATH_TYPE_ANSWER),
         ],
     },
     entry_points={

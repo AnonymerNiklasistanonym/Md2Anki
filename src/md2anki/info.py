@@ -33,7 +33,7 @@ md2anki_description: Final = "Convert Markdown formatted documents to anki decks
 md2anki_url: Final = "https://github.com/AnonymerNiklasistanonym/Md2Anki"
 md2anki_url_git: Final = f"{md2anki_url}.git"
 md2anki_url_bug_tracker: Final = f"{md2anki_url}/issues"
-md2anki_version: Final = ProgramVersion(major=3, minor=0, patch=6, beta=True)
+md2anki_version: Final = ProgramVersion(major=3, minor=0, patch=7, beta=True)
 
 MD_ANKI_DECK_HEADING_SUBDECK_PREFIX: Final = "Subdeck: "
 MD_ANKI_NOTE_QUESTION_ANSWER_SEPARATOR: Final = "---"
