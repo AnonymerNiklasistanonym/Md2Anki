@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Internal packages
+import tempfile
 import shutil
 from pathlib import Path
 
@@ -26,6 +27,7 @@ if __name__ == "__main__":
     dir_src = dir_root.joinpath("src")
     dir_egg_info = dir_src.joinpath("md2anki.egg-info")
     dir_mypy_cache = dir_root.joinpath(".mypy_cache")
+    dir_temp = Path(tempfile.gettempdir())
 
     # Remove example files
     for example_backup_dir in dir_examples.rglob("backup_*"):
@@ -36,6 +38,13 @@ if __name__ == "__main__":
         rm_file(example_pdf, dry_run=dry_run_deletions)
     for example_log in dir_examples.rglob("*.log"):
         rm_file(example_log, dry_run=dry_run_deletions)
+
+    # Remove temporary files
+    for md2anki_temp_dir in dir_temp.rglob("md2anki*"):
+        try:
+            rm_dir(md2anki_temp_dir, dry_run=dry_run_deletions)
+        except PermissionError:
+            pass
 
     # Remove dist directory
     rm_dir(dir_dist, dry_run=dry_run_deletions)
