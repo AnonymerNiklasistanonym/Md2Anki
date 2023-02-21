@@ -1,11 +1,9 @@
+#!/usr/bin/env python3
+
+# Internal packages
 import sys
 import io
 import unittest
-from os.path import dirname, join
-
-# !/usr/bin/env python3
-
-# Internal packages
 from pathlib import Path
 from typing import List, Tuple, Optional
 
@@ -80,7 +78,6 @@ class TestParsePossibleAnkiDeckHeading(unittest.TestCase):
             self.deck_id_list,
             self.results,
             self.expected,
-            strict=True,
         ):
             with self.subTest(
                 md_content=md_content, parent_deck_name=parent_deck, deck_id=deck_id
@@ -143,11 +140,7 @@ class TestParsePossibleAnkiNoteQuestionHeader(unittest.TestCase):
 
     def test_parsed_possible_anki_note_question_same(self):
         for md_content, note_id, result, expected in zip(
-            self.md_content_list,
-            self.note_id_list,
-            self.results,
-            self.expected,
-            strict=True,
+            self.md_content_list, self.note_id_list, self.results, self.expected
         ):
             with self.subTest(md_content=md_content, note_id=note_id):
                 if expected is None:
@@ -361,12 +354,10 @@ class TestParseMdContentToAnkiDeckList(unittest.TestCase):
 
     def test_parsed_anki_deck_list_same(self):
         for md_content, result, expected in zip(
-            self.md_content_list, self.results, self.expected, strict=True
+            self.md_content_list, self.results, self.expected
         ):
             with self.subTest(md_content=md_content):
-                for expected_anki_deck, result_anki_deck in zip(
-                    expected, result, strict=True
-                ):
+                for expected_anki_deck, result_anki_deck in zip(expected, result):
                     self.assertEqual(
                         expected_anki_deck.name,
                         result_anki_deck.name,
@@ -388,9 +379,7 @@ class TestParseMdContentToAnkiDeckList(unittest.TestCase):
                         f"Check if {expected_anki_deck.tags=}=={result_anki_deck_all_tags=}",
                     )
                     for expected_anki_note, result_anki_note in zip(
-                        expected_anki_deck.notes,
-                        result_anki_deck.notes,
-                        strict=True,
+                        expected_anki_deck.notes, result_anki_deck.notes
                     ):
                         self.assertEqual(
                             expected_anki_note.guid,
@@ -415,7 +404,7 @@ class TestParseMdContentToAnkiDeckList(unittest.TestCase):
 
     def test_parsed_anki_deck_list_exception_same(self):
         for md_content, expected_exception in zip(
-            self.md_content_exception_list, self.expected_exception, strict=True
+            self.md_content_exception_list, self.expected_exception
         ):
             with self.subTest(md_content=md_content):
                 # Ignore type error, is the correct type

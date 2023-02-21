@@ -240,6 +240,24 @@ options:
 
 [//]: <> (END: USAGE)
 
+### Linux (bash)
+
+```sh
+# Single source file
+md2anki anki_deck.md -o-anki anki_deck.apkg
+# Multiple source files
+md2anki *.md -o-anki anki_deck.apkg
+```
+
+### Windows (powershell)
+
+```pwsh
+# Single source file
+md2anki anki_deck.md -o-anki anki_deck.apkg
+# Multiple source files
+md2anki (Get-ChildItem -Filter *.md) -o-anki anki_deck.apkg
+```
+
 ## Install
 
 ### PyPI

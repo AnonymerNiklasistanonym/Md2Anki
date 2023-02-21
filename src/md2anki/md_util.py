@@ -8,7 +8,7 @@ import logging
 import re
 from pathlib import Path
 from re import Match
-from typing import Callable, Final, Optional, Set
+from typing import Callable, Final, Optional, Set, Tuple
 from urllib.parse import urlparse, ParseResult
 
 
@@ -152,4 +152,17 @@ def md_update_math_sections(md_content: str, replacer: Callable[[str, bool], str
             return replacer(regex_group_match.group(2), False)
 
     md_content = re.sub(REGEX_MATH_SECTION, math_section_replace, md_content)
+    return md_content
+
+
+def md_update_generic_id_sections(
+    md_content: str, section: Tuple[str, str], replacer: Callable[[str], str]
+):
+    """Update generic sections with a custom start and end `replacer(content): updated str`"""
+
+    def generic_section_replace(regex_group_match: Match):
+        return replacer(regex_group_match.group(1))
+
+    regex_generic_section: Final = re.compile(rf"{section[0]}(.+?){section[1]}")
+    md_content = re.sub(regex_generic_section, generic_section_replace, md_content)
     return md_content

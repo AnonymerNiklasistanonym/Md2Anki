@@ -7,7 +7,8 @@ import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Set, Optional, Dict, List
+from re import Match
+from typing import Set, Optional, Dict, List, Final
 from urllib.parse import ParseResult
 
 # Installed packages
@@ -28,6 +29,7 @@ from md2anki.md_util import (
     md_update_code_parts,
     md_update_images,
     md_update_math_sections,
+    md_update_generic_id_sections,
 )
 from md2anki.subprocess import (
     subprocess_evaluate_code,
@@ -35,6 +37,26 @@ from md2anki.subprocess import (
 )
 
 log = logging.getLogger(__name__)
+
+REGEX_MATH_BLOCK: Final = re.compile(r"\$\$([\S\s\n]+?)\$\$", flags=re.MULTILINE)
+
+
+def multi_line_math_block_to_single_line(regex_group_match: Match):
+    return "".join(regex_group_match.group().splitlines())
+
+
+def update_md_image_to_html(
+    file_path: str,
+    file_description: str,
+    width: Optional[str],
+    height: Optional[str],
+) -> str:
+    style = ""
+    if width is not None:
+        style += f"width: {width};"
+    if height is not None:
+        style += f"height: {height};"
+    return f'<img src="{file_path}" alt="{file_description}" style="{style}">'
 
 
 @dataclass
@@ -89,8 +111,10 @@ class AnkiNote:
         )
 
     def get_used_md2anki_tags(self) -> Set[str]:
-        return md_get_used_md2anki_tags(self.question).union(
-            md_get_used_md2anki_tags(self.answer)
+        return (
+            md_get_used_md2anki_tags(self.question)
+            .union(md_get_used_md2anki_tags(self.answer))
+            .union(self.tags)
         )
 
     def genanki_create_note(
@@ -104,24 +128,32 @@ class AnkiNote:
     ) -> genanki.Note:
         """
         Args:
-            anki_card_model: The card model
-            dir_dynamic_files: Directory for dynamically created files
-            debug: Output debug information
+            @param anki_card_model: The card model
+            @param dir_dynamic_files: Directory for dynamically created files
+            @param custom_program: Custom program commands
+            @param custom_program_args: Custom program command arguments
+            @param evaluate_code: Evaluate code
+            @param keep_temp_files: Keep temporary files (debugging)
         Returns:
             An anki note for genanki
         """
         tmp_question = self.question
         tmp_answer = self.answer
 
-        log.debug(f">> Create note")
+        log.debug(f">> Convert note content (MD) to anki output (HTML)")
         log.debug(f"   > {tmp_question=}")
         log.debug(f"   > {tmp_answer=}")
 
         # Find and store all code sections so that they won't be changed by other changes
         code_sections: Dict[int, str] = dict()
-        placeholder_code_section = "placeholder"
+        placeholder_code_section: Final = (
+            f"<div>md2anki_placeholder_start_code_{create_unique_id()}",
+            f"md2anki_placeholder_end_code_{create_unique_id()}</div>",
+        )
 
-        def md_code_replacer(code: str, code_block: bool, language: Optional[str]):
+        def update_code_section_with_images_or_placeholder(
+            code: str, code_block: bool, language: Optional[str]
+        ):
             if language is not None and language.startswith("."):
                 language = language[1:]
             # Detect executable code
@@ -186,63 +218,69 @@ class AnkiNote:
 
             code_section_index = len(code_sections)
             code_sections[code_section_index] = code_section
-            return f"`{placeholder_code_section}{code_section_index}`"
+            return f"{placeholder_code_section[0]}{code_section_index}{placeholder_code_section[1]}"
 
-        tmp_question = md_update_code_parts(tmp_question, md_code_replacer)
-        tmp_answer = md_update_code_parts(tmp_answer, md_code_replacer)
+        tmp_question = md_update_code_parts(
+            tmp_question, update_code_section_with_images_or_placeholder
+        )
+        tmp_answer = md_update_code_parts(
+            tmp_answer, update_code_section_with_images_or_placeholder
+        )
 
-        # Fix multi line TeX commands (otherwise broken on Website)
-        regex_math_block = re.compile(r"\$\$([\S\s\n]+?)\$\$", flags=re.MULTILINE)
-
-        def lambda_math_block_to_single_line(regex_group_match):
-            return "".join(regex_group_match.group().splitlines())
+        log.debug(
+            f">> Updated code sections with images or placeholders({code_sections=})"
+        )
+        log.debug(f"   > {tmp_question=}")
+        log.debug(f"   > {tmp_answer=}")
 
         tmp_question = re.sub(
-            regex_math_block, lambda_math_block_to_single_line, tmp_question
+            REGEX_MATH_BLOCK, multi_line_math_block_to_single_line, tmp_question
         )
         tmp_answer = re.sub(
-            regex_math_block, lambda_math_block_to_single_line, tmp_answer
+            REGEX_MATH_BLOCK, multi_line_math_block_to_single_line, tmp_answer
         )
 
         # Collect all math sections to later overwrite them again
         math_sections: Dict[int, str] = dict()
-        placeholder_math_section = "placeholder"
+        placeholder_math_section: Final = (
+            f"md2anki_placeholder_start_math_{create_unique_id()}",
+            f"md2anki_placeholder_end_math_{create_unique_id()}",
+        )
 
-        def update_math_section_placeholder(math_section: str, block: bool) -> str:
+        def update_math_section_with_placeholder(math_section: str, block: bool) -> str:
             math_section_index = len(math_sections)
-            math_sections[math_section_index] = math_section
-            if block:
-                return f"$${placeholder_math_section}{math_section_index}$$"
-            else:
-                return f"${placeholder_math_section}{math_section_index}$"
+            math_fence = ("\\[", "\\]") if block else (f"\\(", "\\)")
+            math_sections[
+                math_section_index
+            ] = f"{math_fence[0]}{math_section}{math_fence[1]}"
+            return f"{placeholder_math_section[0]}{math_section_index}{placeholder_math_section[1]}"
 
         tmp_question = md_update_math_sections(
-            tmp_question, update_math_section_placeholder
+            tmp_question, update_math_section_with_placeholder
         )
         tmp_answer = md_update_math_sections(
-            tmp_answer, update_math_section_placeholder
+            tmp_answer, update_math_section_with_placeholder
         )
 
-        # Update local (image) file paths to root directory
+        log.debug(f">> Updated math sections with placeholders ({math_sections=})")
+        log.debug(f"   > {tmp_question=}")
+        log.debug(f"   > {tmp_answer=}")
+
+        # Reset local file paths to resources
         tmp_question = md_update_local_filepaths(tmp_question)
         tmp_answer = md_update_local_filepaths(tmp_answer)
 
-        # Extract files that this card requests and update paths
-        def update_image(
-            file_path: str,
-            file_description: str,
-            width: Optional[str],
-            height: Optional[str],
-        ) -> str:
-            style = ""
-            if width is not None:
-                style += f"width: {width};"
-            if height is not None:
-                style += f"height: {height};"
-            return f'<img src="{file_path}" alt="{file_description}" style="{style}">'
+        log.debug(f">> Reset local filepaths")
+        log.debug(f"   > {tmp_question=}")
+        log.debug(f"   > {tmp_answer=}")
 
-        tmp_question = md_update_images(tmp_question, update_image)
-        tmp_answer = md_update_images(tmp_answer, update_image)
+        # Extract files that this card requests and update paths
+        tmp_question = md_update_images(tmp_question, update_md_image_to_html)
+        tmp_answer = md_update_images(tmp_answer, update_md_image_to_html)
+
+        log.debug(f">> Updated images to HTML")
+        log.debug(f"   > {tmp_question=}")
+        log.debug(f"   > {tmp_answer=}")
 
         # Render many elements like tables by converting MD to HTML
         tmp_question = markdown.markdown(
@@ -260,24 +298,53 @@ class AnkiNote:
         log.debug(f"   > {tmp_question=}")
         log.debug(f"   > {tmp_answer=}")
 
-        # Insert all code sections again
-        def update_code_section_stored(code_sec: str, _, __) -> str:
-            return code_sections[int(code_sec[len(placeholder_code_section) :])]
-
-        tmp_question = md_update_code_parts(tmp_question, update_code_section_stored)
-        tmp_answer = md_update_code_parts(tmp_answer, update_code_section_stored)
-
         # Insert all math sections again
-        def update_math_section_stored(math_sec: str, block: bool) -> str:
-            math_sec_str = math_sections[int(math_sec[len(placeholder_math_section) :])]
-            return f"\\[{math_sec_str}\\]" if block else f"\\({math_sec_str}\\)"
+        def update_math_section_placeholder_with_value(placeholder_index: str) -> str:
+            return math_sections.pop(int(placeholder_index))
 
-        tmp_question = md_update_math_sections(tmp_question, update_math_section_stored)
-        tmp_answer = md_update_math_sections(tmp_answer, update_math_section_stored)
+        tmp_question = md_update_generic_id_sections(
+            tmp_question,
+            placeholder_math_section,
+            update_math_section_placeholder_with_value,
+        )
+        tmp_answer = md_update_generic_id_sections(
+            tmp_answer,
+            placeholder_math_section,
+            update_math_section_placeholder_with_value,
+        )
 
-        log.debug(">> Update placeholder sections")
+        log.debug(f">> Replaced math section placeholders")
         log.debug(f"   > {tmp_question=}")
         log.debug(f"   > {tmp_answer=}")
+
+        if len(math_sections) > 0:
+            raise RuntimeError(
+                f"Not all math sections were inserted back! ({math_sections=})"
+            )
+
+        # Insert all code sections again
+        def update_code_section_placeholder_with_value(placeholder_index: str) -> str:
+            return code_sections.pop(int(placeholder_index))
+
+        tmp_question = md_update_generic_id_sections(
+            tmp_question,
+            placeholder_code_section,
+            update_code_section_placeholder_with_value,
+        )
+        tmp_answer = md_update_generic_id_sections(
+            tmp_answer,
+            placeholder_code_section,
+            update_code_section_placeholder_with_value,
+        )
+
+        log.debug(f">> Replaced code section placeholders")
+        log.debug(f"   > {tmp_question=}")
+        log.debug(f"   > {tmp_answer=}")
+
+        if len(code_sections) > 0:
+            raise RuntimeError(
+                f"Not all code sections were inserted back! ({code_sections=})"
+            )
 
         # Postfix for HTML p tags in front of inline code
         tmp_question = fix_inline_code_p_tags(tmp_question)
