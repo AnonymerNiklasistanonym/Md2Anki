@@ -155,10 +155,11 @@ def main(args: Md2AnkiArgs) -> int:
                     reader.read(),
                     args.pdf_output_file_path,
                     local_assets,
-                    dir_dynamic_files=tmp_dir_dynamic_files_pdf,
                     custom_program=args.custom_program,
                     custom_program_args=args.custom_program_args,
+                    dir_dynamic_files=tmp_dir_dynamic_files_pdf,
                     evaluate_code=args.evaluate_code,
+                    keep_temp_files=args.keep_temp_files,
                 )
         except Exception as err:
             log.error(err)

@@ -2,6 +2,7 @@
 
 # Internal packages
 import logging
+import os
 import shutil
 import subprocess
 import tempfile
@@ -36,9 +37,16 @@ def run_subprocess(
     command: str, arguments: Optional[List[str]] = None, cwd: Optional[Path] = None
 ):
     command_path_global: Final = shutil.which(command)
-    command_path_local: Final = (
+    command_path_local = (
         command_path_global if cwd is None else shutil.which(str(cwd.joinpath(command)))
     )
+    if (
+        command_path_global is None
+        and command_path_local is None
+        and Path(command).is_file()
+        and os.access(command, os.X_OK)
+    ):
+        command_path_local = command
     command_path: Final = (
         command_path_local if command_path_local is not None else command_path_global
     )
@@ -50,6 +58,7 @@ def run_subprocess(
     p = subprocess.run(
         [command_path, *arguments], capture_output=True, text=True, cwd=cwd
     )
+    log.debug(f"Subprocess output {p.stdout=} {p.returncode=}")
     if p.returncode != 0:
         raise ProgramExitedWithWarningsException(
             f"Program exited with warnings ({command=},{arguments=},{cwd=},"
@@ -64,6 +73,20 @@ DEFAULT_CUSTOM_PROGRAM: Final[Dict[str, List[Tuple[str, List[str]]]]] = {
     "py": [("python", ["-c", DEFAULT_CODE_NAME])],
     "js": [("node", ["-e", DEFAULT_CODE_NAME])],
     "ts": [("ts-node", [f"{DEFAULT_CODE_FILE_NAME_START}code.ts"])],
+    "latex": [
+        (
+            "latexmk",
+            [
+                "-shell-escape",
+                "-pdf",
+                f"{DEFAULT_CODE_FILE_NAME_START}code.tex",
+            ],
+        ),
+        (
+            "inkscape",
+            ["--export-filename=code.svg", "code.pdf"],
+        ),
+    ],
     "cpp": [
         (
             "clang++",
@@ -96,6 +119,8 @@ def subprocess_evaluate_code(
     keep_temp_files: bool = False,
 ) -> Tuple[List[str], List[Path]]:
     """Return the command outputs and the found images."""
+    log.debug(f"Evaluate code ({program=},{code=})")
+
     dir_path_temp = Path(tempfile.mkdtemp(prefix=f"{md2anki_name}_evaluate_code_"))
 
     if program in custom_program:

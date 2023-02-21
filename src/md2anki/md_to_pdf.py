@@ -83,10 +83,10 @@ def create_pdf_from_md_content(
 
     md_content = md_update_code_parts(md_content, md_code_replacer)
 
-    fd, md_file_path_temp_str = tempfile.mkstemp(f"{md2anki_name}_tmp_file_pandoc_md_")
+    fd, md_file_path_temp_str = tempfile.mkstemp(prefix=f"{md2anki_name}_tmp_file_pandoc_md_", suffix=".md")
     md_file_path_temp: Final = Path(md_file_path_temp_str)
     asset_dir_path_temp: Final = Path(
-        tempfile.mkdtemp(f"{md2anki_name}_tmp_file_pandoc_md_assets_")
+        tempfile.mkdtemp(prefix=f"{md2anki_name}_tmp_file_pandoc_md_assets_")
     )
     try:
         for local_asset in local_assets:
@@ -102,12 +102,11 @@ def create_pdf_from_md_content(
             "markdown",
             str(md_file_path_temp),
             "-o",
-            str(output_file_path),
+            str(output_file_path.resolve()),
         ]
         subprocess_stdout = run_subprocess(pandoc, cli_args, cwd=asset_dir_path_temp)
         log.debug(f"> Stdout:         {subprocess_stdout=}")
     finally:
-        log.debug(f"Don't remove {md_file_path_temp=}, {asset_dir_path_temp}")
         if not keep_temp_files:
             md_file_path_temp.unlink()
             shutil.rmtree(asset_dir_path_temp)

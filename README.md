@@ -39,7 +39,7 @@ To evaluate code and export to pdf the following additional software needs to be
 ```sh
 # Linux (the apt package manager is just an example)
 # > Evaluate code
-sudo apt install clang nodejs
+sudo apt install clang inkscape nodejs texlive texlive-latex-extra #texlive-full 
 # > PDF export
 sudo apt install librsvg2-bin pandoc texlive-xetex
 ```
@@ -47,7 +47,7 @@ sudo apt install librsvg2-bin pandoc texlive-xetex
 ```ps1
 # Windows (the choco package manager is just an example)
 # > Evaluate code
-choco install llvm nodejs
+choco install inkscape llvm miktex nodejs
 # > PDF export
 choco install miktex pandoc rsvg-convert
 ```

@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import glob
-import os
 import sys
 from os.path import dirname, join
 from pathlib import Path
@@ -21,6 +19,7 @@ def run_example(
     debug: Optional[bool] = False,
     evaluate_code: Optional[bool] = None,
     file_dirs: Optional[List[Path]] = None,
+    keep_temporary_files: Optional[bool] = None,
     log_file: Optional[Path] = None,
     o_anki: Optional[Path] = None,
     o_backup_dir: Optional[Path] = None,
@@ -33,6 +32,8 @@ def run_example(
         args.append("--debug")
     if evaluate_code is True:
         args.append("--evaluate-code")
+    if keep_temporary_files is True:
+        args.append("--keep-temp-files")
     if log_file is not None:
         args.extend(["-log-file", str(log_file)])
     if o_anki is not None:
@@ -61,6 +62,7 @@ def run_example_glob(
     debug: Optional[bool] = False,
     evaluate_code: Optional[bool] = None,
     file_dirs: Optional[List[Path]] = None,
+    keep_temporary_files: Optional[bool] = None,
 ):
     for glob_file in dir_path.glob(glob_str):
         run_example(
@@ -69,6 +71,7 @@ def run_example_glob(
             debug=debug,
             evaluate_code=evaluate_code,
             file_dirs=file_dirs,
+            keep_temporary_files=keep_temporary_files,
             log_file=glob_file.parent.joinpath(f"{glob_file.stem}.log"),
             o_anki=glob_file.parent.joinpath(f"{glob_file.stem}.apkg"),
             o_backup_dir=glob_file.parent.joinpath(f"backup_{glob_file.stem}"),
@@ -84,6 +87,7 @@ def run_example_glob_multi_part(
     debug: Optional[bool] = False,
     evaluate_code: Optional[bool] = None,
     file_dirs: Optional[List[Path]] = None,
+    keep_temporary_files: Optional[bool] = None,
 ):
     all_parts = list(dir_path.glob(f"{multi_part_name}_part_*.md"))
     all_parts.sort()
@@ -93,6 +97,7 @@ def run_example_glob_multi_part(
         debug=debug,
         evaluate_code=evaluate_code,
         file_dirs=file_dirs,
+        keep_temporary_files=keep_temporary_files,
         log_file=dir_path.joinpath(f"{multi_part_name}_all_parts.log"),
         o_anki=dir_path.joinpath(f"{multi_part_name}_all_parts.apkg"),
         o_backup_dir=dir_path.joinpath(f"backup_{multi_part_name}"),
@@ -111,8 +116,19 @@ if __name__ == "__main__":
     toggle_single_part_examples = True
     toggle_pdf_examples = True
     toggle_evaluate_code = True
+    toogle_keep_temporary_files = True
 
     example_file_dirs: List[Path] = [EXAMPLE_DIR.joinpath("res")]
+
+    run_example(
+        [Path("code_run_example.md")],
+        debug=debug_examples,
+        evaluate_code=toggle_evaluate_code,
+        file_dirs=example_file_dirs,
+        keep_temporary_files=toogle_keep_temporary_files,
+        o_pdf=Path("code_run_example.pdf"),
+    )
+    exit(0)
 
     if toggle_multi_part_examples:
         # Merge multi part examples
@@ -122,6 +138,7 @@ if __name__ == "__main__":
             debug=debug_examples,
             evaluate_code=toggle_evaluate_code,
             file_dirs=example_file_dirs,
+            keep_temporary_files=toogle_keep_temporary_files,
         )
         run_example_glob_multi_part(
             EXAMPLE_DIR,
@@ -129,6 +146,7 @@ if __name__ == "__main__":
             debug=debug_examples,
             evaluate_code=toggle_evaluate_code,
             file_dirs=example_file_dirs,
+            keep_temporary_files=toogle_keep_temporary_files,
         )
 
     if toggle_single_part_examples:
@@ -139,6 +157,7 @@ if __name__ == "__main__":
             debug=debug_examples,
             evaluate_code=toggle_evaluate_code,
             file_dirs=example_file_dirs,
+            keep_temporary_files=toogle_keep_temporary_files,
         )
         run_example_glob(
             EXAMPLE_DIR,
@@ -147,6 +166,7 @@ if __name__ == "__main__":
             debug=debug_examples,
             evaluate_code=toggle_evaluate_code,
             file_dirs=example_file_dirs,
+            keep_temporary_files=toogle_keep_temporary_files,
         )
 
         # Rerun all created backups
@@ -159,6 +179,7 @@ if __name__ == "__main__":
                 debug=debug_examples,
                 evaluate_code=toggle_evaluate_code,
                 file_dirs=[backup_dir.joinpath("assets")],
+                keep_temporary_files=toogle_keep_temporary_files,
                 log_file=backup_dir.joinpath(f"{backup_dir.stem}.log"),
                 o_anki=backup_dir.joinpath(f"{backup_dir.stem}.apkg"),
                 o_md=backup_dir.joinpath("document.md"),
@@ -172,6 +193,7 @@ if __name__ == "__main__":
                 debug=debug_examples,
                 evaluate_code=toggle_evaluate_code,
                 file_dirs=example_file_dirs,
+                keep_temporary_files=toogle_keep_temporary_files,
                 log_file=EXAMPLE_DIR.joinpath(f"{pdf_example}_example_pdf.log"),
                 o_pdf=EXAMPLE_DIR.joinpath(f"{pdf_example}_example.pdf"),
             )

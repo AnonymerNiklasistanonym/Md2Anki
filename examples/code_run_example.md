@@ -85,3 +85,53 @@ plt.xlabel("$t$ (in min)")
 plt.legend(loc="upper right")
 plt.savefig("graph_3.svg")
 ```
+
+```{=latex}
+\documentclass[tikz,border=10pt]{standalone}
+\usetikzlibrary{positioning}
+\tikzset{
+    main
+    node/.style={circle,fill=none,draw,minimum size=1cm,inner sep=0pt}
+}
+\begin{document}
+\begin{tikzpicture}
+    \node[main node] [                                 ] (1)  {$1$};
+
+    \node[main node] [below left  = 1cm and 1.5cm  of 1] (2)  {$2$};
+    \node[main node] [below right = 1cm and 1.5cm  of 1] (3)  {$8$};
+
+    \node[main node] [below left  = 1cm and 0.5cm  of 2] (4)  {$3$};
+    \node[main node] [below right = 1cm and 0.5cm  of 2] (5)  {$7$};
+
+    \node[main node] [below left  = 1cm and 0.5cm  of 3] (6)  {$9$};
+    \node[main node] [below right = 1cm and 0.5cm  of 3] (7)  {$10$};
+
+    \node[main node] [below left  = 1cm and 0.5cm  of 4] (8)  {$4$};
+    \node[main node] [below right = 1cm and 0.5cm  of 4] (9)  {$5$};
+
+    \node[main node] [below left  = 1cm and 0.5cm  of 7] (10) {$11$};
+    \node[main node] [below right = 1cm and 0.5cm  of 7] (11) {$12$};
+
+    \node[main node] [below left  = 1cm and 0.5cm  of 9] (12) {$6$};
+
+    \path[draw,thick]
+    (1) edge node {} (2)
+    (1) edge node {} (3)
+
+    (2) edge node {} (4)
+    (2) edge node {} (5)
+
+    (3) edge node {} (6)
+    (3) edge node {} (7)
+
+    (4) edge node {} (8)
+    (4) edge node {} (9)
+
+    (7) edge node {} (10)
+    (7) edge node {} (11)
+
+    (9) edge node {} (12)
+    ;
+\end{tikzpicture}
+\end{document}
+```
