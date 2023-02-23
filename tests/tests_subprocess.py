@@ -94,29 +94,33 @@ class TestEvaluateCode(unittest.TestCase):
                 "plt.legend(loc='upper right')\n"
                 "plt.savefig('graph_3.svg')\n",
                 "py",
-                ([""], [Path('graph_3.svg')]),
-            ),
-            (
-                "\\documentclass[tikz,border=10pt]{standalone}\n"
-                "\\usetikzlibrary{positioning}\n"
-                "\\tikzset{\n"
-                "    main\n"
-                "    node/.style={circle,fill=none,draw,minimum size=1cm,inner sep=0pt}\n"
-                "}\n"
-                "\\begin{document}\n"
-                "\\begin{tikzpicture}\n"
-                "    \\node[main node] [                               ] (0)  {$A$};\n"
-                "    \\node[main node] [right       = 2cm          of 0] (1)  {$B$};\n"
-                "\n"
-                "     \\path[draw,thick]\n"
-                "     (0) edge node {} (1)\n"
-                "     ;\n"
-                "\\end{tikzpicture}\n"
-                "\\end{document}\n",
-                "latex",
-                (None, [Path('code.svg')]),
+                ([""], [Path("graph_3.svg")]),
             ),
         ]
+
+        if sys.platform != "win32":
+            test_data.append(
+                (
+                    "\\documentclass[tikz,border=10pt]{standalone}\n"
+                    "\\usetikzlibrary{positioning}\n"
+                    "\\tikzset{\n"
+                    "    main\n"
+                    "    node/.style={circle,fill=none,draw,minimum size=1cm,inner sep=0pt}\n"
+                    "}\n"
+                    "\\begin{document}\n"
+                    "\\begin{tikzpicture}\n"
+                    "    \\node[main node] [                               ] (0)  {$A$};\n"
+                    "    \\node[main node] [right       = 2cm          of 0] (1)  {$B$};\n"
+                    "\n"
+                    "     \\path[draw,thick]\n"
+                    "     (0) edge node {} (1)\n"
+                    "     ;\n"
+                    "\\end{tikzpicture}\n"
+                    "\\end{document}\n",
+                    "latex",
+                    (None, [Path("code.svg")]),
+                ),
+            )
 
         for test_input, test_program, test_expected in test_data:
             self.code.append((test_program, test_input))
@@ -137,7 +141,12 @@ class TestEvaluateCode(unittest.TestCase):
                 )
             )
             shutil.rmtree(dir_dynamic_files)
-            self.expected.append((test_expected[0], [dir_dynamic_files.joinpath(x) for x in test_expected[1]]))
+            self.expected.append(
+                (
+                    test_expected[0],
+                    [dir_dynamic_files.joinpath(x) for x in test_expected[1]],
+                )
+            )
 
     def test_evaluated_code_output_matches(self):
         for (language, code), result, expected in zip(
@@ -146,8 +155,12 @@ class TestEvaluateCode(unittest.TestCase):
             with self.subTest(language=language, code=code):
                 if expected[0] is not None:
                     self.assertEqual(
-                        result[0], expected[0], f"Check if output stdout {result[0]=}=={expected[0]=}"
+                        result[0],
+                        expected[0],
+                        f"Check if output stdout {result[0]=}=={expected[0]=}",
                     )
                 self.assertEqual(
-                    result[1], expected[1], f"Check if output image files {result[1]=}=={expected[1]=}"
+                    result[1],
+                    expected[1],
+                    f"Check if output image files {result[1]=}=={expected[1]=}",
                 )

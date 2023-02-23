@@ -83,7 +83,9 @@ def create_pdf_from_md_content(
 
     md_content = md_update_code_parts(md_content, md_code_replacer)
 
-    fd, md_file_path_temp_str = tempfile.mkstemp(prefix=f"{md2anki_name}_tmp_file_pandoc_md_", suffix=".md")
+    fd, md_file_path_temp_str = tempfile.mkstemp(
+        prefix=f"{md2anki_name}_tmp_file_pandoc_md_", suffix=".md"
+    )
     md_file_path_temp: Final = Path(md_file_path_temp_str)
     asset_dir_path_temp: Final = Path(
         tempfile.mkdtemp(prefix=f"{md2anki_name}_tmp_file_pandoc_md_assets_")

@@ -14,12 +14,6 @@ The decks were tested on:
 - [Anki web (Browser client, 02.2022)](https://ankiweb.net/)
 - [AnkiDroid (Android client, 2.15.6)](https://play.google.com/store/apps/details?id=com.ichi2.anki)
 
-**TODO**:
-
-- [ ] Add tests for anki note generation
-- [ ] Enable code execution to additionally generate:
-  - [ ] LaTeX `tikzpicture` Graphs
-
 ## Features
 
 - Create an anki deck `.apkg` file
@@ -39,7 +33,7 @@ To evaluate code and export to pdf the following additional software needs to be
 ```sh
 # Linux (the apt package manager is just an example)
 # > Evaluate code
-sudo apt install clang inkscape nodejs texlive texlive-latex-extra #texlive-full 
+sudo apt install clang inkscape latexmk nodejs texlive texlive-latex-extra #texlive-full
 # > PDF export
 sudo apt install librsvg2-bin pandoc texlive-xetex
 ```

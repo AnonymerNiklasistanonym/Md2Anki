@@ -91,14 +91,15 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt update
-        sudo apt install clang nodejs
+        sudo apt install clang inkscape latexmk nodejs texlive texlive-latex-extra
     - name: Install external dependencies [Windows]
       if: matrix.os == 'windows-latest'
       run: |
-        choco install llvm nodejs
+        choco install inkscape llvm miktex nodejs
     - name: Install external dependencies
       run: |
         npm install -g ts-node
+        python -m pip install numpy matplotlib
     - name: Check if tests can be ran without errors
       run: python -m unittest
       working-directory: tests
