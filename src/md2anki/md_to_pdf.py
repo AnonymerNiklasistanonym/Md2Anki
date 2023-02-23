@@ -7,16 +7,14 @@ import shutil
 import tempfile
 from os import fdopen
 from pathlib import Path
-from typing import List, Optional, Dict, Final, Tuple
+from typing import List, Dict, Final, Tuple
+
+from md2anki.anki_note import update_md2anki_macro_markdown_content
 
 # Local modules
 from md2anki.info import md2anki_name
-from md2anki.md_util import md_update_code_parts
-from md2anki.subprocess import (
-    subprocess_evaluate_code,
-    UnableToEvaluateCodeException,
-    run_subprocess,
-)
+from md2anki.subprocess import run_subprocess
+
 
 PANDOC_ARGS_PDF_KEY_NAME: Final = "pandoc_pdf"
 PANDOC_ARGS_PDF: Final[Dict[str, List[Tuple[str, List[str]]]]] = {
@@ -24,8 +22,11 @@ PANDOC_ARGS_PDF: Final[Dict[str, List[Tuple[str, List[str]]]]] = {
         (
             "pandoc",
             [
-                "-t",
+                "--from",
+                "markdown",
+                "--to",
                 "pdf",
+                "--table-of-contents",
                 "-V",
                 "geometry:a4paper",
                 "-V",
@@ -51,37 +52,14 @@ def create_pdf_from_md_content(
     evaluate_code: bool = False,
     keep_temp_files: bool = False,
 ):
-    # Evaluate code before running pandoc on it
-
-    def md_code_replacer(code: str, code_block: bool, language: Optional[str]):
-        if language is not None and language.startswith("."):
-            language = language[1:]
-        # Detect executable code
-        try:
-            if evaluate_code and language is not None and language.startswith("="):
-                code_output, image_list = subprocess_evaluate_code(
-                    language[1:],
-                    code,
-                    dir_dynamic_files=dir_dynamic_files,
-                    custom_program=custom_program,
-                    custom_program_args=custom_program_args,
-                    keep_temp_files=keep_temp_files,
-                )
-                log.debug(f"> Evaluate {code=}: {code_output=}, {image_list=}")
-                if len(image_list) > 0:
-                    return "".join(map(lambda x: f"![]({x})\n", image_list))
-                else:
-                    return html.escape("".join(code_output))
-        except UnableToEvaluateCodeException as err:
-            log.error(err)
-        if code_block:
-            return f"```{language}\n{code}```\n"
-        else:
-            return f"`{code}`" + (
-                ("{." + language + "}") if language is not None else ""
-            )
-
-    md_content = md_update_code_parts(md_content, md_code_replacer)
+    md_content = update_md2anki_macro_markdown_content(
+        md_content,
+        dir_dynamic_files=dir_dynamic_files,
+        custom_program=custom_program,
+        custom_program_args=custom_program_args,
+        evaluate_code=evaluate_code,
+        keep_temp_files=keep_temp_files,
+    )
 
     fd, md_file_path_temp_str = tempfile.mkstemp(
         prefix=f"{md2anki_name}_tmp_file_pandoc_md_", suffix=".md"

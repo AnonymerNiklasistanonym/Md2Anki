@@ -34,7 +34,10 @@ class ProgramExitedWithWarningsException(Exception):
 
 
 def run_subprocess(
-    command: str, arguments: Optional[List[str]] = None, cwd: Optional[Path] = None
+    command: str,
+    arguments: Optional[List[str]] = None,
+    cwd: Optional[Path] = None,
+    customEnv: Optional[Dict[str, str]] = None,
 ):
     command_path_global: Final = shutil.which(command)
     command_path_local = (
@@ -55,8 +58,12 @@ def run_subprocess(
     if arguments is None:
         arguments = list()
     log.debug(f"Run subprocess {command=}/{command_path=} {arguments=} ({cwd=})")
+    my_env = os.environ.copy()
+    if customEnv is not None:
+        for key, value in customEnv.items():
+            my_env[key] = value
     p = subprocess.run(
-        [command_path, *arguments], capture_output=True, text=True, cwd=cwd
+        [command_path, *arguments], capture_output=True, text=True, cwd=cwd, env=my_env
     )
     log.debug(f"Subprocess output {p.stdout=} {p.returncode=}")
     if p.returncode != 0:
@@ -117,6 +124,7 @@ def subprocess_evaluate_code(
     custom_program_args: Dict[str, List[List[str]]],
     dir_dynamic_files: Optional[Path] = None,
     keep_temp_files: bool = False,
+    customEnv: Optional[Dict[str, str]] = None,
 ) -> Tuple[List[str], List[Path]]:
     """Return the command outputs and the found images."""
     log.debug(f"Evaluate code ({program=},{code=})")
@@ -164,7 +172,12 @@ def subprocess_evaluate_code(
             program_binaries, program_binaries_args
         ):
             results.append(
-                run_subprocess(program_binary, program_binary_args, cwd=dir_path_temp)
+                run_subprocess(
+                    program_binary,
+                    program_binary_args,
+                    cwd=dir_path_temp,
+                    customEnv=customEnv,
+                )
             )
         images_list = list()
         if dir_dynamic_files is not None:

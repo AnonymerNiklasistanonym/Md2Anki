@@ -120,15 +120,14 @@ if __name__ == "__main__":
 
     example_file_dirs: List[Path] = [EXAMPLE_DIR.joinpath("res")]
 
-    run_example(
-        [Path("code_run_example.md")],
-        debug=debug_examples,
-        evaluate_code=toggle_evaluate_code,
-        file_dirs=example_file_dirs,
-        keep_temporary_files=toogle_keep_temporary_files,
-        o_pdf=Path("code_run_example.pdf"),
-    )
-    exit(0)
+    # run_example(
+    #     [Path("code_run_example.md")],
+    #     debug=debug_examples,
+    #     evaluate_code=toggle_evaluate_code,
+    #     file_dirs=example_file_dirs,
+    #     keep_temporary_files=toogle_keep_temporary_files,
+    #     o_pdf=Path("code_run_example.pdf"),
+    # )
 
     if toggle_multi_part_examples:
         # Merge multi part examples

@@ -145,6 +145,7 @@ def main(args: Md2AnkiArgs) -> int:
             md_merge_anki_decks_to_md_file(
                 anki_decks_flat,
                 tmp_file_path_md_merge,
+                local_asset_dir_path=Path("."),
                 remove_ids=True,
             )
             local_assets: List[Path] = []

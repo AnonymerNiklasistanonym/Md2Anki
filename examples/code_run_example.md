@@ -35,6 +35,17 @@ int main() {
 }
 ```
 
+Evaluate code differently for anki cards and pdf output using environment variables:
+
+```{=py}
+import os
+
+if "MD2ANKI_ANKI_HTML" in os.environ and os.environ["MD2ANKI_ANKI_HTML"] == str(True):
+    print("Evaluated for anki card md/html $\\rightarrow$ html content")
+if "MD2ANKI_PANDOC_PDF" in os.environ and os.environ["MD2ANKI_PANDOC_PDF"] == str(True):
+    print("Evaluated for pandoc md/latex $\\rightarrow$ pdf content")
+```
+
 ## Question with matplotlib graph (d49a8734-1ab7-4b18-a717-c68d6304658d)
 
 ```{=py}
