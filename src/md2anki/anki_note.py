@@ -157,8 +157,6 @@ class AnkiNote:
             if language is not None and language.startswith("."):
                 language = language[1:]
             # Detect executable code
-            code_section = None
-            image_section = None
             try:
                 if evaluate_code and language is not None and language.startswith("="):
                     code_output, image_list = subprocess_evaluate_code(
@@ -173,11 +171,11 @@ class AnkiNote:
                         f"> Evaluate {code=}: {code_output=}, {image_list=}",
                     )
                     if len(image_list) > 0:
-                        image_section = "".join(
+                        return "".join(
                             map(lambda x: f"![]({x})\n", image_list)
                         )
                     else:
-                        code_section = html.escape("".join(code_output))
+                        return "".join(code_output)
                 elif language is not None and language.startswith("="):
                     # If there is no code update values
                     language = language[1:]
@@ -186,35 +184,32 @@ class AnkiNote:
                     )
             except UnableToEvaluateCodeException as err:
                 print(err, file=sys.stderr)
-            if image_section is not None:
-                return image_section
-            elif code_section is None:
-                if language is None:
-                    language = "text"
-                try:
-                    language_lexer = get_lexer_by_name(language)
-                except ClassNotFound as err:
-                    log.warning(
-                        f"[CARD={self.guid}] Default to text lexer ({language=}, {err=})",
+            if language is None:
+                language = "text"
+            try:
+                language_lexer = get_lexer_by_name(language)
+            except ClassNotFound as err:
+                log.warning(
+                    f"[CARD={self.guid}] Default to text lexer ({language=}, {err=})",
+                )
+                language_lexer = get_lexer_by_name("text")
+            html_formatter = get_formatter_by_name("html", noclasses=True)
+            pygments_html_output = highlight(
+                code, language_lexer, html_formatter
+            ).replace("background: #f8f8f8", "")
+            if code_block:
+                code_section = pygments_html_output.replace(
+                    'class="highlight"', 'class="highlight highlight_block"'
+                )
+            else:
+                code_section = (
+                    pygments_html_output.replace("\n", " ")
+                    .replace("\r", "")
+                    .replace(
+                        'class="highlight"', 'class="highlight highlight_inline"'
                     )
-                    language_lexer = get_lexer_by_name("text")
-                html_formatter = get_formatter_by_name("html", noclasses=True)
-                pygments_html_output = highlight(
-                    code, language_lexer, html_formatter
-                ).replace("background: #f8f8f8", "")
-                if code_block:
-                    code_section = pygments_html_output.replace(
-                        'class="highlight"', 'class="highlight highlight_block"'
-                    )
-                else:
-                    code_section = (
-                        pygments_html_output.replace("\n", " ")
-                        .replace("\r", "")
-                        .replace(
-                            'class="highlight"', 'class="highlight highlight_inline"'
-                        )
-                        .rstrip()
-                    )
+                    .rstrip()
+                )
 
             code_section_index = len(code_sections)
             code_sections[code_section_index] = code_section
