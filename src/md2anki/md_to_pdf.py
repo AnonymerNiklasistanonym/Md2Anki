@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 # Internal packages
-import html
 import logging
 import shutil
 import tempfile
@@ -9,10 +8,9 @@ from os import fdopen
 from pathlib import Path
 from typing import List, Dict, Final, Tuple
 
-from md2anki.anki_note import update_md2anki_macro_markdown_content
-
 # Local modules
 from md2anki.info import md2anki_name
+from md2anki.preprocessor import md_preprocessor_md2anki
 from md2anki.subprocess import run_subprocess
 
 
@@ -52,7 +50,7 @@ def create_pdf_from_md_content(
     evaluate_code: bool = False,
     keep_temp_files: bool = False,
 ):
-    md_content = update_md2anki_macro_markdown_content(
+    md_content = md_preprocessor_md2anki(
         md_content,
         dir_dynamic_files=dir_dynamic_files,
         custom_program=custom_program,
