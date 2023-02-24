@@ -76,6 +76,7 @@ def main(args: Md2AnkiArgs) -> int:
                         custom_program=args.custom_program,
                         custom_program_args=args.custom_program_args,
                         evaluate_code=args.evaluate_code,
+                        external_file_dirs=args.additional_file_dirs,
                         keep_temp_files=args.keep_temp_files,
                     )
                     for anki_deck in anki_decks_flat
@@ -160,6 +161,7 @@ def main(args: Md2AnkiArgs) -> int:
                     custom_program_args=args.custom_program_args,
                     dir_dynamic_files=tmp_dir_dynamic_files_pdf,
                     evaluate_code=args.evaluate_code,
+                    external_file_dirs=args.additional_file_dirs,
                     keep_temp_files=args.keep_temp_files,
                 )
         except Exception as err:

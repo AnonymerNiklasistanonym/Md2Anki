@@ -37,3 +37,13 @@ int main() {
 	return 0;
 }
 ```
+
+## Question (c1277119-fe3b-4843-a41e-ecf12fbd85fb)
+
+Answer with code from external file:
+
+```cpp
+
+[//]: # (MD2ANKI_INSERT_FILE=res/hello_world.cpp)
+
+```

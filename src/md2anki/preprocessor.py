@@ -33,6 +33,9 @@ from md2anki.subprocess import (
 log = logging.getLogger(__name__)
 
 REGEX_MATH_BLOCK: Final = re.compile(r"\$\$([\S\s\n]+?)\$\$", flags=re.MULTILINE)
+REGEX_MD_COMMENT_INSERT_FILE: Final = re.compile(
+    r"\n\s*\[//]:\s+#\s+\(MD2ANKI_INSERT_FILE=(.*?)\)\n\s*\n", flags=re.MULTILINE
+)
 
 
 def multi_line_math_block_to_single_line(regex_group_match: Match):
@@ -58,6 +61,7 @@ def md_preprocessor_md2anki(
     dir_dynamic_files: Path,
     custom_program: Dict[str, List[str]],
     custom_program_args: Dict[str, List[List[str]]],
+    external_file_dirs: List[Path],
     evaluate_code: bool = False,
     keep_temp_files: bool = False,
     anki_latex_math: bool = False,
@@ -78,6 +82,29 @@ def md_preprocessor_md2anki(
     """
 
     log.debug(f">> Update md2anki macro Markdown to native Markdown")
+    log.debug(f"   > {md_content=}")
+
+    def insert_external_file(regex_group_match: Match):
+        filepath = Path(regex_group_match[1])
+        found_file = False
+        if filepath.is_file():
+            found_file = True
+        else:
+            for external_file_dir in external_file_dirs:
+                if external_file_dir.joinpath(filepath).is_file():
+                    found_file = True
+                    filepath = external_file_dir.joinpath(filepath)
+                    break
+        if not found_file:
+            raise RuntimeError(
+                f"File to be inserted was not found ({filepath=}, {external_file_dirs=})"
+            )
+        with open(filepath, "r") as f:
+            return f"\n{f.read()}\n"
+
+    md_content = re.sub(REGEX_MD_COMMENT_INSERT_FILE, insert_external_file, md_content)
+
+    log.debug(f">> Updated insert file comments")
     log.debug(f"   > {md_content=}")
 
     # Find and store all code sections so that they won't be changed by other changes

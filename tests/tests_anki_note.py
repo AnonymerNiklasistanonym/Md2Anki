@@ -120,6 +120,7 @@ class TestAnkiNoteGeneric(unittest.TestCase):
                         custom_program_args=convert_list_to_dict_merged(
                             DEFAULT_CUSTOM_PROGRAM_ARGS, json_str_to_str_list
                         ),
+                        external_file_dirs=[],
                     ).fields
                 )
             )

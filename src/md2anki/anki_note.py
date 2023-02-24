@@ -86,6 +86,7 @@ class AnkiNote:
         dir_dynamic_files: Path,
         custom_program: Dict[str, List[str]],
         custom_program_args: Dict[str, List[List[str]]],
+        external_file_dirs: List[Path],
         evaluate_code: bool = False,
         keep_temp_files: bool = False,
     ) -> genanki.Note:
@@ -96,6 +97,7 @@ class AnkiNote:
             @param custom_program: Custom program commands
             @param custom_program_args: Custom program command arguments
             @param evaluate_code: Evaluate code
+            @param external_file_dirs: External file directories to insert files from
             @param keep_temp_files: Keep temporary files (debugging)
         Returns:
             An anki note for genanki
@@ -110,6 +112,7 @@ class AnkiNote:
                     custom_program=custom_program,
                     custom_program_args=custom_program_args,
                     evaluate_code=evaluate_code,
+                    external_file_dirs=external_file_dirs,
                     keep_temp_files=keep_temp_files,
                     anki_latex_math=True,
                     render_to_html=True,
@@ -120,6 +123,7 @@ class AnkiNote:
                     custom_program=custom_program,
                     custom_program_args=custom_program_args,
                     evaluate_code=evaluate_code,
+                    external_file_dirs=external_file_dirs,
                     keep_temp_files=keep_temp_files,
                     anki_latex_math=True,
                     render_to_html=True,

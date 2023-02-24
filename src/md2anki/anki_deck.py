@@ -57,6 +57,7 @@ class AnkiDeck:
         dir_dynamic_files: Path,
         custom_program: Dict[str, List[str]],
         custom_program_args: Dict[str, List[List[str]]],
+        external_file_dirs: List[Path],
         evaluate_code: bool,
         keep_temp_files: bool,
     ) -> genanki.Deck:
@@ -69,6 +70,7 @@ class AnkiDeck:
                     custom_program=custom_program,
                     custom_program_args=custom_program_args,
                     evaluate_code=evaluate_code,
+                    external_file_dirs=external_file_dirs,
                     keep_temp_files=keep_temp_files,
                 )
             )
@@ -108,8 +110,9 @@ class AnkiDeck:
         dir_dynamic_files: Path,
         custom_program: Dict[str, List[str]],
         custom_program_args: Dict[str, List[List[str]]],
-        evaluate_code: bool,
-        keep_temp_files: bool,
+        external_file_dirs: List[Path],
+        evaluate_code: bool = False,
+        keep_temp_files: bool = False,
     ) -> Tuple[genanki.Deck, List[Path]]:
         """Return anki deck and a list of all media files."""
         genanki_anki_deck = self.genanki_create_deck(
@@ -118,6 +121,7 @@ class AnkiDeck:
             custom_program=custom_program,
             custom_program_args=custom_program_args,
             evaluate_code=evaluate_code,
+            external_file_dirs=external_file_dirs,
             keep_temp_files=keep_temp_files,
         )
         media_files = self.get_local_files_from_notes()
