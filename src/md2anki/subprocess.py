@@ -80,6 +80,20 @@ DEFAULT_CUSTOM_PROGRAM: Final[Dict[str, List[Tuple[str, List[str]]]]] = {
     "py": [("python", ["-c", DEFAULT_CODE_NAME])],
     "js": [("node", ["-e", DEFAULT_CODE_NAME])],
     "ts": [("ts-node", [f"{DEFAULT_CODE_FILE_NAME_START}code.ts"])],
+    "pl": [
+        (
+            "swipl",
+            [
+                "-O",
+                "-s",
+                f"{DEFAULT_CODE_FILE_NAME_START}code.pl",
+                "-g",
+                "true",
+                "-t",
+                "halt.",
+            ],
+        )
+    ],
     "latex": [
         (
             "latexmk",

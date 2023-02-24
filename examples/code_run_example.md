@@ -146,3 +146,9 @@ plt.savefig("graph_3.svg")
 \end{tikzpicture}
 \end{document}
 ```
+
+```{=pl}
+
+[//]: # (MD2ANKI_INSERT_FILE=res/test.pl)
+
+```
