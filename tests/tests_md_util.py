@@ -123,16 +123,22 @@ class TestMdUpdateCodeParts(unittest.TestCase):
             (
                 "code block indented:\n\n" "    ```python\n    print('hi')\n    ```",
                 "code block indented:\n\n"
-                "    ```apythonb\nc    print('hi')\n    d```",
+                "    ```apythonb\nc    print('hi')\n    d    e\n```",
             ),
         ]
 
-        def update_code_part(code: str, code_block: bool, language: Optional[str]):
+        def update_code_part(
+            code: str,
+            code_block: bool,
+            language: Optional[str],
+            code_block_indent: Optional[str],
+        ):
             if language is not None:
                 language = f"a{language}b"
             code = f"c{code}d"
+            indent = f"{code_block_indent}e\n" if code_block_indent is not None else ""
             if code_block:
-                return f"```{language}\n{code}```"
+                return f"{code_block_indent if len(indent) > 0 else ''}```{language}\n{code}{indent}```"
             else:
                 return f"`{code}`" + (
                     ("{" + language + "}") if language is not None else ""

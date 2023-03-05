@@ -4,6 +4,7 @@
 import logging
 import re
 import sys
+import textwrap
 from pathlib import Path
 from re import Match
 from typing import Optional, Dict, List, Final
@@ -115,16 +116,25 @@ def md_preprocessor_md2anki(
     )
 
     def update_code_section_with_images_or_placeholder(
-        code: str, code_block: bool, language: Optional[str]
+        code: str,
+        code_block: bool,
+        language: Optional[str],
+        code_block_indent: Optional[str],
     ):
+        # Fix pandoc inline notation for language formatting
         if language is not None and language.startswith("."):
             language = language[1:]
+        indent = code_block_indent if code_block_indent is not None else ""
+        # Fix code block condent if indented
+        indent_free_code = code
+        if code_block and code_block_indent is not None and len(code_block_indent) > 0:
+            indent_free_code = textwrap.dedent(code)
         # Detect executable code
         try:
             if evaluate_code and language is not None and language.startswith("="):
                 code_output, image_list = subprocess_evaluate_code(
                     language[1:],
-                    code,
+                    indent_free_code,
                     dir_dynamic_files=dir_dynamic_files,
                     custom_program=custom_program,
                     custom_program_args=custom_program_args,
@@ -135,12 +145,12 @@ def md_preprocessor_md2anki(
                     },
                 )
                 log.debug(
-                    f"> Evaluate {code=}: {code_output=}, {image_list=}",
+                    f"> Evaluate {indent_free_code=}: {code_output=}, {image_list=}",
                 )
                 if len(image_list) > 0:
-                    return "".join(map(lambda x: f"![]({x})\n", image_list))
+                    return "".join(map(lambda x: f"{indent}![]({x})\n", image_list))
                 else:
-                    return "".join(code_output)
+                    return textwrap.indent("".join(code_output), indent)
             elif language is not None and language.startswith("="):
                 # If there is no code update values
                 language = language[1:]
@@ -148,12 +158,12 @@ def md_preprocessor_md2anki(
                     f"Code ({language!r}) for evaluation was found but evaluation is disabled!",
                 )
         except UnableToEvaluateCodeException as err:
-            print(err, file=sys.stderr)
+            log.error(err)
         if language is None:
             language = "text"
         if render_to_html is False:
             if code_block:
-                return f"```{language}\n{code}```\n"
+                return f"{indent}```{language}\n{code}```\n"
             else:
                 return f"`{code}`" + (
                     ("{." + language + "}") if language is not None else ""
@@ -170,8 +180,11 @@ def md_preprocessor_md2anki(
             "background: #f8f8f8", ""
         )
         if code_block:
-            code_section = pygments_html_output.replace(
-                'class="highlight"', 'class="highlight highlight_block"'
+            code_section = textwrap.indent(
+                pygments_html_output.replace(
+                    'class="highlight"', 'class="highlight highlight_block"'
+                ),
+                indent,
             )
         else:
             code_section = (

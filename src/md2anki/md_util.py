@@ -28,8 +28,15 @@ group for the width and height if found.
 """
 
 REGEX_CODE_BLOCK: Final = re.compile(
-    r"```(?:\{(.+?)}|(.+?))\n([\S\s\n]+?)```", flags=re.MULTILINE
+    r"(?:^|([ \t]*))```(?:\{(.+?)}|(.+?))\n([\S\s\n]+?)```", flags=re.MULTILINE
 )
+"""
+Regex expression to find code blocks: ```language\ncode\n```
+The first group is a found indentation of the initial code block (no checks are being made!) or none, the second is the
+language of the code in normal notation and is None if pandoc notation was found in the third group.
+The fourth and last group is the actual code part (including indents!).
+"""
+
 REGEX_INLINE_CODE: Final = re.compile(r"(?<!\S)`([^`]+?)`(?:\{(.+?)})?(?!\S)")
 
 REGEX_MATH_SECTION: Final = re.compile(r"\${2}((?:[^$]|\n)+?)\${2}|\$(.+?)\$")
@@ -97,22 +104,24 @@ def md_update_images(
 
 def md_update_code_parts(
     md_content: str,
-    code_replacer: Callable[[str, bool, Optional[str]], str],
+    code_replacer: Callable[[str, bool, Optional[str], Optional[str]], str],
 ) -> str:
-    """Update code parts `replacer(code, code_block, language): updated code str`"""
+    """Update code parts `replacer(code, code_block, language, code_block_indent): updated code str`"""
 
     def code_block_replace(regex_group_match: Match):
-        language_normal = regex_group_match.group(1)
-        language_pandoc = regex_group_match.group(2)
+        code_block_indent = regex_group_match.group(1)
+        language_normal = regex_group_match.group(2)
+        language_pandoc = regex_group_match.group(3)
         return code_replacer(
-            regex_group_match.group(3),
+            regex_group_match.group(4),
             True,
-            language_normal if language_normal is not None else language_pandoc,
+            language_normal or language_pandoc,
+            code_block_indent,
         )
 
     def inline_code_replace(regex_group_match: Match):
         return code_replacer(
-            regex_group_match.group(1), False, regex_group_match.group(2)
+            regex_group_match.group(1), False, regex_group_match.group(2), None
         )
 
     md_content = re.sub(REGEX_CODE_BLOCK, code_block_replace, md_content)

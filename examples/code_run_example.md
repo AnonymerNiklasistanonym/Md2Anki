@@ -23,17 +23,19 @@ console.log(message);
 
 ---
 
-Answer with code block:
+Answer:
 
-```{=cpp}
-#include <iostream>
-using namespace std;
+- with indented code block:
 
-int main() {
-	cout << "Bye World!" << endl; // prints Hello World!
-	return 0;
-}
-```
+  ```{=cpp}
+  #include <iostream>
+  using namespace std;
+
+  int main() {
+      cout << "Bye World!" << endl; // prints Hello World!
+      return 0;
+  }
+  ```
 
 Evaluate code differently for anki cards and pdf output using environment variables:
 
@@ -75,27 +77,29 @@ plt.savefig("graph_2.svg")
 
 ---
 
-Answer
+Answer with indented code:
 
-```{=py}
-import numpy as np
-import matplotlib.pyplot as plt
+- Code:
 
-def m_t_exp_wachstum(c, k, t):
-    return c * np.exp(k * t)
+  ```{=py}
+  import numpy as np
+  import matplotlib.pyplot as plt
 
-def m_t_exp_wachstum_abl(c, k, t):
-    return k * m_t_exp_wachstum(c, k, t)
+  def m_t_exp_wachstum(c, k, t):
+      return c * np.exp(k * t)
 
-x = np.linspace(0, 200)
-y_m_t = m_t_exp_wachstum(c=30, k=-0.04, t=x)
-y_m_t_abl = m_t_exp_wachstum_abl(c=30, k=-0.04, t=x)
+  def m_t_exp_wachstum_abl(c, k, t):
+      return k * m_t_exp_wachstum(c, k, t)
 
-plt.plot(x, y_m_t, "-b", label="$M_{vereinfacht}(t)$")
-plt.xlabel("$t$ (in min)")
-plt.legend(loc="upper right")
-plt.savefig("graph_3.svg")
-```
+  x = np.linspace(0, 200)
+  y_m_t = m_t_exp_wachstum(c=30, k=-0.04, t=x)
+  y_m_t_abl = m_t_exp_wachstum_abl(c=30, k=-0.04, t=x)
+
+  plt.plot(x, y_m_t, "-b", label="$M_{vereinfacht}(t)$")
+  plt.xlabel("$t$ (in min)")
+  plt.legend(loc="upper right")
+  plt.savefig("graph_3.svg")
+  ```
 
 ```{=latex}
 \documentclass[tikz,border=10pt]{standalone}
