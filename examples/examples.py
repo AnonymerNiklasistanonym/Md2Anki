@@ -116,7 +116,6 @@ if __name__ == "__main__":
     toggle_single_part_examples = True
     toggle_pdf_examples = True
     toggle_evaluate_code = True
-    toogle_keep_temporary_files = True
 
     example_file_dirs: List[Path] = [EXAMPLE_DIR.joinpath("res")]
 
@@ -128,6 +127,7 @@ if __name__ == "__main__":
     #     keep_temporary_files=toogle_keep_temporary_files,
     #     o_pdf=Path("code_run_example.pdf"),
     # )
+    toogle_keep_temporary_files = debug_examples
 
     if toggle_multi_part_examples:
         # Merge multi part examples

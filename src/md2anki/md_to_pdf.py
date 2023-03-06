@@ -69,9 +69,14 @@ def create_pdf_from_md_content(
         tempfile.mkdtemp(prefix=f"{md2anki_name}_tmp_file_pandoc_md_assets_")
     )
     try:
+        log.debug(f"Copy {local_assets=} to {asset_dir_path_temp=}")
         for local_asset in local_assets:
             log.debug(f"> Copy {local_asset=} to {asset_dir_path_temp=}")
             shutil.copy2(local_asset, asset_dir_path_temp)
+        log.debug(f"Copy {dir_dynamic_files=} to {asset_dir_path_temp=}")
+        for dir_dynamic_file in dir_dynamic_files.rglob("*"):
+            log.debug(f"> Copy {dir_dynamic_file=} to {asset_dir_path_temp=}")
+            shutil.copy2(dir_dynamic_file, asset_dir_path_temp)
         with fdopen(fd, "w") as tmp:
             tmp.write(md_content)
         pandoc = custom_program[PANDOC_ARGS_PDF_KEY_NAME][0]
