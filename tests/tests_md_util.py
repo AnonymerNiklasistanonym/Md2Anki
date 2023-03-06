@@ -118,12 +118,16 @@ class TestMdUpdateCodeParts(unittest.TestCase):
             ),
             (
                 "abc\n```python\nprint('hi')\n```",
-                "abc\n```apythonb\ncprint('hi')\nd```",
+                "abc\n```python\nprint('hi')\n```",
+            ),
+            (
+                "abc\n\n```python\nprint('hi')\n```",
+                "abc\n\n```apythonb\ncprint('hi')\nd\n```",
             ),
             (
                 "code block indented:\n\n" "    ```python\n    print('hi')\n    ```",
                 "code block indented:\n\n"
-                "    ```apythonb\nc    print('hi')\n    d    e\n```",
+                "    ```apythonb\nc    print('hi')\nd\n    e```",
             ),
         ]
 
@@ -136,9 +140,13 @@ class TestMdUpdateCodeParts(unittest.TestCase):
             if language is not None:
                 language = f"a{language}b"
             code = f"c{code}d"
-            indent = f"{code_block_indent}e\n" if code_block_indent is not None else ""
+            indent = (
+                f"{code_block_indent}e"
+                if code_block_indent is not None and len(code_block_indent) > 0
+                else ""
+            )
             if code_block:
-                return f"{code_block_indent if len(indent) > 0 else ''}```{language}\n{code}{indent}```"
+                return f"\n{code_block_indent if len(indent) > 0 else ''}```{language}\n{code}\n{indent}```"
             else:
                 return f"`{code}`" + (
                     ("{" + language + "}") if language is not None else ""

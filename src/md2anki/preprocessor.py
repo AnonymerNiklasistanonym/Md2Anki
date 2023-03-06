@@ -3,7 +3,6 @@
 # Internal packages
 import logging
 import re
-import sys
 import textwrap
 from pathlib import Path
 from re import Match
@@ -35,7 +34,8 @@ log = logging.getLogger(__name__)
 
 REGEX_MATH_BLOCK: Final = re.compile(r"\$\$([\S\s\n]+?)\$\$", flags=re.MULTILINE)
 REGEX_MD_COMMENT_INSERT_FILE: Final = re.compile(
-    r"\n\s*\[//]:\s+#\s+\(MD2ANKI_INSERT_FILE=(.*?)\)\n\s*\n", flags=re.MULTILINE
+    r"(?:^[ \t]*[\n\r]|\A)(?P<indent>[ \t]*)\[//]:\s+#\s+\(MD2ANKI_INSERT_FILE=(?P<file>.*?)\)(?=(?:[ \t]*[\n\r]){2,}|[ \t]*\Z)",
+    flags=re.MULTILINE,
 )
 
 
@@ -86,7 +86,8 @@ def md_preprocessor_md2anki(
     log.debug(f"   > {md_content=}")
 
     def insert_external_file(regex_group_match: Match):
-        filepath = Path(regex_group_match[1])
+        indent = regex_group_match.group(1)
+        filepath = Path(regex_group_match.group(2))
         found_file = False
         if filepath.is_file():
             found_file = True
@@ -101,7 +102,7 @@ def md_preprocessor_md2anki(
                 f"File to be inserted was not found ({filepath=}, {external_file_dirs=})"
             )
         with open(filepath, "r") as f:
-            return f"\n{f.read()}\n"
+            return f"\n\n{textwrap.indent(f.read(), indent)}\n"
 
     md_content = re.sub(REGEX_MD_COMMENT_INSERT_FILE, insert_external_file, md_content)
 
@@ -129,6 +130,7 @@ def md_preprocessor_md2anki(
         indent_free_code = code
         if code_block and code_block_indent is not None and len(code_block_indent) > 0:
             indent_free_code = textwrap.dedent(code)
+        prefix = "\n" if code_block else ""
         # Detect executable code
         try:
             if evaluate_code and language is not None and language.startswith("="):
@@ -148,9 +150,11 @@ def md_preprocessor_md2anki(
                     f"> Evaluate {indent_free_code=}: {code_output=}, {image_list=}",
                 )
                 if len(image_list) > 0:
-                    return "".join(map(lambda x: f"{indent}![]({x})\n", image_list))
+                    return prefix + "\n".join(
+                        map(lambda x: f"{indent}![]({x})\n", image_list)
+                    )
                 else:
-                    return textwrap.indent("".join(code_output), indent)
+                    return prefix + textwrap.indent("".join(code_output), indent)
             elif language is not None and language.startswith("="):
                 # If there is no code update values
                 language = language[1:]
@@ -163,7 +167,7 @@ def md_preprocessor_md2anki(
             language = "text"
         if render_to_html is False:
             if code_block:
-                return f"{indent}```{language}\n{code}```\n"
+                return prefix + f"{indent}```{language}\n{code}```\n"
             else:
                 return f"`{code}`" + (
                     ("{." + language + "}") if language is not None else ""
@@ -196,7 +200,7 @@ def md_preprocessor_md2anki(
 
         code_section_index = len(code_sections)
         code_sections[code_section_index] = code_section
-        return f"{placeholder_code_section[0]}{code_section_index}{placeholder_code_section[1]}"
+        return f"{prefix}{placeholder_code_section[0]}{code_section_index}{placeholder_code_section[1]}"
 
     md_content = md_update_code_parts(
         md_content, update_code_section_with_images_or_placeholder

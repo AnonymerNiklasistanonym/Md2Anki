@@ -2,7 +2,7 @@
 
 ## Run inline code `print(6 * 6)`{=py} (90e43264-471a-4da9-b340-0b519f80f1b9)
 
-Answer with `print('inline')`{=py} code
+Answer with `print('inline', end='')`{=py} code
 
 ## Question with code block that resolves to output text: (fc59dd82-0535-4e5a-8927-3b2dbab902b7)
 
@@ -101,6 +101,14 @@ Answer with indented code:
   plt.savefig("graph_3.svg")
   ```
 
+- Prolog code
+
+  ```{=pl}
+
+  [//]: # (MD2ANKI_INSERT_FILE=res/test.pl)
+
+  ```
+
 ```{=latex}
 \documentclass[tikz,border=10pt]{standalone}
 \usetikzlibrary{positioning}
@@ -149,10 +157,4 @@ Answer with indented code:
     ;
 \end{tikzpicture}
 \end{document}
-```
-
-```{=pl}
-
-[//]: # (MD2ANKI_INSERT_FILE=res/test.pl)
-
 ```

@@ -28,7 +28,8 @@ group for the width and height if found.
 """
 
 REGEX_CODE_BLOCK: Final = re.compile(
-    r"(?:^|([ \t]*))```(?:\{(.+?)}|(.+?))\n([\S\s\n]+?)```", flags=re.MULTILINE
+    r"(?:^[ \t]*[\n\r]|\A)(?P<indent>[ \t]*)```(?:\{(?P<language_pandoc>.+?)}|(?P<language>.+?))[\n\r](?P<code_with_indents>(?:(?:\1[^\r\n]*?|\s*?)[\r\n])+?)\1```(?=(?:[ \t]*[\n\r]){2,}|(?:[ \t]*[\n\r]){0,1}[ \t]*\Z)",
+    flags=re.MULTILINE,
 )
 """
 Regex expression to find code blocks: ```language\ncode\n```
@@ -39,7 +40,9 @@ The fourth and last group is the actual code part (including indents!).
 
 REGEX_INLINE_CODE: Final = re.compile(r"(?<!\S)`([^`]+?)`(?:\{(.+?)})?(?!\S)")
 
-REGEX_MATH_SECTION: Final = re.compile(r"\${2}((?:[^$]|\n)+?)\${2}|\$(.+?)\$")
+REGEX_MATH_SECTION: Final = re.compile(
+    r"\${2}((?:[^$]|\n)+?)\${2}|\$(.+?)\$", flags=re.MULTILINE
+)
 
 log = logging.getLogger(__name__)
 
@@ -109,14 +112,13 @@ def md_update_code_parts(
     """Update code parts `replacer(code, code_block, language, code_block_indent): updated code str`"""
 
     def code_block_replace(regex_group_match: Match):
-        code_block_indent = regex_group_match.group(1)
         language_normal = regex_group_match.group(2)
         language_pandoc = regex_group_match.group(3)
         return code_replacer(
             regex_group_match.group(4),
             True,
             language_normal or language_pandoc,
-            code_block_indent,
+            regex_group_match.group(1),
         )
 
     def inline_code_replace(regex_group_match: Match):
