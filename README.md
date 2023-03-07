@@ -186,27 +186,35 @@ options:
   -anki-model MODEL_ID  custom anki card model (md2anki_default,
                         md2anki_type_answer) (default: md2anki_default)
   -custom-program language program
-                        use custom program for code evaluation (default:
-                        [('py', 'python'), ('js', 'node'), ('ts', 'ts-node'),
-                        ('cpp', 'clang++'), ('cpp', 'main.exe'), ('c',
-                        'clang'), ('c', 'main.exe'), ('pandoc_pdf',
-                        'pandoc')])
+                        use custom program for code evaluation [i.e. "py"
+                        "python3.11"] (default: [('py', 'python'), ('js',
+                        'node'), ('ts', 'ts-node'), ('pl', 'swipl'), ('latex',
+                        'latexmk'), ('latex', 'inkscape'), ('cpp', 'clang++'),
+                        ('cpp', 'main.exe'), ('c', 'clang'), ('c',
+                        'main.exe'), ('pandoc_pdf', 'pandoc')])
   -custom-program-args language program-args
-                        use custom program args for code evaluation (default:
-                        [('py', '["-c", "MD2ANKI_CODE"]'), ('js', '["-e",
-                        "MD2ANKI_CODE"]'), ('ts',
-                        '["MD2ANKI_CODE_FILE=code.ts"]'), ('cpp', '["-Wall",
-                        "-std=c++20", "MD2ANKI_CODE_FILE=main.cpp", "-o",
-                        "main.exe"]'), ('cpp', '[]'), ('c', '["-std=c17",
-                        "MD2ANKI_CODE_FILE=main.c", "-o", "main.exe"]'), ('c',
-                        '[]'), ('pandoc_pdf', '["-t", "pdf", "-V",
-                        "geometry:a4paper", "-V", "geometry:margin=2cm", "--
-                        pdf-engine=xelatex", "--pdf-engine-opt=-shell-
+                        use custom program args for code evaluation [i.e. "py"
+                        "[\"-c\",\"MD2ANKI_CODE\"]"] (default: [('py', '["-c",
+                        "MD2ANKI_CODE"]'), ('js', '["-e", "MD2ANKI_CODE"]'),
+                        ('ts', '["MD2ANKI_CODE_FILE=code.ts"]'), ('pl',
+                        '["-O", "-s", "MD2ANKI_CODE_FILE=code.pl", "-g",
+                        "true", "-t", "halt."]'), ('latex', '["-shell-escape",
+                        "-pdf", "MD2ANKI_CODE_FILE=code.tex"]'), ('latex', '["
+                        --export-filename=code.svg", "code.pdf"]'), ('cpp',
+                        '["-Wall", "-std=c++20", "MD2ANKI_CODE_FILE=main.cpp",
+                        "-o", "main.exe"]'), ('cpp', '[]'), ('c',
+                        '["-std=c17", "MD2ANKI_CODE_FILE=main.c", "-o",
+                        "main.exe"]'), ('c', '[]'), ('pandoc_pdf', '["--from",
+                        "markdown", "--to", "pdf", "--table-of-contents",
+                        "-V", "geometry:a4paper", "-V", "geometry:margin=2cm",
+                        "--pdf-engine=xelatex", "--pdf-engine-opt=-shell-
                         escape"]')])
   -d [{DEBUG,INFO,WARNING,ERROR,CRITICAL}], --debug [{DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                         custom log level to the console (default: INFO)
-  -e, --evaluate-code   evaluate code parts that start with an '=' like
-                        '`print(1+1)`{=python} (default: False)
+  -e, --evaluate-code   evaluate markdown inline code/code blocks with the
+                        language prefix '=' i.e. '`print(1+1)`{=python} or
+                        '```{=python} [newline] print(1+1) [newline] ```'
+                        (default: False)
   -file-dir [FILE_DIR ...]
                         add directories that should be checked for referenced
                         files (like relative path images) (default: [])

@@ -19,8 +19,8 @@ from md2anki.cli import (
     str_to_str,
     json_str_to_str_list,
 )
-from md2anki.info import md2anki_name
-from md2anki.subprocess import subprocess_evaluate_code
+from md2anki.info import MD2ANKI_NAME
+from md2anki.evaluate_code import evaluate_code_in_subprocess
 
 
 class TestEvaluateCode(unittest.TestCase):
@@ -125,10 +125,10 @@ class TestEvaluateCode(unittest.TestCase):
         for test_input, test_program, test_expected in test_data:
             self.code.append((test_program, test_input))
             dir_dynamic_files = Path(
-                tempfile.mkdtemp(prefix=f"{md2anki_name}_tmp_file_test_subprocess_")
+                tempfile.mkdtemp(prefix=f"{MD2ANKI_NAME}_tmp_file_test_subprocess_")
             )
             self.results.append(
-                subprocess_evaluate_code(
+                evaluate_code_in_subprocess(
                     test_program,
                     test_input,
                     custom_program=convert_list_to_dict_merged(

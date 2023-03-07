@@ -16,10 +16,10 @@ from md2anki.anki_note import AnkiNote, MdSection
 from md2anki.create_id import create_unique_id_int
 from md2anki.info import (
     ANKI_SUBDECK_SEPARATOR,
-    md2anki_url_git,
-    md2anki_name,
-    md2anki_version,
-    MD_ANKI_DECK_HEADING_SUBDECK_PREFIX,
+    MD2ANKI_URL_GIT,
+    MD2ANKI_NAME,
+    MD2ANKI_VERSION,
+    MD2ANKI_MD_ANKI_DECK_HEADING_SUBDECK_PREFIX,
 )
 from md2anki.md_util import md_get_used_md2anki_tags
 
@@ -208,7 +208,7 @@ def md_merge_anki_decks_to_md_file(
                 file.write(
                     anki_deck_heading.create_string(
                         depth=heading_depth + initial_heading_depth - 1,
-                        heading_prefix=MD_ANKI_DECK_HEADING_SUBDECK_PREFIX
+                        heading_prefix=MD2ANKI_MD_ANKI_DECK_HEADING_SUBDECK_PREFIX
                         if heading_depth > 1
                         else "",
                         with_heading_id=not remove_ids,
@@ -279,21 +279,21 @@ def backup_anki_decks_to_dir(
     ) as pwsh_file:
         document_name = "document"
         anki_deck_name = "anki_deck"
-        info_string = f"Automatically created using {md2anki_name} {md2anki_version}"
+        info_string = f"Automatically created using {MD2ANKI_NAME} {MD2ANKI_VERSION}"
         # Shebang and version
         bash_file.write(f"#!/usr/bin/env bash\n\n# {info_string}\n\n")
         pwsh_file.write(f"#!/usr/bin/env pwsh\n\n# {info_string}\n\n")
         # Git clone
         bash_file.write(
-            f'Md2AnkiGitDir="{md2anki_name}"\n'
+            f'Md2AnkiGitDir="{MD2ANKI_NAME}"\n'
             'if [ ! -d "$Md2AnkiGitDir" ] ; then\n'
-            f'    git clone "{md2anki_url_git}" {md2anki_name}\n'
+            f'    git clone "{MD2ANKI_URL_GIT}" {MD2ANKI_NAME}\n'
             "fi\n\n"
         )
         pwsh_file.write(
-            f'$Md2AnkiGitDir = Join-Path $PSScriptRoot -ChildPath "{md2anki_name}"\n'
+            f'$Md2AnkiGitDir = Join-Path $PSScriptRoot -ChildPath "{MD2ANKI_NAME}"\n'
             "if (-not (Test-Path -LiteralPath $Md2AnkiGitDir)) {\n"
-            f'    git clone "{md2anki_url_git} {md2anki_name}"\n'
+            f'    git clone "{MD2ANKI_URL_GIT} {MD2ANKI_NAME}"\n'
             "}\n\n"
         )
         # Run command

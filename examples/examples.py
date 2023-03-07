@@ -8,7 +8,7 @@ from typing import List, Optional
 # Append the module path for md2anki
 sys.path.append(join(dirname(__file__), "..", "src"))
 
-from md2anki.info import md2anki_name
+from md2anki.info import MD2ANKI_NAME
 from md2anki.cli import parse_cli_args, AnkiCardModelId
 from md2anki.main import main
 
@@ -50,7 +50,7 @@ def run_example(
         args.extend(["-anki-model", anki_model.value])
     if o_backup_dir is not None:
         args.extend(["-o-backup-dir", str(o_backup_dir)])
-    print(f"{md2anki_name} {' '.join(args)}")
+    print(f"{MD2ANKI_NAME} {' '.join(args)}")
     cli_args = parse_cli_args(args)
     assert main(cli_args) == 0
 

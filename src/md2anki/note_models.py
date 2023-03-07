@@ -7,16 +7,16 @@ from typing import Final
 
 # Local modules
 from md2anki.anki_deck import AnkiModel
-from md2anki.info import (
-    md2anki_name,
-    RELATIVE_CSS_FILE_PATH,
-    RELATIVE_CSS_FILE_PATH_TYPE_ANSWER,
+from md2anki.files import (
+    RELATIVE_RES_CSS_FILE_PATH,
+    RELATIVE_RES_CSS_FILE_PATH_TYPE_ANSWER,
 )
+from md2anki.info import MD2ANKI_NAME
 
 CURRENT_DIR: Final = Path(__file__).parent
-CSS_FILE_PATH: Final = CURRENT_DIR.joinpath(RELATIVE_CSS_FILE_PATH)
+CSS_FILE_PATH: Final = CURRENT_DIR.joinpath(RELATIVE_RES_CSS_FILE_PATH)
 CSS_FILE_PATH_TYPE_ANSWER: Final = CURRENT_DIR.joinpath(
-    RELATIVE_CSS_FILE_PATH_TYPE_ANSWER
+    RELATIVE_RES_CSS_FILE_PATH_TYPE_ANSWER
 )
 
 
@@ -35,8 +35,8 @@ def create_type_answer_anki_deck_model() -> AnkiModel:
         css_data += file.read()
     return AnkiModel(
         guid=396500203,
-        name=f"{md2anki_name} {AnkiCardModelId.TYPE_ANSWER.value} (v3)",
-        description=f"{md2anki_name} (type answer)",
+        name=f"{MD2ANKI_NAME} {AnkiCardModelId.TYPE_ANSWER.value} (v3)",
+        description=f"{MD2ANKI_NAME} (type answer)",
         css=css_data,
         template_card_question='<div class="card card_question">{{Question}}</div>\n\n{{type:Answer}}',
         template_card_question_surround=("", ""),
@@ -50,7 +50,7 @@ def create_default_anki_deck_model() -> AnkiModel:
         css_data = file.read()
     return AnkiModel(
         guid=396500103,
-        name=f"{md2anki_name} {AnkiCardModelId.DEFAULT.value} (v3)",
-        description=f"{md2anki_name} (default)",
+        name=f"{MD2ANKI_NAME} {AnkiCardModelId.DEFAULT.value} (v3)",
+        description=f"{MD2ANKI_NAME} (default)",
         css=css_data,
     )

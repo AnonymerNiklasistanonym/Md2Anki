@@ -11,7 +11,10 @@ from re import Match
 from typing import Callable, Final, Optional, Set, Tuple
 from urllib.parse import urlparse, ParseResult
 
+# Logger
+log = logging.getLogger(__name__)
 
+# Constants
 REGEX_MD_TAG: Final = re.compile(r"`{=:(.*?):=}`")
 """
 Regex expression to parse a markdown tag notation: '`{=:tag list string:=}`'
@@ -28,7 +31,9 @@ group for the width and height if found.
 """
 
 REGEX_CODE_BLOCK: Final = re.compile(
-    r"(?:^[ \t]*[\n\r]|\A)(?P<indent>[ \t]*)```(?:\{(?P<language_pandoc>.+?)}|(?P<language>.+?))[\n\r](?P<code_with_indents>(?:(?:\1[^\r\n]*?|\s*?)[\r\n])+?)\1```(?=(?:[ \t]*[\n\r]){2,}|(?:[ \t]*[\n\r]){0,1}[ \t]*\Z)",
+    r"(?:^[ \t]*[\n\r]|\A)(?P<indent>[ \t]*)```(?:\{(?P<language_pandoc>.+?)}|(?P<language>.+?))[\n\r]"
+    r"(?P<code_with_indents>(?:(?:\1[^\r\n]*?|\s*?)[\r\n])+?)\1```"
+    r"(?=(?:[ \t]*[\n\r]){2,}|(?:[ \t]*[\n\r])?[ \t]*\Z)",
     flags=re.MULTILINE,
 )
 """
@@ -43,8 +48,6 @@ REGEX_INLINE_CODE: Final = re.compile(r"(?<!\S)`([^`]+?)`(?:\{(.+?)})?(?!\S)")
 REGEX_MATH_SECTION: Final = re.compile(
     r"\${2}((?:[^$]|\n)+?)\${2}|\$(.+?)\$", flags=re.MULTILINE
 )
-
-log = logging.getLogger(__name__)
 
 # TODO Add update local files method
 # TODO Add update (inline) code blocks method

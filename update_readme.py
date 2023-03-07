@@ -8,8 +8,8 @@ sys.path.append(str(Path(__file__).parent.joinpath("src")))
 
 from md2anki.cli import get_argument_parser
 from md2anki.info import (
-    md2anki_name,
-    md2anki_description,
+    MD2ANKI_NAME,
+    MD2ANKI_DESCRIPTION,
 )
 
 md_comment: Final = ("[//]: <> (", ")")
@@ -31,7 +31,7 @@ def create_md_content(section_id: str, old_content: str) -> str:
         md_comment[0] + md_comment_begin_end[0] + section_id + md_comment[1] + "\n\n"
     )
     if section_id == "HEADER":
-        out += f"# {md2anki_name}\n\n{md2anki_description}\n"
+        out += f"# {MD2ANKI_NAME}\n\n{MD2ANKI_DESCRIPTION}\n"
     elif section_id == "EXAMPLES":
         out += f"{md_code_block[0]}markdown\n"
         with open(EXAMPLE_BASIC_FILE_PATH, "r") as example_basic:
@@ -43,7 +43,7 @@ def create_md_content(section_id: str, old_content: str) -> str:
         out += f"{md_code_block[1]}\n"
     elif section_id == "USAGE":
         out += f"{md_code_block[0]}text\n"
-        path = tempfile.mktemp(prefix=f"{md2anki_name}_capture_help_")
+        path = tempfile.mktemp(prefix=f"{MD2ANKI_NAME}_capture_help_")
         try:
             with open(path, "w") as tmp:
                 get_argument_parser().print_help(file=tmp)

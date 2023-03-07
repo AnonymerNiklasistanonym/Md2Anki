@@ -15,7 +15,7 @@ from md2anki.anki_deck import (
     backup_anki_decks_to_dir,
 )
 from md2anki.cli import Md2AnkiArgs, AnkiCardModelId
-from md2anki.info import md2anki_name
+from md2anki.info import MD2ANKI_NAME
 from md2anki.md_parser import parse_md_content_to_anki_deck_list
 from md2anki.md_to_pdf import create_pdf_from_md_content
 from md2anki.note_models import (
@@ -65,7 +65,7 @@ def main(args: Md2AnkiArgs) -> int:
         log.debug(f"Create anki deck file {args.anki_output_file_path!r}...")
         tmp_dir_dynamic_files_anki = Path(
             tempfile.mkdtemp(
-                prefix=f"{md2anki_name}_tmp_dir_dynamic_files_anki_output_"
+                prefix=f"{MD2ANKI_NAME}_tmp_dir_dynamic_files_anki_output_"
             )
         )
         try:
@@ -137,10 +137,10 @@ def main(args: Md2AnkiArgs) -> int:
     if args.pdf_output_file_path is not None:
         log.debug(f"Create pdf in {args.backup_output_dir_path!r}...")
         tmp_dir_dynamic_files_pdf: Final = Path(
-            tempfile.mkdtemp(prefix=f"{md2anki_name}_tmp_dir_dynamic_files_pdf_output_")
+            tempfile.mkdtemp(prefix=f"{MD2ANKI_NAME}_tmp_dir_dynamic_files_pdf_output_")
         )
         tmp_file_path_md_merge: Final = Path(
-            tempfile.mktemp(prefix=f"{md2anki_name}_tmp_file_md_merge_pdf_output_")
+            tempfile.mktemp(prefix=f"{MD2ANKI_NAME}_tmp_file_md_merge_pdf_output_")
         )
         try:
             md_merge_anki_decks_to_md_file(

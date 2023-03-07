@@ -2,39 +2,42 @@
 
 # Internal packages
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Final
-
-RELATIVE_RES_DIR: Final = Path("res")
-RELATIVE_CSS_FILE_PATH: Final = RELATIVE_RES_DIR.joinpath("stylesheet.css")
-RELATIVE_CSS_FILE_PATH_TYPE_ANSWER: Final = RELATIVE_RES_DIR.joinpath(
-    "stylesheet_type_answer.css"
-)
 
 
 @dataclass
 class ProgramVersion:
     """
-    Contains all information about the md2anki version.
+    Contains version information.
     """
 
-    major: int
-    minor: int = 0
-    patch: int = 0
-    beta: bool = False
+    major: Final[int] = 1
+    minor: Final[int] = 0
+    patch: Final[int] = 0
+    beta: Final[bool] = False
 
     def __repr__(self):
         return f"{self.major}.{self.minor}.{self.patch}{'b' if self.beta else ''}"
 
 
-md2anki_name: Final = "md2anki"
-md2anki_author: Final = "AnonymerNiklasistanonym"
-md2anki_description: Final = "Convert Markdown formatted documents to anki decks"
-md2anki_url: Final = "https://github.com/AnonymerNiklasistanonym/Md2Anki"
-md2anki_url_git: Final = f"{md2anki_url}.git"
-md2anki_url_bug_tracker: Final = f"{md2anki_url}/issues"
-md2anki_version: Final = ProgramVersion(major=3, minor=0, patch=12, beta=True)
+# md2anki information
+MD2ANKI_NAME: Final = "md2anki"
+MD2ANKI_AUTHOR: Final = "AnonymerNiklasistanonym"
+MD2ANKI_DESCRIPTION: Final = "Convert Markdown formatted documents to anki decks"
+MD2ANKI_URL: Final = "https://github.com/AnonymerNiklasistanonym/Md2Anki"
+MD2ANKI_URL_GIT: Final = f"{MD2ANKI_URL}.git"
+MD2ANKI_URL_BUG_TRACKER: Final = f"{MD2ANKI_URL}/issues"
+MD2ANKI_VERSION: Final = ProgramVersion(major=3, minor=0, patch=12, beta=True)
 
-MD_ANKI_DECK_HEADING_SUBDECK_PREFIX: Final = "Subdeck: "
-MD_ANKI_NOTE_QUESTION_ANSWER_SEPARATOR: Final = "---"
+# md2anki Markdown information
+MD2ANKI_MD_ANKI_DECK_HEADING_SUBDECK_PREFIX: Final = "Subdeck: "
+MD2ANKI_MD_ANKI_NOTE_QUESTION_ANSWER_SEPARATOR: Final = "---"
+MD2ANKI_MD_EVALUATE_CODE_LANGUAGE_PREFIX: Final = "="
+MD2ANKI_MD_COMMENT_INSERT_FILE_PREFIX = f"{MD2ANKI_NAME.upper()}_INSERT_FILE="
+
+# md2anki evaluate code information
+MD2ANKI_EVALUATE_CODE_ENV_NAME_ANKI_HTML_BOOL = f"{MD2ANKI_NAME.upper()}_ANKI_HTML"
+MD2ANKI_EVALUATE_CODE_ENV_NAME_PANDOC_PDF_BOOL = f"{MD2ANKI_NAME.upper()}_PANDOC_PDF"
+
+# anki information
 ANKI_SUBDECK_SEPARATOR: Final = "::"

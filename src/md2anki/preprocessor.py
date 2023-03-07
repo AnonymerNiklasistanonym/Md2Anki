@@ -18,6 +18,13 @@ from pygments.util import ClassNotFound
 # Local modules
 from md2anki.create_id import create_unique_id
 from md2anki.html_util import fix_inline_code_p_tags
+from md2anki.info import (
+    MD2ANKI_MD_EVALUATE_CODE_LANGUAGE_PREFIX,
+    MD2ANKI_EVALUATE_CODE_ENV_NAME_ANKI_HTML_BOOL,
+    MD2ANKI_EVALUATE_CODE_ENV_NAME_PANDOC_PDF_BOOL,
+    MD2ANKI_MD_COMMENT_INSERT_FILE_PREFIX,
+    MD2ANKI_NAME,
+)
 from md2anki.md_util import (
     md_update_local_filepaths,
     md_update_code_parts,
@@ -25,16 +32,20 @@ from md2anki.md_util import (
     md_update_math_sections,
     md_update_generic_id_sections,
 )
-from md2anki.subprocess import (
-    subprocess_evaluate_code,
+from md2anki.evaluate_code import (
+    evaluate_code_in_subprocess,
     UnableToEvaluateCodeException,
 )
 
+# Logger
 log = logging.getLogger(__name__)
 
+# Constants
 REGEX_MATH_BLOCK: Final = re.compile(r"\$\$([\S\s\n]+?)\$\$", flags=re.MULTILINE)
 REGEX_MD_COMMENT_INSERT_FILE: Final = re.compile(
-    r"(?:^[ \t]*[\n\r]|\A)(?P<indent>[ \t]*)\[//]:\s+#\s+\(MD2ANKI_INSERT_FILE=(?P<file>.*?)\)(?=(?:[ \t]*[\n\r]){2,}|[ \t]*\Z)",
+    r"(?:^[ \t]*[\n\r]|\A)(?P<indent>[ \t]*)\[//]:\s+#\s+\("
+    rf"{MD2ANKI_MD_COMMENT_INSERT_FILE_PREFIX}"
+    r"(?P<file>.*?)\)(?=(?:[ \t]*[\n\r]){2,}|[ \t]*\Z)",
     flags=re.MULTILINE,
 )
 
@@ -69,11 +80,14 @@ def md_preprocessor_md2anki(
     render_to_html: bool = False,
 ) -> str:
     """
+    Preprocess Markdown content with md2anki macros.
+
     Args:
         @param md_content: Markdown content with md2anki/pandoc/... macros
         @param dir_dynamic_files: Directory for dynamically created files
         @param custom_program: Custom program commands
         @param custom_program_args: Custom program command arguments
+        @param external_file_dirs: Other directories that contain file references.
         @param evaluate_code: Evaluate code
         @param keep_temp_files: Keep temporary files (debugging)
         @param anki_latex_math: Additionally render certain macros with HTML in mind
@@ -84,6 +98,8 @@ def md_preprocessor_md2anki(
 
     log.debug(f">> Update md2anki macro Markdown to native Markdown")
     log.debug(f"   > {md_content=}")
+
+    # 1. Replace Markdown comments with external file content
 
     def insert_external_file(regex_group_match: Match):
         indent = regex_group_match.group(1)
@@ -109,11 +125,11 @@ def md_preprocessor_md2anki(
     log.debug(f">> Updated insert file comments")
     log.debug(f"   > {md_content=}")
 
-    # Find and store all code sections so that they won't be changed by other changes
+    # 2. Find, evaluate and store all code sections so that they won't be changed by other changes
     code_sections: Dict[int, str] = dict()
     placeholder_code_section: Final = (
-        f"<div>md2anki_placeholder_start_code_{create_unique_id()}",
-        f"md2anki_placeholder_end_code_{create_unique_id()}</div>",
+        f"<div>{MD2ANKI_NAME}_placeholder_start_code_{create_unique_id()}",
+        f"{MD2ANKI_NAME}_placeholder_end_code_{create_unique_id()}</div>",
     )
 
     def update_code_section_with_images_or_placeholder(
@@ -133,17 +149,25 @@ def md_preprocessor_md2anki(
         prefix = "\n" if code_block else ""
         # Detect executable code
         try:
-            if evaluate_code and language is not None and language.startswith("="):
-                code_output, image_list = subprocess_evaluate_code(
+            if (
+                evaluate_code
+                and language is not None
+                and language.startswith(MD2ANKI_MD_EVALUATE_CODE_LANGUAGE_PREFIX)
+            ):
+                code_output, image_list = evaluate_code_in_subprocess(
                     language[1:],
                     indent_free_code,
                     dir_dynamic_files=dir_dynamic_files,
                     custom_program=custom_program,
                     custom_program_args=custom_program_args,
                     keep_temp_files=keep_temp_files,
-                    customEnv={
-                        "MD2ANKI_ANKI_HTML": str(render_to_html),
-                        "MD2ANKI_PANDOC_PDF": str(not render_to_html),
+                    custom_env={
+                        MD2ANKI_EVALUATE_CODE_ENV_NAME_ANKI_HTML_BOOL: str(
+                            render_to_html
+                        ),
+                        MD2ANKI_EVALUATE_CODE_ENV_NAME_PANDOC_PDF_BOOL: str(
+                            not render_to_html
+                        ),
                     },
                 )
                 log.debug(
@@ -216,8 +240,8 @@ def md_preprocessor_md2anki(
     # Collect all math sections to later overwrite them again
     math_sections: Dict[int, str] = dict()
     placeholder_math_section: Final = (
-        f"md2anki_placeholder_start_math_{create_unique_id()}",
-        f"md2anki_placeholder_end_math_{create_unique_id()}",
+        f"{MD2ANKI_NAME}_placeholder_start_math_{create_unique_id()}",
+        f"{MD2ANKI_NAME}_placeholder_end_math_{create_unique_id()}",
     )
 
     if anki_latex_math is True:

@@ -14,10 +14,17 @@ from pathlib import Path
 from typing import Optional, List, Dict, Final, Tuple, TypeVar, Callable
 
 # Local modules
-from md2anki.info import md2anki_version, md2anki_name
+from md2anki.info import (
+    MD2ANKI_VERSION,
+    MD2ANKI_NAME,
+    MD2ANKI_MD_EVALUATE_CODE_LANGUAGE_PREFIX,
+)
 from md2anki.md_to_pdf import PANDOC_ARGS_PDF
 from md2anki.note_models import AnkiCardModelId
-from md2anki.subprocess import DEFAULT_CUSTOM_PROGRAM
+from md2anki.evaluate_code import (
+    DEFAULT_CUSTOM_PROGRAM,
+    EVALUATE_CODE_PLACEHOLDER_CODE_STRING,
+)
 
 
 class SortedArgumentDefaultsHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
@@ -114,13 +121,18 @@ def str_to_str(a: str) -> str:
     return a
 
 
-def json_str_to_str_list(a: str) -> List[str]:
-    possible_list: List[str] = json.loads(a)
-    if not all(isinstance(elem, str) for elem in possible_list):
+def json_str_to_str_list(possible_json_string: str) -> List[str]:
+    try:
+        possible_string_list: List[str] = json.loads(possible_json_string)
+        if not all(isinstance(elem, str) for elem in possible_string_list):
+            raise RuntimeError(
+                f"Supplied json string was not a string list ({possible_json_string=},{possible_string_list=})"
+            )
+        return possible_string_list
+    except ValueError as err:
         raise RuntimeError(
-            f"Custom program args need to be a JSON string list ({possible_list!r})"
+            f"Supplied json string {possible_json_string!r} was not a valid JSON string ({err})"
         )
-    return possible_list
 
 
 def get_argument_parser() -> argparse.ArgumentParser:
@@ -128,10 +140,10 @@ def get_argument_parser() -> argparse.ArgumentParser:
         description="Create an anki deck file (.apkg) from one or more Markdown documents. "
         "If no custom output path is given the file name of the document (+ .apkg) is used.",
         formatter_class=SortedArgumentDefaultsHelpFormatter,
-        prog=md2anki_name,
+        prog=MD2ANKI_NAME,
     )
     parser.add_argument(
-        "-v", "--version", action="version", version=f"%(prog)s {md2anki_version}"
+        "-v", "--version", action="version", version=f"%(prog)s {MD2ANKI_VERSION}"
     )
 
     parser.add_argument(
@@ -150,7 +162,9 @@ def get_argument_parser() -> argparse.ArgumentParser:
         "-e",
         "--evaluate-code",
         action="store_true",
-        help="evaluate code parts that start with an '=' like '`print(1+1)`{=python}",
+        help="evaluate markdown inline code/code blocks with the language prefix "
+        f"{MD2ANKI_MD_EVALUATE_CODE_LANGUAGE_PREFIX!r} "
+        "i.e. '`print(1+1)`{=python} or '```{=python} [newline] print(1+1) [newline] ```'",
     )
     parser.add_argument(
         "-k",
@@ -233,7 +247,7 @@ def get_argument_parser() -> argparse.ArgumentParser:
         action="append",
         nargs=2,
         default=DEFAULT_CUSTOM_PROGRAMS,
-        help="use custom program for code evaluation",
+        help='use custom program for code evaluation [i.e. "py" "python3.11"]',
     )
     parser.add_argument(
         "-custom-program-args",
@@ -242,7 +256,9 @@ def get_argument_parser() -> argparse.ArgumentParser:
         action="append",
         nargs=2,
         default=DEFAULT_CUSTOM_PROGRAM_ARGS,
-        help="use custom program args for code evaluation",
+        help='use custom program args for code evaluation  [i.e. "py" "[\\"-c\\",\\"'
+        f"{EVALUATE_CODE_PLACEHOLDER_CODE_STRING}"
+        '\\"]"]',
     )
     parser.add_argument(
         "md_input_files",

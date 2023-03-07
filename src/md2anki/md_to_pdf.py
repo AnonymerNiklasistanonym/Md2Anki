@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import List, Dict, Final, Tuple
 
 # Local modules
-from md2anki.info import md2anki_name
+from md2anki.info import MD2ANKI_NAME
 from md2anki.preprocessor import md_preprocessor_md2anki
 from md2anki.subprocess import run_subprocess
 
@@ -62,11 +62,11 @@ def create_pdf_from_md_content(
     )
 
     fd, md_file_path_temp_str = tempfile.mkstemp(
-        prefix=f"{md2anki_name}_tmp_file_pandoc_md_", suffix=".md"
+        prefix=f"{MD2ANKI_NAME}_tmp_file_pandoc_md_", suffix=".md"
     )
     md_file_path_temp: Final = Path(md_file_path_temp_str)
     asset_dir_path_temp: Final = Path(
-        tempfile.mkdtemp(prefix=f"{md2anki_name}_tmp_file_pandoc_md_assets_")
+        tempfile.mkdtemp(prefix=f"{MD2ANKI_NAME}_tmp_file_pandoc_md_assets_")
     )
     try:
         log.debug(f"Copy {local_assets=} to {asset_dir_path_temp=}")
