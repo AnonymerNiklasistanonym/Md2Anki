@@ -1,11 +1,20 @@
+#!/usr/bin/env python3
+
+# Future import to support Python 3.9
+from __future__ import annotations
+
+# Internal modules
 import sys
 from pathlib import Path
 from setuptools import setup, find_packages
+from typing import Final
 
-# Append the module path for md2anki
-sys.path.append(str(Path(__file__).parent.joinpath("src")))
+# Append the module path for md2anki standalone information files
+sys.path.append(str(Path(__file__).parent.joinpath("src", "md2anki")))
 
-from md2anki.info import (
+# Local modules
+# These imports will only import the self-contained constants of the files and not require the module dependencies
+from info import (
     MD2ANKI_VERSION,
     MD2ANKI_NAME,
     MD2ANKI_AUTHOR,
@@ -13,14 +22,14 @@ from md2anki.info import (
     MD2ANKI_URL,
     MD2ANKI_URL_BUG_TRACKER,
 )
-from md2anki.files import (
+from files import (
     RELATIVE_RES_CSS_FILE_PATH,
     RELATIVE_RES_CSS_FILE_PATH_TYPE_ANSWER,
 )
 
 
 with open("README.md", "r", encoding="utf-8") as f:
-    long_description = f.read()
+    long_description: Final = f.read()
 
 
 setup(
