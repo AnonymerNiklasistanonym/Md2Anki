@@ -11,8 +11,8 @@ from typing import Optional, TextIO, List, Tuple, Final
 # Local modules
 from md2anki.anki_deck import AnkiDeck, AnkiNote
 from md2anki.create_id import create_unique_id_int, create_unique_id
-from md2anki.info import (
-    ANKI_SUBDECK_SEPARATOR,
+from md2anki.info.anki import ANKI_SUBDECK_SEPARATOR
+from md2anki.info.general import (
     MD2ANKI_MD_ANKI_DECK_HEADING_SUBDECK_PREFIX,
     MD2ANKI_MD_ANKI_NOTE_QUESTION_ANSWER_SEPARATOR,
 )

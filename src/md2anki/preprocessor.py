@@ -18,7 +18,7 @@ from pygments.util import ClassNotFound
 # Local modules
 from md2anki.create_id import create_unique_id
 from md2anki.html_util import fix_inline_code_p_tags
-from md2anki.info import (
+from md2anki.info.general import (
     MD2ANKI_MD_EVALUATE_CODE_LANGUAGE_PREFIX,
     MD2ANKI_EVALUATE_CODE_ENV_NAME_ANKI_HTML_BOOL,
     MD2ANKI_EVALUATE_CODE_ENV_NAME_PANDOC_PDF_BOOL,
@@ -75,6 +75,7 @@ def md_preprocessor_md2anki(
     custom_program_args: Dict[str, List[List[str]]],
     external_file_dirs: List[Path],
     evaluate_code: bool = False,
+    evaluate_code_cache_dir: Optional[Path] = None,
     keep_temp_files: bool = False,
     anki_latex_math: bool = False,
     render_to_html: bool = False,
@@ -89,6 +90,7 @@ def md_preprocessor_md2anki(
         @param custom_program_args: Custom program command arguments
         @param external_file_dirs: Other directories that contain file references.
         @param evaluate_code: Evaluate code
+        @param evaluate_code_cache_dir: Cache code evaluations in directory
         @param keep_temp_files: Keep temporary files (debugging)
         @param anki_latex_math: Additionally render certain macros with HTML in mind
         @param render_to_html: Additionally render certain macros with HTML in mind
@@ -161,7 +163,7 @@ def md_preprocessor_md2anki(
                     custom_program=custom_program,
                     custom_program_args=custom_program_args,
                     keep_temp_files=keep_temp_files,
-                    custom_env={
+                    additional_env={
                         MD2ANKI_EVALUATE_CODE_ENV_NAME_ANKI_HTML_BOOL: str(
                             render_to_html
                         ),
@@ -169,6 +171,7 @@ def md_preprocessor_md2anki(
                             not render_to_html
                         ),
                     },
+                    cache_dir=evaluate_code_cache_dir,
                 )
                 log.debug(
                     f"> Evaluate {indent_free_code=}: {code_output=}, {image_list=}",

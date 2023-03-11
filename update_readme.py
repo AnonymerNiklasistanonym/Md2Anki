@@ -7,7 +7,7 @@ from typing import Optional, Tuple, List, Final
 sys.path.append(str(Path(__file__).parent.joinpath("src")))
 
 from md2anki.cli import get_argument_parser
-from md2anki.info import (
+from md2anki.info.general import (
     MD2ANKI_NAME,
     MD2ANKI_DESCRIPTION,
 )

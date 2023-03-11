@@ -166,11 +166,12 @@ Answer
 [//]: <> (BEGIN: USAGE)
 
 ```text
-usage: md2anki [-h] [-v] [-d [{DEBUG,INFO,WARNING,ERROR,CRITICAL}]] [-e] [-k]
-               [-anki-model MODEL_ID] [-o-anki APKG_FILE] [-o-md MD_FILE]
+usage: md2anki [-h] [-v] [-d [{DEBUG,INFO,WARNING,ERROR,CRITICAL}]] [-e]
+               [--evaluate-code-ignore-cache] [--evaluate-code-delete-cache]
+               [-k] [-anki-model MODEL_ID] [-o-anki APKG_FILE] [-o-md MD_FILE]
                [-o-md-dir MD_DIR] [-o-backup-dir BACKUP_DIR] [-o-pdf PDF_FILE]
-               [-log-file LOG_FILE] [-file-dir [FILE_DIR ...]]
-               [-md-heading-depth HEADING_DEPTH]
+               [-evaluate-code-cache-dir CACHE_DIR] [-log-file LOG_FILE]
+               [-file-dir [FILE_DIR ...]] [-md-heading-depth HEADING_DEPTH]
                [-custom-program language program]
                [-custom-program-args language program-args]
                MD_INPUT_FILE [MD_INPUT_FILE ...]
@@ -183,6 +184,12 @@ positional arguments:
                         notes
 
 options:
+  --evaluate-code-delete-cache
+                        delete all cached files from previous code evaluations
+                        (default: False)
+  --evaluate-code-ignore-cache
+                        ignore the cached files from previous code evaluations
+                        (default: False)
   -anki-model MODEL_ID  custom anki card model (md2anki_default,
                         md2anki_type_answer) (default: md2anki_default)
   -custom-program language program
@@ -215,6 +222,9 @@ options:
                         language prefix '=' i.e. '`print(1+1)`{=python} or
                         '```{=python} [newline] print(1+1) [newline] ```'
                         (default: False)
+  -evaluate-code-cache-dir CACHE_DIR
+                        use a custom cache dir for code evaluations (default:
+                        None)
   -file-dir [FILE_DIR ...]
                         add directories that should be checked for referenced
                         files (like relative path images) (default: [])

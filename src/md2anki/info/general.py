@@ -27,7 +27,7 @@ MD2ANKI_DESCRIPTION: Final = "Convert Markdown formatted documents to anki decks
 MD2ANKI_URL: Final = "https://github.com/AnonymerNiklasistanonym/Md2Anki"
 MD2ANKI_URL_GIT: Final = f"{MD2ANKI_URL}.git"
 MD2ANKI_URL_BUG_TRACKER: Final = f"{MD2ANKI_URL}/issues"
-MD2ANKI_VERSION: Final = ProgramVersion(major=3, minor=0, patch=13, beta=True)
+MD2ANKI_VERSION: Final = ProgramVersion(major=3, minor=0, patch=14, beta=True)
 
 # md2anki Markdown information
 MD2ANKI_MD_ANKI_DECK_HEADING_SUBDECK_PREFIX: Final = "Subdeck: "
@@ -38,6 +38,3 @@ MD2ANKI_MD_COMMENT_INSERT_FILE_PREFIX = f"{MD2ANKI_NAME.upper()}_INSERT_FILE="
 # md2anki evaluate code information
 MD2ANKI_EVALUATE_CODE_ENV_NAME_ANKI_HTML_BOOL = f"{MD2ANKI_NAME.upper()}_ANKI_HTML"
 MD2ANKI_EVALUATE_CODE_ENV_NAME_PANDOC_PDF_BOOL = f"{MD2ANKI_NAME.upper()}_PANDOC_PDF"
-
-# anki information
-ANKI_SUBDECK_SEPARATOR: Final = "::"

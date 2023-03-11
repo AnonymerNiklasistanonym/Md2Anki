@@ -8,7 +8,7 @@ from typing import List, Optional
 # Append the module path for md2anki
 sys.path.append(join(dirname(__file__), "..", "src"))
 
-from md2anki.info import MD2ANKI_NAME
+from md2anki.info.general import MD2ANKI_NAME
 from md2anki.cli import parse_cli_args, AnkiCardModelId
 from md2anki.main import main
 

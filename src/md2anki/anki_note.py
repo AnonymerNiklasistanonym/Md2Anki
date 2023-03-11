@@ -88,6 +88,7 @@ class AnkiNote:
         custom_program_args: Dict[str, List[List[str]]],
         external_file_dirs: List[Path],
         evaluate_code: bool = False,
+        evaluate_code_cache_dir: Optional[Path] = None,
         keep_temp_files: bool = False,
     ) -> genanki.Note:
         """
@@ -97,6 +98,7 @@ class AnkiNote:
             @param custom_program: Custom program commands
             @param custom_program_args: Custom program command arguments
             @param evaluate_code: Evaluate code
+            @param evaluate_code_cache_dir: Cache code evaluations in directory
             @param external_file_dirs: External file directories to insert files from
             @param keep_temp_files: Keep temporary files (debugging)
         Returns:
@@ -112,6 +114,7 @@ class AnkiNote:
                     custom_program=custom_program,
                     custom_program_args=custom_program_args,
                     evaluate_code=evaluate_code,
+                    evaluate_code_cache_dir=evaluate_code_cache_dir,
                     external_file_dirs=external_file_dirs,
                     keep_temp_files=keep_temp_files,
                     anki_latex_math=True,
@@ -123,6 +126,7 @@ class AnkiNote:
                     custom_program=custom_program,
                     custom_program_args=custom_program_args,
                     evaluate_code=evaluate_code,
+                    evaluate_code_cache_dir=evaluate_code_cache_dir,
                     external_file_dirs=external_file_dirs,
                     keep_temp_files=keep_temp_files,
                     anki_latex_math=True,

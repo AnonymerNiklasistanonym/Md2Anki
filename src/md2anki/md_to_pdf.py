@@ -6,10 +6,10 @@ import shutil
 import tempfile
 from os import fdopen
 from pathlib import Path
-from typing import List, Dict, Final, Tuple
+from typing import List, Dict, Final, Tuple, Optional
 
 # Local modules
-from md2anki.info import MD2ANKI_NAME
+from md2anki.info.general import MD2ANKI_NAME
 from md2anki.preprocessor import md_preprocessor_md2anki
 from md2anki.subprocess import run_subprocess
 
@@ -49,6 +49,7 @@ def create_pdf_from_md_content(
     dir_dynamic_files: Path,
     external_file_dirs: List[Path],
     evaluate_code: bool = False,
+    evaluate_code_cache_dir: Optional[Path] = None,
     keep_temp_files: bool = False,
 ):
     md_content = md_preprocessor_md2anki(
@@ -57,6 +58,7 @@ def create_pdf_from_md_content(
         custom_program=custom_program,
         custom_program_args=custom_program_args,
         evaluate_code=evaluate_code,
+        evaluate_code_cache_dir=evaluate_code_cache_dir,
         external_file_dirs=external_file_dirs,
         keep_temp_files=keep_temp_files,
     )

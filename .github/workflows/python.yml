@@ -31,10 +31,10 @@ jobs:
         cache: 'pip'
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install -r requirements.txt
+        python3 -m pip install --upgrade pip
+        python3 -m pip install -r requirements.txt
     - name: Run check [main.py]
-      run: python main.py --version
+      run: python3 main.py --version
     - name: Run check [run.sh]
       if: matrix.os == 'ubuntu-latest'
       run: ./run.sh --version
@@ -60,11 +60,11 @@ jobs:
         cache: 'pip'
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install black
+        python3 -m pip install --upgrade pip
+        python3 -m pip install black
     - name: Check formatting
       continue-on-error: true
-      run: python -m black --check src setup.py examples tests clean.py main.py update_readme.py
+      run: python3 -m black --check src setup.py examples tests clean.py main.py update_readme.py
 
 
   test:
@@ -85,8 +85,8 @@ jobs:
         cache: 'pip'
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install -r requirements.txt
+        python3 -m pip install --upgrade pip
+        python3 -m pip install -r requirements.txt
     - name: Install external dependencies [Ubuntu]
       if: matrix.os == 'ubuntu-latest'
       run: |
@@ -99,9 +99,9 @@ jobs:
     - name: Install external dependencies
       run: |
         npm install -g ts-node
-        python -m pip install numpy matplotlib
+        python3 -m pip install numpy matplotlib
     - name: Check if tests can be ran without errors
-      run: python -m unittest
+      run: python3 -m unittest
       working-directory: tests
 
 
@@ -123,12 +123,11 @@ jobs:
         cache: 'pip'
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install -r requirements.txt
-        python -m pip install --upgrade mypy types-beautifulsoup4 types-Markdown types-Pygments
+        python3 -m pip install --upgrade pip
+        python3 -m pip install -r requirements.txt
+        python3 -m pip install --upgrade mypy types-beautifulsoup4 types-Markdown types-Pygments
     - name: Check if type checks can be ran without errors
-      continue-on-error: true
-      run: python -m mypy src setup.py examples tests clean.py main.py update_readme.py
+      run: python3 -m mypy src examples tests clean.py main.py setup.py update_readme.py
 
 
   package:
@@ -153,22 +152,25 @@ jobs:
         cache: 'pip'
     - name: Create Python package
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install --upgrade build
-        python -m build
+        python3 -m pip install --upgrade pip
+        python3 -m pip install --upgrade build
+        python3 -m build
     - name: Install Python package [Linux]
       if: matrix.os == 'ubuntu-latest'
-      run: python -m pip install "$(ls | grep .*.whl)"
+      run: python3 -m pip install "$(ls | grep .*.whl)"
       working-directory: dist
     - name: Install Python package [Windows]
       if: matrix.os == 'windows-latest'
-      run: python -m pip install ((Get-ChildItem .).Name | Select-String -Pattern ".*.whl")
+      run: python3 -m pip install ((Get-ChildItem .).Name | Select-String -Pattern ".*.whl")
       working-directory: dist
     - name: Test if Python package installation was successful
       run: |
         md2anki --version
         md2anki "basic_example.md"
         md2anki "images_example.md" -file-dir "."
+        python3 -m md2anki --version
+        python3 -m md2anki "basic_example.md"
+        python3 -m md2anki "images_example.md" -file-dir "."
       working-directory: examples
     - name: Create checksums for the Python package files [Linux]
       if: matrix.os == 'ubuntu-latest'

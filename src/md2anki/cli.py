@@ -8,23 +8,24 @@ import argparse
 import json
 import logging
 import sys
+import tempfile
 from dataclasses import dataclass, field
 from operator import attrgetter
 from pathlib import Path
 from typing import Optional, List, Dict, Final, Tuple, TypeVar, Callable
 
 # Local modules
-from md2anki.info import (
+from md2anki.info.evaluate_code import (
+    EVALUATE_CODE_DEFAULT_COMMANDS,
+    EVALUATE_CODE_PLACEHOLDER_CODE_STRING,
+)
+from md2anki.info.general import (
     MD2ANKI_VERSION,
     MD2ANKI_NAME,
     MD2ANKI_MD_EVALUATE_CODE_LANGUAGE_PREFIX,
 )
 from md2anki.md_to_pdf import PANDOC_ARGS_PDF
 from md2anki.note_models import AnkiCardModelId
-from md2anki.evaluate_code import (
-    DEFAULT_CUSTOM_PROGRAM,
-    EVALUATE_CODE_PLACEHOLDER_CODE_STRING,
-)
 
 
 class SortedArgumentDefaultsHelpFormatter(argparse.ArgumentDefaultsHelpFormatter):
@@ -76,9 +77,15 @@ class Md2AnkiArgs:
         default_factory=lambda: dict()
     )
     """Custom program args for languages used for code evaluation."""
+    evaluate_code_cache_dir_path: Optional[Path] = None
+    """The optional cache dir path of the evaluated code."""
 
     evaluate_code = False
     """Evaluate code."""
+    evaluate_code_ignore_cache = False
+    """Ignore cache of already evaluated code."""
+    evaluate_code_delete_cache = False
+    """Delete cache of already evaluated code."""
     keep_temp_files = False
     """Remove temporary files."""
     error: Optional[MdInputFileNotFoundException] = None
@@ -101,12 +108,12 @@ def convert_list_to_dict_merged(
 
 DEFAULT_CUSTOM_PROGRAMS: Final = [
     (key, program)
-    for key, values in DEFAULT_CUSTOM_PROGRAM.items()
+    for key, values in EVALUATE_CODE_DEFAULT_COMMANDS.items()
     for program, _ in values
 ] + [(key, program) for key, values in PANDOC_ARGS_PDF.items() for program, _ in values]
 DEFAULT_CUSTOM_PROGRAM_ARGS: Final = [
     (key, json.dumps(program_args))
-    for key, values in DEFAULT_CUSTOM_PROGRAM.items()
+    for key, values in EVALUATE_CODE_DEFAULT_COMMANDS.items()
     for _, program_args in values
 ] + [
     (key, json.dumps(program_args))
@@ -167,6 +174,16 @@ def get_argument_parser() -> argparse.ArgumentParser:
         "i.e. '`print(1+1)`{=python} or '```{=python} [newline] print(1+1) [newline] ```'",
     )
     parser.add_argument(
+        "--evaluate-code-ignore-cache",
+        action="store_true",
+        help="ignore the cached files from previous code evaluations",
+    )
+    parser.add_argument(
+        "--evaluate-code-delete-cache",
+        action="store_true",
+        help="delete all cached files from previous code evaluations",
+    )
+    parser.add_argument(
         "-k",
         "--keep-temp-files",
         action="store_true",
@@ -210,6 +227,12 @@ def get_argument_parser() -> argparse.ArgumentParser:
         metavar="PDF_FILE",
         type=Path,
         help="create a PDF (.pdf) file of the anki deck (i.e. merges input files and removes IDs)",
+    )
+    parser.add_argument(
+        "-evaluate-code-cache-dir",
+        metavar="CACHE_DIR",
+        type=Path,
+        help="use a custom cache dir for code evaluations",
     )
     parser.add_argument(
         "-log-file",
@@ -337,6 +360,14 @@ def parse_cli_args(cli_args: List[str]) -> Md2AnkiArgs:
     parsed_args.backup_output_dir_path = args.o_backup_dir
     parsed_args.pdf_output_file_path = args.o_pdf
     parsed_args.evaluate_code = args.evaluate_code
+    parsed_args.evaluate_code_ignore_cache = args.evaluate_code_ignore_cache
+    parsed_args.evaluate_code_delete_cache = args.evaluate_code_delete_cache
+    parsed_args.evaluate_code_cache_dir_path = args.evaluate_code_cache_dir
+
+    if parsed_args.evaluate_code_cache_dir_path is None:
+        parsed_args.evaluate_code_cache_dir_path = Path(tempfile.gettempdir()).joinpath(
+            f"{MD2ANKI_NAME}_evaluate_code_cache"
+        )
 
     if args.keep_temp_files is not None:
         parsed_args.keep_temp_files = args.keep_temp_files
@@ -381,16 +412,20 @@ def parse_cli_args(cli_args: List[str]) -> Md2AnkiArgs:
             )
             parsed_args.additional_file_dirs.remove(additional_file_dir)
 
-    parsed_args.anki_output_file_path = (
-        args.o_anki
-        if args.o_anki
-        else parsed_args.md_input_file_paths[0].parent.joinpath(
-            f"{parsed_args.md_input_file_paths[0].stem}.apkg"
+    if args.o_anki is not None:
+        # Only automatically create an anki output file path if it was not none
+        parsed_args.anki_output_file_path = (
+            args.o_anki if f"{args.o_anki}".lower() != "none" else None
         )
-    )
+    else:
+        parsed_args.anki_output_file_path = parsed_args.md_input_file_paths[
+            0
+        ].parent.joinpath(f"{parsed_args.md_input_file_paths[0].stem}.apkg")
 
-    if args.o_md:
-        parsed_args.md_output_file_paths = [args.o_md]
+    if args.o_md is not None:
+        parsed_args.md_output_file_paths = (
+            [args.o_md] if f"{args.o_md}".lower() != "none" else None
+        )
     elif args.o_md_dir:
         parsed_args.md_output_dir_path = args.o_md_dir
     else:

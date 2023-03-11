@@ -15,7 +15,7 @@ from md2anki.anki_deck import (
     backup_anki_decks_to_dir,
 )
 from md2anki.cli import Md2AnkiArgs, AnkiCardModelId
-from md2anki.info import MD2ANKI_NAME
+from md2anki.info.general import MD2ANKI_NAME
 from md2anki.md_parser import parse_md_content_to_anki_deck_list
 from md2anki.md_to_pdf import create_pdf_from_md_content
 from md2anki.note_models import (
@@ -33,6 +33,30 @@ def main(args: Md2AnkiArgs) -> int:
     if args.error is not None:
         log.error(args.error)
         return 1
+
+    # Other routines
+    if (
+        args.evaluate_code_delete_cache
+        and args.evaluate_code_cache_dir_path is not None
+    ):
+        log.debug(
+            f"Delete evaluate code cache dir {args.evaluate_code_cache_dir_path!r}"
+        )
+        if args.evaluate_code_cache_dir_path.is_dir():
+            shutil.rmtree(args.evaluate_code_cache_dir_path)
+    if args.evaluate_code_cache_dir_path is not None and args.evaluate_code:
+        args.evaluate_code_cache_dir_path.mkdir(parents=True, exist_ok=True)
+
+    # Stop parsing if no outputs are specified
+    if (
+        args.anki_output_file_path is None
+        and args.md_output_file_paths is None
+        and args.md_output_dir_path is None
+        and args.pdf_output_file_path is None
+        and args.backup_output_dir_path is None
+    ):
+        log.warning("Stop parsing because no outputs are specified!")
+        return 0
 
     # Create the Anki card model
     if args.anki_card_model == AnkiCardModelId.DEFAULT:
@@ -76,6 +100,9 @@ def main(args: Md2AnkiArgs) -> int:
                         custom_program=args.custom_program,
                         custom_program_args=args.custom_program_args,
                         evaluate_code=args.evaluate_code,
+                        evaluate_code_cache_dir=None
+                        if args.evaluate_code_ignore_cache
+                        else args.evaluate_code_cache_dir_path,
                         external_file_dirs=args.additional_file_dirs,
                         keep_temp_files=args.keep_temp_files,
                     )
@@ -161,6 +188,9 @@ def main(args: Md2AnkiArgs) -> int:
                     custom_program_args=args.custom_program_args,
                     dir_dynamic_files=tmp_dir_dynamic_files_pdf,
                     evaluate_code=args.evaluate_code,
+                    evaluate_code_cache_dir=None
+                    if args.evaluate_code_ignore_cache
+                    else args.evaluate_code_cache_dir_path,
                     external_file_dirs=args.additional_file_dirs,
                     keep_temp_files=args.keep_temp_files,
                 )

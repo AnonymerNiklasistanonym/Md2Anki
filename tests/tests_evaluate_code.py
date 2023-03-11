@@ -19,7 +19,7 @@ from md2anki.cli import (
     str_to_str,
     json_str_to_str_list,
 )
-from md2anki.info import MD2ANKI_NAME
+from md2anki.info.general import MD2ANKI_NAME
 from md2anki.evaluate_code import evaluate_code_in_subprocess
 
 

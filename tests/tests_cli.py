@@ -36,6 +36,9 @@ class TestCliArgs(unittest.TestCase):
                     ),
                     custom_program=parse_cli_args([__file__]).custom_program,
                     custom_program_args=parse_cli_args([__file__]).custom_program_args,
+                    evaluate_code_cache_dir_path=parse_cli_args(
+                        [__file__]
+                    ).evaluate_code_cache_dir_path,
                 ),
             ),
             (
@@ -49,6 +52,9 @@ class TestCliArgs(unittest.TestCase):
                     ),
                     custom_program=parse_cli_args([__file__]).custom_program,
                     custom_program_args=parse_cli_args([__file__]).custom_program_args,
+                    evaluate_code_cache_dir_path=parse_cli_args(
+                        [__file__]
+                    ).evaluate_code_cache_dir_path,
                 ),
             ),
             (
@@ -67,6 +73,9 @@ class TestCliArgs(unittest.TestCase):
                     ),
                     custom_program=parse_cli_args([__file__]).custom_program,
                     custom_program_args=parse_cli_args([__file__]).custom_program_args,
+                    evaluate_code_cache_dir_path=parse_cli_args(
+                        [__file__]
+                    ).evaluate_code_cache_dir_path,
                 ),
             ),
             (
@@ -90,6 +99,9 @@ class TestCliArgs(unittest.TestCase):
                         **{"py": ["python3.8"], "cpp": ["gcc"]},
                     },
                     custom_program_args=parse_cli_args([__file__]).custom_program_args,
+                    evaluate_code_cache_dir_path=parse_cli_args(
+                        [__file__]
+                    ).evaluate_code_cache_dir_path,
                 ),
             ),
         ]

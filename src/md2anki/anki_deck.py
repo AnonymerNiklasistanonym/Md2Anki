@@ -14,8 +14,8 @@ import genanki
 from md2anki.anki_model import AnkiModel
 from md2anki.anki_note import AnkiNote, MdSection
 from md2anki.create_id import create_unique_id_int
-from md2anki.info import (
-    ANKI_SUBDECK_SEPARATOR,
+from md2anki.info.anki import ANKI_SUBDECK_SEPARATOR
+from md2anki.info.general import (
     MD2ANKI_URL_GIT,
     MD2ANKI_NAME,
     MD2ANKI_VERSION,
@@ -58,8 +58,9 @@ class AnkiDeck:
         custom_program: Dict[str, List[str]],
         custom_program_args: Dict[str, List[List[str]]],
         external_file_dirs: List[Path],
-        evaluate_code: bool,
-        keep_temp_files: bool,
+        evaluate_code: bool = False,
+        evaluate_code_cache_dir: Optional[Path] = None,
+        keep_temp_files: bool = False,
     ) -> genanki.Deck:
         tmp_anki_deck = genanki.Deck(self.guid, self.name)
         for note in self.notes:
@@ -70,6 +71,7 @@ class AnkiDeck:
                     custom_program=custom_program,
                     custom_program_args=custom_program_args,
                     evaluate_code=evaluate_code,
+                    evaluate_code_cache_dir=evaluate_code_cache_dir,
                     external_file_dirs=external_file_dirs,
                     keep_temp_files=keep_temp_files,
                 )
@@ -112,6 +114,7 @@ class AnkiDeck:
         custom_program_args: Dict[str, List[List[str]]],
         external_file_dirs: List[Path],
         evaluate_code: bool = False,
+        evaluate_code_cache_dir: Optional[Path] = None,
         keep_temp_files: bool = False,
     ) -> Tuple[genanki.Deck, List[Path]]:
         """Return anki deck and a list of all media files."""
@@ -121,6 +124,7 @@ class AnkiDeck:
             custom_program=custom_program,
             custom_program_args=custom_program_args,
             evaluate_code=evaluate_code,
+            evaluate_code_cache_dir=evaluate_code_cache_dir,
             external_file_dirs=external_file_dirs,
             keep_temp_files=keep_temp_files,
         )

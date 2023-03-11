@@ -14,7 +14,7 @@ sys.path.append(str(Path(__file__).parent.joinpath("src", "md2anki")))
 
 # Local modules
 # These imports will only import the self-contained constants of the files and not require the module dependencies
-from info import (
+from info.general import (
     MD2ANKI_VERSION,
     MD2ANKI_NAME,
     MD2ANKI_AUTHOR,
@@ -22,7 +22,7 @@ from info import (
     MD2ANKI_URL,
     MD2ANKI_URL_BUG_TRACKER,
 )
-from files import (
+from info.files import (
     RELATIVE_RES_CSS_FILE_PATH,
     RELATIVE_RES_CSS_FILE_PATH_TYPE_ANSWER,
 )
