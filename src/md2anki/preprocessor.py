@@ -24,6 +24,8 @@ from md2anki.info.general import (
     MD2ANKI_EVALUATE_CODE_ENV_NAME_PANDOC_PDF_BOOL,
     MD2ANKI_MD_COMMENT_INSERT_FILE_PREFIX,
     MD2ANKI_NAME,
+    MD2ANKI_MD_MD2ANKI_TAG_PREFIX,
+    MD2ANKI_MD_MD2ANKI_TAG_SUFFIX,
 )
 from md2anki.md_util import (
     md_update_local_filepaths,
@@ -139,7 +141,15 @@ def md_preprocessor_md2anki(
         code_block: bool,
         language: Optional[str],
         code_block_indent: Optional[str],
-    ):
+    ) -> str:
+        # Remove md2anki tags
+        if (
+            code_block is False
+            and language is None
+            and code.startswith(MD2ANKI_MD_MD2ANKI_TAG_PREFIX)
+            and code.endswith(MD2ANKI_MD_MD2ANKI_TAG_SUFFIX)
+        ):
+            return ""
         # Fix pandoc inline notation for language formatting
         if language is not None and language.startswith("."):
             language = language[1:]

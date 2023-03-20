@@ -11,11 +11,19 @@ from re import Match
 from typing import Callable, Final, Optional, Set, Tuple
 from urllib.parse import urlparse, ParseResult
 
+# Local modules
+from md2anki.info.general import (
+    MD2ANKI_MD_MD2ANKI_TAG_PREFIX,
+    MD2ANKI_MD_MD2ANKI_TAG_SUFFIX,
+)
+
 # Logger
 log = logging.getLogger(__name__)
 
 # Constants
-REGEX_MD_TAG: Final = re.compile(r"`{=:(.*?):=}`")
+REGEX_MD_TAG: Final = re.compile(
+    rf"`{MD2ANKI_MD_MD2ANKI_TAG_PREFIX}(.*?){MD2ANKI_MD_MD2ANKI_TAG_SUFFIX}`"
+)
 """
 Regex expression to parse a markdown tag notation: '`{=:tag list string:=}`'
 The first group is the 'tag list string'.
