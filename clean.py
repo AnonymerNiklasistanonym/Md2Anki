@@ -7,13 +7,14 @@ from pathlib import Path
 
 
 def rm_dir(dir_path: Path, dry_run=False):
-    print(f"Remove directory {dir_path!r}")
+    print(f"Remove directory {dir_path!r} ({dry_run=},isDir={dir_path.is_dir()})")
     if not dry_run and dir_path.is_dir():
+        print("a")
         shutil.rmtree(dir_path)
 
 
 def rm_file(file_path: Path, dry_run=False):
-    print(f"Remove file {file_path!r}")
+    print(f"Remove file {file_path!r} ({dry_run=},isFile={file_path.is_file()})")
     if not dry_run and file_path.is_file():
         file_path.unlink()
 
@@ -25,9 +26,18 @@ if __name__ == "__main__":
     dir_dist = dir_root.joinpath("dist")
     dir_examples = dir_root.joinpath("examples")
     dir_src = dir_root.joinpath("src")
+    dir_src_md2anki = dir_src.joinpath("md2anki")
+    dir_src_md2anki_info = dir_src_md2anki.joinpath("info")
     dir_egg_info = dir_src.joinpath("md2anki.egg-info")
-    dir_mypy_cache = dir_root.joinpath(".mypy_cache")
+    dir_mypy_cache_list = [
+        dir_root.joinpath(".mypy_cache"),
+        dir_src.joinpath(".mypy_cache"),
+        dir_src_md2anki.joinpath(".mypy_cache"),
+        dir_src_md2anki_info.joinpath(".mypy_cache"),
+    ]
     dir_temp = Path(tempfile.gettempdir())
+    dir_coverage_html = dir_root.joinpath("htmlcov")
+    coverage_file = dir_root.joinpath(".coverage")
 
     # Remove example files
     for example_backup_dir in dir_examples.rglob("backup_*"):
@@ -53,7 +63,8 @@ if __name__ == "__main__":
     rm_dir(dir_egg_info, dry_run=dry_run_deletions)
 
     # Remove mypy cache directory
-    rm_dir(dir_mypy_cache, dry_run=dry_run_deletions)
+    for dir_mypy_cache in dir_mypy_cache_list:
+        rm_dir(dir_mypy_cache, dry_run=dry_run_deletions)
 
     # Remove pycache directories
     venv_directories = [
@@ -67,3 +78,7 @@ if __name__ == "__main__":
                 skip = True
         if not skip:
             rm_dir(pycache_dir, dry_run=dry_run_deletions)
+
+    # Remove coverage files
+    rm_dir(dir_coverage_html, dry_run=dry_run_deletions)
+    rm_file(coverage_file, dry_run=dry_run_deletions)

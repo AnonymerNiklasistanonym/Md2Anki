@@ -415,7 +415,7 @@ def parse_cli_args(cli_args: List[str]) -> Md2AnkiArgs:
     if args.o_anki is not None:
         # Only automatically create an anki output file path if it was not none
         parsed_args.anki_output_file_path = (
-            args.o_anki if f"{args.o_anki}".lower() != "none" else None
+            args.o_anki if f"{args.o_anki.name}".lower() != "none" else None
         )
     else:
         parsed_args.anki_output_file_path = parsed_args.md_input_file_paths[
@@ -424,7 +424,7 @@ def parse_cli_args(cli_args: List[str]) -> Md2AnkiArgs:
 
     if args.o_md is not None:
         parsed_args.md_output_file_paths = (
-            [args.o_md] if f"{args.o_md}".lower() != "none" else None
+            [args.o_md] if f"{args.o_md.name}".lower() != "none" else None
         )
     elif args.o_md_dir:
         parsed_args.md_output_dir_path = args.o_md_dir
