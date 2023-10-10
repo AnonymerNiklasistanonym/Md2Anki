@@ -1,9 +1,9 @@
-beautifulsoup4==4.11.2
+beautifulsoup4==4.12.2
 cached-property==1.5.2
 chevron==0.14.0
-frozendict==2.3.4
+frozendict==2.3.8
 genanki==0.13.0
-Markdown==3.4.1
-Pygments==2.14.0
-PyYAML==6.0
-soupsieve==2.3.2.post1
+Markdown==3.5
+Pygments==2.16.1
+PyYAML==6.0.1
+soupsieve==2.5
