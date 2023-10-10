@@ -26,6 +26,7 @@ $$
 
 ## Question with formulas in different formats: (13ad0c68-bed4-45d7-b389-06cb9108d52d)
 
+- Normal text: 50s < 100s (4>2)
 - Formula: $a = 20$, $b = 30$
 - Math formula:
 
@@ -35,6 +36,7 @@ $$
   0 & \text{else}
   \end{cases}
   $$
+- Escape the inline math opening/closing tag symbol: 10$\$$
 
 ## Sinus, Kosinus und Tangens (09605ae5-f9c5-48ee-8586-c43dcfbd6cab)
 

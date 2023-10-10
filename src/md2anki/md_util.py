@@ -54,8 +54,13 @@ The fourth and last group is the actual code part (including indents!).
 REGEX_INLINE_CODE: Final = re.compile(r"(?<!\S)`([^`]+?)`(?:\{(.+?)})?(?!\S)")
 
 REGEX_MATH_SECTION: Final = re.compile(
-    r"\${2}((?:[^$]|\n)+?)\${2}|\$(.+?)\$", flags=re.MULTILINE
+    r"\${2}((?:[^$]|\n)+?)\${2}|\$([^\n]+?)(?<!\\)\$", flags=re.MULTILINE
 )
+"""
+Regex expression to find math sections. The first part matches $$...$$ sections and the second part inline $...$
+sections. To have the option to escape the $ symbol there is a negative lookbehind in front of the closing $ symbol
+that checks if it was escaped and then moves on to the next $ symbol.
+"""
 
 # TODO Add update local files method
 # TODO Add update (inline) code blocks method
