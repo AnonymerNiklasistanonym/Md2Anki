@@ -43,8 +43,10 @@ def run_subprocess(
         command_path = shutil.which(str(cwd.joinpath(command)))
     if command_path is None and Path(command).is_file() and os.access(command, os.X_OK):
         command_path = command
+        log.debug(f"Found command path os.access=OK {command_path=}")
     if command_path is None:
         command_path = shutil.which(command)
+        log.debug(f"Found command path shutil.which {command_path=}")
     if command_path is None:
         raise ProgramNotFoundException(f"{command=} could not be found")
     command_args: Final[List[str]] = list() if args is None else args

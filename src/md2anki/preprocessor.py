@@ -200,6 +200,7 @@ def md_preprocessor_md2anki(
                 )
         except UnableToEvaluateCodeException as err:
             log.error(err)
+
         if language is None:
             language = "text"
         if render_to_html is False:
@@ -213,7 +214,7 @@ def md_preprocessor_md2anki(
             language_lexer = get_lexer_by_name(language)
         except ClassNotFound as err:
             log.warning(
-                f"Default to text lexer ({language=}, {err=})",
+                f"Default to text lexer ({language=}, {err=}, check supported lexers by running with --lexers)",
             )
             language_lexer = get_lexer_by_name("text")
         html_formatter = get_formatter_by_name("html", noclasses=True)

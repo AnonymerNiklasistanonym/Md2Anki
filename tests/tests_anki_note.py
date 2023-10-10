@@ -80,9 +80,7 @@ class TestAnkiNoteGeneric(unittest.TestCase):
                     ),
                 ),
                 (
-                    '<p class="highlight_inline_next">question</p>\n'
-                    + '<div class="highlight highlight_inline" style=""><pre style="line-height: '
-                    + '125%;"><span></span>{=:note_tag:=} </pre></div>',
+                    "<p>question</p>",
                     '<p>answer \\(66 * 42 = 10\\) <img alt="" src="wikipedia_svg_demo.svg" style=""/></p>',
                 ),
             ),

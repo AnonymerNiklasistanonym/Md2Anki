@@ -142,3 +142,5 @@ backup_*
 temp
 *.pdf
 .vscode/settings.json
+package-lock.json
+package.json

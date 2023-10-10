@@ -200,12 +200,18 @@ def evaluate_code_in_subprocess(
                 results.append(p)
             else:
                 # Run subprocess
-                p = run_subprocess(
-                    program_binary,
-                    program_binary_args,
-                    cwd=dir_path_temp,
-                    additional_env=additional_env,
-                )
+                try:
+                    p = run_subprocess(
+                        program_binary,
+                        program_binary_args,
+                        cwd=dir_path_temp,
+                        additional_env=additional_env,
+                    )
+                except OSError as err:
+                    log.error(
+                        f"Error running the command {program_binary=} {program_binary_args=} cwd={dir_path_temp!r} {additional_env=} ({program=})"
+                    )
+                    raise err
                 # Store cache
                 evaluate_code_copy_and_store_cache(
                     cache_dir,

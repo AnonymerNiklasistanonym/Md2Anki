@@ -12,6 +12,8 @@ import tempfile
 from dataclasses import dataclass, field
 from operator import attrgetter
 from pathlib import Path
+from pygments import __version__ as pygments_version
+from pygments.lexers import get_all_lexers
 from typing import Optional, List, Dict, Final, Tuple, TypeVar, Callable
 
 # Local modules
@@ -151,6 +153,14 @@ def get_argument_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "-v", "--version", action="version", version=f"%(prog)s {MD2ANKI_VERSION}"
+    )
+    parser.add_argument(
+        "--lexers",
+        action="version",
+        version=f"Pygments {pygments_version} supports lexers for the following languages: "
+        f" {', '.join([x[0] + ' (' + ', '.join(x[1]) + ')' for x in get_all_lexers()])}. "
+        "For more information check https://pygments.org/docs/lexers.",
+        help="print a list of all supported lexer languages and their aliases",
     )
 
     parser.add_argument(

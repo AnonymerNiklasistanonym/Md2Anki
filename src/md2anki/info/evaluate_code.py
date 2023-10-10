@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Internal packages
+import os
 from typing import Dict, Final, List, Tuple
 
 # Types
@@ -18,7 +19,12 @@ EVALUATE_CODE_PREFIX_CODE_FILE_NAME: Final = "MD2ANKI_CODE_FILE="
 EVALUATE_CODE_DEFAULT_COMMANDS: Final[EvaluateCodeInfo] = {
     "py": [("python", ["-c", EVALUATE_CODE_PLACEHOLDER_CODE_STRING])],
     "js": [("node", ["-e", EVALUATE_CODE_PLACEHOLDER_CODE_STRING])],
-    "ts": [("ts-node", [f"{EVALUATE_CODE_PREFIX_CODE_FILE_NAME}code.ts"])],
+    "ts": [
+        (
+            "ts-node.cmd" if os.name == "nt" else "ts-node",
+            [f"{EVALUATE_CODE_PREFIX_CODE_FILE_NAME}code.ts"],
+        )
+    ],
     "pl": [
         (
             "swipl",
