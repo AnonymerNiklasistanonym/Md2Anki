@@ -19,13 +19,13 @@ from pygments.util import ClassNotFound
 from md2anki.create_id import create_unique_id
 from md2anki.html_util import fix_inline_code_p_tags
 from md2anki.info.general import (
-    MD2ANKI_MD_EVALUATE_CODE_LANGUAGE_PREFIX,
+    MD2ANKI_MD_PP_EVALUATE_CODE_LANGUAGE_PREFIX,
     MD2ANKI_EVALUATE_CODE_ENV_NAME_ANKI_HTML_BOOL,
     MD2ANKI_EVALUATE_CODE_ENV_NAME_PANDOC_PDF_BOOL,
-    MD2ANKI_MD_COMMENT_INSERT_FILE_PREFIX,
+    MD2ANKI_MD_PP_COMMENT_INSERT_FILE_PREFIX,
     MD2ANKI_NAME,
-    MD2ANKI_MD_MD2ANKI_TAG_PREFIX,
-    MD2ANKI_MD_MD2ANKI_TAG_SUFFIX,
+    MD2ANKI_MD_PP_MD2ANKI_TAG_PREFIX,
+    MD2ANKI_MD_PP_MD2ANKI_TAG_SUFFIX,
 )
 from md2anki.md_util import (
     md_update_local_filepaths,
@@ -46,7 +46,7 @@ log = logging.getLogger(__name__)
 REGEX_MATH_BLOCK: Final = re.compile(r"\$\$([\S\s\n]+?)\$\$", flags=re.MULTILINE)
 REGEX_MD_COMMENT_INSERT_FILE: Final = re.compile(
     r"(?:^[ \t]*[\n\r]|\A)(?P<indent>[ \t]*)\[//]:\s+#\s+\("
-    rf"{MD2ANKI_MD_COMMENT_INSERT_FILE_PREFIX}"
+    rf"{MD2ANKI_MD_PP_COMMENT_INSERT_FILE_PREFIX}"
     r"(?P<file>.*?)\)(?=(?:[ \t]*[\n\r]){2,}|[ \t]*\Z)",
     flags=re.MULTILINE,
 )
@@ -146,8 +146,8 @@ def md_preprocessor_md2anki(
         if (
             code_block is False
             and language is None
-            and code.startswith(MD2ANKI_MD_MD2ANKI_TAG_PREFIX)
-            and code.endswith(MD2ANKI_MD_MD2ANKI_TAG_SUFFIX)
+            and code.startswith(MD2ANKI_MD_PP_MD2ANKI_TAG_PREFIX)
+            and code.endswith(MD2ANKI_MD_PP_MD2ANKI_TAG_SUFFIX)
         ):
             return ""
         # Fix pandoc inline notation for language formatting
@@ -164,7 +164,7 @@ def md_preprocessor_md2anki(
             if (
                 evaluate_code
                 and language is not None
-                and language.startswith(MD2ANKI_MD_EVALUATE_CODE_LANGUAGE_PREFIX)
+                and language.startswith(MD2ANKI_MD_PP_EVALUATE_CODE_LANGUAGE_PREFIX)
             ):
                 code_output, image_list = evaluate_code_in_subprocess(
                     language[1:],

@@ -359,7 +359,6 @@ The tests can be run using the command (in the `tests` directory):
 python -m unittest
 ```
 
-
 ### Format code
 
 Python files can be formatted using the commands:

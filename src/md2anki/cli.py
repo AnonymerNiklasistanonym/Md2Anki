@@ -19,12 +19,12 @@ from typing import Optional, List, Dict, Final, Tuple, TypeVar, Callable
 # Local modules
 from md2anki.info.evaluate_code import (
     EVALUATE_CODE_DEFAULT_COMMANDS,
-    EVALUATE_CODE_PLACEHOLDER_CODE_STRING,
+    EVALUATE_CODE_MD2ANKI_PLACEHOLDER_CODE_STRING,
 )
 from md2anki.info.general import (
     MD2ANKI_VERSION,
     MD2ANKI_NAME,
-    MD2ANKI_MD_EVALUATE_CODE_LANGUAGE_PREFIX,
+    MD2ANKI_MD_PP_EVALUATE_CODE_LANGUAGE_PREFIX,
 )
 from md2anki.md_to_pdf import PANDOC_ARGS_PDF
 from md2anki.note_models import AnkiCardModelId
@@ -180,7 +180,7 @@ def get_argument_parser() -> argparse.ArgumentParser:
         "--evaluate-code",
         action="store_true",
         help="evaluate markdown inline code/code blocks with the language prefix "
-        f"{MD2ANKI_MD_EVALUATE_CODE_LANGUAGE_PREFIX!r} "
+        f"{MD2ANKI_MD_PP_EVALUATE_CODE_LANGUAGE_PREFIX!r} "
         "i.e. '`print(1+1)`{=python} or '```{=python} [newline] print(1+1) [newline] ```'",
     )
     parser.add_argument(
@@ -290,7 +290,7 @@ def get_argument_parser() -> argparse.ArgumentParser:
         nargs=2,
         default=DEFAULT_CUSTOM_PROGRAM_ARGS,
         help='use custom program args for code evaluation  [i.e. "py" "[\\"-c\\",\\"'
-        f"{EVALUATE_CODE_PLACEHOLDER_CODE_STRING}"
+        f"{EVALUATE_CODE_MD2ANKI_PLACEHOLDER_CODE_STRING}"
         '\\"]"]',
     )
     parser.add_argument(

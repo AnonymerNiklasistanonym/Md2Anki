@@ -44,10 +44,10 @@ setup(
     packages=find_packages(where="src"),
     python_requires=">=3.9",
     install_requires=[
-        "beautifulsoup4>=4.11.2",
+        "beautifulsoup4>=4.12.2",
         "genanki>=0.13.0",
-        "Markdown>=3.4.1",
-        "Pygments>=2.14.0",
+        "Markdown>=3.5",
+        "Pygments>=2.16.1",
     ],
     package_data={
         MD2ANKI_NAME: [

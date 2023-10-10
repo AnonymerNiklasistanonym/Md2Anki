@@ -11,8 +11,8 @@ from typing import List, Optional, Dict, Tuple
 
 # Local modules
 from md2anki.info.evaluate_code import (
-    EVALUATE_CODE_PLACEHOLDER_CODE_STRING,
-    EVALUATE_CODE_PREFIX_CODE_FILE_NAME,
+    EVALUATE_CODE_MD2ANKI_PLACEHOLDER_CODE_STRING,
+    EVALUATE_CODE_MD2ANKI_PREFIX_CODE_FILE_NAME,
 )
 from md2anki.info.general import MD2ANKI_NAME
 from md2anki.subprocess import run_subprocess
@@ -142,11 +142,11 @@ def evaluate_code_in_subprocess(
     if program in custom_program_args:
 
         def insert_code_or_code_file(program_bin_arg: str) -> str:
-            if program_bin_arg == EVALUATE_CODE_PLACEHOLDER_CODE_STRING:
+            if program_bin_arg == EVALUATE_CODE_MD2ANKI_PLACEHOLDER_CODE_STRING:
                 return code
-            if program_bin_arg.startswith(EVALUATE_CODE_PREFIX_CODE_FILE_NAME):
+            if program_bin_arg.startswith(EVALUATE_CODE_MD2ANKI_PREFIX_CODE_FILE_NAME):
                 code_file_name = program_bin_arg[
-                    len(EVALUATE_CODE_PREFIX_CODE_FILE_NAME) :
+                    len(EVALUATE_CODE_MD2ANKI_PREFIX_CODE_FILE_NAME) :
                 ]
                 if len(code_file_name) == 0:
                     raise RuntimeError(

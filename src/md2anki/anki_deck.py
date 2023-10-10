@@ -14,17 +14,16 @@ import genanki
 from md2anki.anki_model import AnkiModel
 from md2anki.anki_note import AnkiNote, MdSection
 from md2anki.create_id import create_unique_id_int
-from md2anki.info.anki import ANKI_SUBDECK_SEPARATOR
+from md2anki.info.anki import ANKI_SUBDECK_SEPARATOR, ANKI_SUPPORTED_FILE_FORMATS
 from md2anki.info.general import (
     MD2ANKI_URL_GIT,
     MD2ANKI_NAME,
     MD2ANKI_VERSION,
-    MD2ANKI_MD_ANKI_DECK_HEADING_SUBDECK_PREFIX,
+    MD2ANKI_MD_PP_ANKI_DECK_HEADING_SUBDECK_PREFIX,
 )
 from md2anki.md_util import md_get_used_md2anki_tags
 
-ANKI_SUPPORTED_FILE_FORMATS: Final = [".jpg", ".png", ".svg"]
-
+# Logger
 log = logging.getLogger(__name__)
 
 
@@ -212,7 +211,7 @@ def md_merge_anki_decks_to_md_file(
                 file.write(
                     anki_deck_heading.create_string(
                         depth=heading_depth + initial_heading_depth - 1,
-                        heading_prefix=MD2ANKI_MD_ANKI_DECK_HEADING_SUBDECK_PREFIX
+                        heading_prefix=MD2ANKI_MD_PP_ANKI_DECK_HEADING_SUBDECK_PREFIX
                         if heading_depth > 1
                         else "",
                         with_heading_id=not remove_ids,

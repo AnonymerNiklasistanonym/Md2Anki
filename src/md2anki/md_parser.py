@@ -13,8 +13,8 @@ from md2anki.anki_deck import AnkiDeck, AnkiNote
 from md2anki.create_id import create_unique_id_int, create_unique_id
 from md2anki.info.anki import ANKI_SUBDECK_SEPARATOR
 from md2anki.info.general import (
-    MD2ANKI_MD_ANKI_DECK_HEADING_SUBDECK_PREFIX,
-    MD2ANKI_MD_ANKI_NOTE_QUESTION_ANSWER_SEPARATOR,
+    MD2ANKI_MD_PP_ANKI_DECK_HEADING_SUBDECK_PREFIX,
+    MD2ANKI_MD_PP_ANKI_NOTE_QUESTION_ANSWER_SEPARATOR,
 )
 
 REGEX_MD_ANKI_DECK_HEADING: Final = re.compile(r"^(#+)\s+(.+?)(?:\s+\((\d+)\))?\s*$")
@@ -97,7 +97,7 @@ def parse_possible_anki_deck_heading(
             else create_unique_id_int()
         )
         anki_deck_is_subdeck = anki_deck_name.startswith(
-            MD2ANKI_MD_ANKI_DECK_HEADING_SUBDECK_PREFIX
+            MD2ANKI_MD_PP_ANKI_DECK_HEADING_SUBDECK_PREFIX
         )
         if anki_deck_is_subdeck:
             if parent_deck_name is None:
@@ -105,7 +105,7 @@ def parse_possible_anki_deck_heading(
                     f"Found {anki_deck_name=} heading that is a subdeck but no parent deck name"
                 )
             anki_deck_name = anki_deck_name[
-                len(MD2ANKI_MD_ANKI_DECK_HEADING_SUBDECK_PREFIX) :
+                len(MD2ANKI_MD_PP_ANKI_DECK_HEADING_SUBDECK_PREFIX) :
             ]
         if parent_deck_name is not None:
             anki_deck_name = (
@@ -308,7 +308,7 @@ def parse_md_content_to_anki_deck_list(
                 )
             elif (
                 parse_state == ParseStateMarkdownDocument.ANKI_NOTE_QUESTION
-                and line_stripped == MD2ANKI_MD_ANKI_NOTE_QUESTION_ANSWER_SEPARATOR
+                and line_stripped == MD2ANKI_MD_PP_ANKI_NOTE_QUESTION_ANSWER_SEPARATOR
             ):
                 # Append read anki note answer to question and reset answer
                 anki_note = anki_decks_stack[-1].notes[-1]

@@ -4,6 +4,10 @@
 import os
 from typing import Dict, Final, List, Tuple
 
+# Local modules
+from md2anki.info.general import MD2ANKI_NAME
+
+
 # Types
 EvaluateCodeLanguageId = str
 EvaluateCodeCommand = str
@@ -13,16 +17,18 @@ EvaluateCodeInfo = Dict[
     List[Tuple[EvaluateCodeCommand, List[EvaluateCodeCommandArgument]]],
 ]
 
-# evaluate code information
-EVALUATE_CODE_PLACEHOLDER_CODE_STRING: Final = "MD2ANKI_CODE"
-EVALUATE_CODE_PREFIX_CODE_FILE_NAME: Final = "MD2ANKI_CODE_FILE="
+# Evaluate code information
+EVALUATE_CODE_MD2ANKI_PLACEHOLDER_CODE_STRING: Final = f"{MD2ANKI_NAME.upper()}_CODE"
+EVALUATE_CODE_MD2ANKI_PREFIX_CODE_FILE_NAME: Final = (
+    f"{MD2ANKI_NAME.upper()}_CODE_FILE="
+)
 EVALUATE_CODE_DEFAULT_COMMANDS: Final[EvaluateCodeInfo] = {
-    "py": [("python", ["-c", EVALUATE_CODE_PLACEHOLDER_CODE_STRING])],
-    "js": [("node", ["-e", EVALUATE_CODE_PLACEHOLDER_CODE_STRING])],
+    "py": [("python", ["-c", EVALUATE_CODE_MD2ANKI_PLACEHOLDER_CODE_STRING])],
+    "js": [("node", ["-e", EVALUATE_CODE_MD2ANKI_PLACEHOLDER_CODE_STRING])],
     "ts": [
         (
-            "ts-node.cmd" if os.name == "nt" else "ts-node",
-            [f"{EVALUATE_CODE_PREFIX_CODE_FILE_NAME}code.ts"],
+            "ts-node" + (".cmd" if os.name == "nt" else ""),
+            [f"{EVALUATE_CODE_MD2ANKI_PREFIX_CODE_FILE_NAME}code.ts"],
         )
     ],
     "pl": [
@@ -31,7 +37,7 @@ EVALUATE_CODE_DEFAULT_COMMANDS: Final[EvaluateCodeInfo] = {
             [
                 "-O",
                 "-s",
-                f"{EVALUATE_CODE_PREFIX_CODE_FILE_NAME}code.pl",
+                f"{EVALUATE_CODE_MD2ANKI_PREFIX_CODE_FILE_NAME}code.pl",
                 "-g",
                 "true",
                 "-t",
@@ -45,7 +51,7 @@ EVALUATE_CODE_DEFAULT_COMMANDS: Final[EvaluateCodeInfo] = {
             [
                 "-shell-escape",
                 "-pdf",
-                f"{EVALUATE_CODE_PREFIX_CODE_FILE_NAME}code.tex",
+                f"{EVALUATE_CODE_MD2ANKI_PREFIX_CODE_FILE_NAME}code.tex",
             ],
         ),
         (
@@ -59,7 +65,7 @@ EVALUATE_CODE_DEFAULT_COMMANDS: Final[EvaluateCodeInfo] = {
             [
                 "-Wall",
                 "-std=c++20",
-                f"{EVALUATE_CODE_PREFIX_CODE_FILE_NAME}main.cpp",
+                f"{EVALUATE_CODE_MD2ANKI_PREFIX_CODE_FILE_NAME}main.cpp",
                 "-o",
                 "main.exe",
             ],
@@ -71,7 +77,7 @@ EVALUATE_CODE_DEFAULT_COMMANDS: Final[EvaluateCodeInfo] = {
             "clang",
             [
                 "-std=c17",
-                f"{EVALUATE_CODE_PREFIX_CODE_FILE_NAME}main.c",
+                f"{EVALUATE_CODE_MD2ANKI_PREFIX_CODE_FILE_NAME}main.c",
                 "-o",
                 "main.exe",
             ],
@@ -79,3 +85,4 @@ EVALUATE_CODE_DEFAULT_COMMANDS: Final[EvaluateCodeInfo] = {
         ("main.exe", []),
     ],
 }
+"""The commands that should per default be used to evaluate code of certain languages."""
