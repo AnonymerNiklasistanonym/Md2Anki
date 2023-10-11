@@ -54,7 +54,7 @@ The fourth and last group is the actual code part (including indents!).
 REGEX_INLINE_CODE: Final = re.compile(r"(?<!\S)`([^`]+?)`(?:\{(.+?)})?(?!\S)")
 
 REGEX_MATH_SECTION: Final = re.compile(
-    r"\${2}((?:[^$]|\n)+?)\${2}|\$([^\n]+?)(?<!\\)\$", flags=re.MULTILINE
+    r"\${2}((?:[^$]|\n)+?)\${2}|\$(?!\s)([^\n]+?)(?<!\s)(?<!\\)\$", flags=re.MULTILINE
 )
 """
 Regex expression to find math sections. The first part matches $$...$$ sections and the second part inline $...$
