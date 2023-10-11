@@ -132,8 +132,8 @@ def md_preprocessor_md2anki(
     # 2. Find, evaluate and store all code sections so that they won't be changed by other changes
     code_sections: Dict[int, str] = dict()
     placeholder_code_section: Final = (
-        f"<div>{MD2ANKI_NAME}_placeholder_start_code_{create_unique_id()}",
-        f"{MD2ANKI_NAME}_placeholder_end_code_{create_unique_id()}</div>",
+        f"{MD2ANKI_NAME}_placeholder_start_code_{create_unique_id()}",
+        f"{MD2ANKI_NAME}_placeholder_end_code_{create_unique_id()}",
     )
 
     def update_code_section_with_images_or_placeholder(

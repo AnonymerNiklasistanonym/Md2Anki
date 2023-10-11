@@ -58,8 +58,6 @@ python -m pip install numpy matplotlib
 
 ### Examples
 
-Checkout the [`examples`](examples) directory for more examples.
-
 [//]: <> (BEGIN: EXAMPLES)
 
 ```markdown
@@ -160,6 +158,26 @@ Answer
 ```
 
 [//]: <> (END: EXAMPLES)
+
+Checkout the [`examples`](examples) directory for more examples.
+
+If you want to run them all use the following command in that directory:
+
+```sh
+python -m examples
+```
+
+Prerequisites to run them all are:
+
+```sh
+python -m pip install numpy matplotlib
+npm install -g ts-node
+# Manjaro/Arch Linux
+sudo pacman -S swi-prolog clang npm pandoc-cli inkscape
+sudo pacman -S texlive-latex texlive-binextra texlive-xetex texlive-latexextra texlive-fontsextra
+# AUR
+sudo pacman -S ttf-ms-fonts 
+```
 
 ## Usage
 
