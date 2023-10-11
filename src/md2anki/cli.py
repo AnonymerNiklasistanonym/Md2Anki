@@ -181,7 +181,7 @@ def get_argument_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="evaluate markdown inline code/code blocks with the language prefix "
         f"{MD2ANKI_MD_PP_EVALUATE_CODE_LANGUAGE_PREFIX!r} "
-        "i.e. '`print(1+1)`{=python} or '```{=python} [newline] print(1+1) [newline] ```'",
+        "i.e. '`print(1+1)`{=python}' or '```{=python} [newline] print(1+1) [newline] ```'",
     )
     parser.add_argument(
         "--evaluate-code-ignore-cache",
