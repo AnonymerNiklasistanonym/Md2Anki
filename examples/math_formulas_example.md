@@ -39,6 +39,7 @@ $$
 
 - Escape the inline math opening/closing tag symbol: 10$\$$
 - Standalone symbols are not processed: $ is a symbol, $ is another symbol
+- HTML escape tags in anki deck: $<t$, $<p>Escaped</p>$
 
 ## Sinus, Kosinus und Tangens (09605ae5-f9c5-48ee-8586-c43dcfbd6cab)
 

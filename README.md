@@ -31,11 +31,18 @@ The decks were tested on:
 To evaluate code and export to pdf the following additional software needs to be installed:
 
 ```sh
-# Linux (the apt package manager is just an example)
-# > Evaluate code
+# Linux
+# > Ubuntu
+# >> Evaluate code
 sudo apt install clang inkscape latexmk nodejs texlive texlive-latex-extra #texlive-full
-# > PDF export
+# >> PDF export
 sudo apt install librsvg2-bin pandoc texlive-xetex
+# > Arch/Manjaro
+# Manjaro/Arch Linux
+# >> Evaluate code
+sudo pacman -S swi-prolog clang npm inkscape
+# >> PDF export
+sudo pacman -S pandoc-cli texlive-latex texlive-binextra texlive-xetex texlive-latexextra texlive-fontsextra texlive-luatex texlive-fontsrecommended
 ```
 
 ```ps1
@@ -47,7 +54,6 @@ choco install miktex pandoc rsvg-convert
 ```
 
 (On Windows `rsvg-convert` can sometimes throw errors in combination with `pandoc` but the latest build from [miyako](https://github.com/miyako/console-rsvg-convert/releases) does not throw them so try this one if you get errors)
-
 
 ```sh
 # Linux + Windows
@@ -165,18 +171,6 @@ If you want to run them all use the following command in that directory:
 
 ```sh
 python -m examples
-```
-
-Prerequisites to run them all are:
-
-```sh
-python -m pip install numpy matplotlib
-npm install -g ts-node
-# Manjaro/Arch Linux
-sudo pacman -S swi-prolog clang npm pandoc-cli inkscape
-sudo pacman -S texlive-latex texlive-binextra texlive-xetex texlive-latexextra texlive-fontsextra
-# AUR
-sudo pacman -S ttf-ms-fonts 
 ```
 
 ## Usage

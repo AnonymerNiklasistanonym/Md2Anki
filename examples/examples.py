@@ -116,18 +116,17 @@ if __name__ == "__main__":
     toggle_single_part_examples = True
     toggle_pdf_examples = True
     toggle_evaluate_code = True
+    toggle_keep_temporary_files = debug_examples
 
     example_file_dirs: List[Path] = [EXAMPLE_DIR.joinpath("res")]
 
     # run_example(
-    #     [Path("code_run_example.md")],
+    #     [Path("custom_example.md")],
     #     debug=debug_examples,
     #     evaluate_code=toggle_evaluate_code,
     #     file_dirs=example_file_dirs,
-    #     keep_temporary_files=toogle_keep_temporary_files,
-    #     o_pdf=Path("code_run_example.pdf"),
+    #     keep_temporary_files=toggle_keep_temporary_files,
     # )
-    toogle_keep_temporary_files = debug_examples
 
     if toggle_multi_part_examples:
         # Merge multi part examples
@@ -137,7 +136,7 @@ if __name__ == "__main__":
             debug=debug_examples,
             evaluate_code=toggle_evaluate_code,
             file_dirs=example_file_dirs,
-            keep_temporary_files=toogle_keep_temporary_files,
+            keep_temporary_files=toggle_keep_temporary_files,
         )
         run_example_glob_multi_part(
             EXAMPLE_DIR,
@@ -145,7 +144,7 @@ if __name__ == "__main__":
             debug=debug_examples,
             evaluate_code=toggle_evaluate_code,
             file_dirs=example_file_dirs,
-            keep_temporary_files=toogle_keep_temporary_files,
+            keep_temporary_files=toggle_keep_temporary_files,
         )
 
     if toggle_single_part_examples:
@@ -156,7 +155,7 @@ if __name__ == "__main__":
             debug=debug_examples,
             evaluate_code=toggle_evaluate_code,
             file_dirs=example_file_dirs,
-            keep_temporary_files=toogle_keep_temporary_files,
+            keep_temporary_files=toggle_keep_temporary_files,
         )
         run_example_glob(
             EXAMPLE_DIR,
@@ -165,7 +164,7 @@ if __name__ == "__main__":
             debug=debug_examples,
             evaluate_code=toggle_evaluate_code,
             file_dirs=example_file_dirs,
-            keep_temporary_files=toogle_keep_temporary_files,
+            keep_temporary_files=toggle_keep_temporary_files,
         )
 
         # Rerun all created backups
@@ -178,10 +177,10 @@ if __name__ == "__main__":
                 debug=debug_examples,
                 evaluate_code=toggle_evaluate_code,
                 file_dirs=[backup_dir.joinpath("assets")],
-                keep_temporary_files=toogle_keep_temporary_files,
+                keep_temporary_files=toggle_keep_temporary_files,
                 log_file=backup_dir.joinpath(f"{backup_dir.stem}.log"),
                 o_anki=backup_dir.joinpath(f"{backup_dir.stem}.apkg"),
-                o_md=backup_dir.joinpath("document.md"),
+                o_md=backup_dir.joinpath("document.md") if len(list(backup_dir.glob("*.md"))) == 1 else None,
             )
 
     if toggle_pdf_examples:
@@ -192,7 +191,7 @@ if __name__ == "__main__":
                 debug=debug_examples,
                 evaluate_code=toggle_evaluate_code,
                 file_dirs=example_file_dirs,
-                keep_temporary_files=toogle_keep_temporary_files,
+                keep_temporary_files=toggle_keep_temporary_files,
                 log_file=EXAMPLE_DIR.joinpath(f"{pdf_example}_example_pdf.log"),
                 o_pdf=EXAMPLE_DIR.joinpath(f"{pdf_example}_example.pdf"),
             )

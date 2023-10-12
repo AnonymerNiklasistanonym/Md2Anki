@@ -99,6 +99,15 @@ def parse_possible_anki_deck_heading(
         anki_deck_is_subdeck = anki_deck_name.startswith(
             MD2ANKI_MD_PP_ANKI_DECK_HEADING_SUBDECK_PREFIX
         )
+        if ANKI_SUBDECK_SEPARATOR in anki_deck_name:
+            log.warning(
+                f"The anki deck heading {anki_deck_name!r} contains the symbol {ANKI_SUBDECK_SEPARATOR!r} "
+                f"used to declare a subdeck which is replaced in order to avoid errors, please use a separate "
+                f"heading structure using {MD2ANKI_MD_PP_ANKI_DECK_HEADING_SUBDECK_PREFIX!r} instead"
+            )
+            anki_deck_name = anki_deck_name.replace(
+                rf"{ANKI_SUBDECK_SEPARATOR}", ":\u200B:"
+            )
         if anki_deck_is_subdeck:
             if parent_deck_name is None:
                 log.warning(

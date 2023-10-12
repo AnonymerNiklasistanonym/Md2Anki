@@ -2,6 +2,7 @@
 
 # Internal packages
 import logging
+import html
 import re
 import textwrap
 from pathlib import Path
@@ -265,7 +266,7 @@ def md_preprocessor_md2anki(
             math_fence = ("\\[", "\\]") if block else (f"\\(", "\\)")
             math_sections[
                 math_section_index
-            ] = f"{math_fence[0]}{math_section}{math_fence[1]}"
+            ] = f"{math_fence[0]}{html.escape(math_section)}{math_fence[1]}"
             return f"{placeholder_math_section[0]}{math_section_index}{placeholder_math_section[1]}"
 
         md_content = md_update_math_sections(
