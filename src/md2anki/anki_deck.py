@@ -73,6 +73,7 @@ class AnkiDeck:
                     evaluate_code_cache_dir=evaluate_code_cache_dir,
                     external_file_dirs=external_file_dirs,
                     keep_temp_files=keep_temp_files,
+                    merge_fields=len(self.model.fields) == 1,
                 )
             )
         return tmp_anki_deck

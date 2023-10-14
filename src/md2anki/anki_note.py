@@ -90,6 +90,7 @@ class AnkiNote:
         evaluate_code: bool = False,
         evaluate_code_cache_dir: Optional[Path] = None,
         keep_temp_files: bool = False,
+        merge_fields: bool = False,
     ) -> genanki.Note:
         """
         Args:
@@ -104,35 +105,36 @@ class AnkiNote:
         Returns:
             An anki note for genanki
         """
+        question_field_str = md_preprocessor_md2anki(
+            self.question,
+            dir_dynamic_files=dir_dynamic_files,
+            custom_program=custom_program,
+            custom_program_args=custom_program_args,
+            evaluate_code=evaluate_code,
+            evaluate_code_cache_dir=evaluate_code_cache_dir,
+            external_file_dirs=external_file_dirs,
+            keep_temp_files=keep_temp_files,
+            anki_latex_math=True,
+            render_to_html=True,
+        )
+        answer_field_str = md_preprocessor_md2anki(
+            self.answer,
+            dir_dynamic_files=dir_dynamic_files,
+            custom_program=custom_program,
+            custom_program_args=custom_program_args,
+            evaluate_code=evaluate_code,
+            evaluate_code_cache_dir=evaluate_code_cache_dir,
+            external_file_dirs=external_file_dirs,
+            keep_temp_files=keep_temp_files,
+            anki_latex_math=True,
+            render_to_html=True,
+        )
         return genanki.Note(
             guid=self.guid,
             model=anki_card_model,
-            fields=[
-                md_preprocessor_md2anki(
-                    self.question,
-                    dir_dynamic_files=dir_dynamic_files,
-                    custom_program=custom_program,
-                    custom_program_args=custom_program_args,
-                    evaluate_code=evaluate_code,
-                    evaluate_code_cache_dir=evaluate_code_cache_dir,
-                    external_file_dirs=external_file_dirs,
-                    keep_temp_files=keep_temp_files,
-                    anki_latex_math=True,
-                    render_to_html=True,
-                ),
-                md_preprocessor_md2anki(
-                    self.answer,
-                    dir_dynamic_files=dir_dynamic_files,
-                    custom_program=custom_program,
-                    custom_program_args=custom_program_args,
-                    evaluate_code=evaluate_code,
-                    evaluate_code_cache_dir=evaluate_code_cache_dir,
-                    external_file_dirs=external_file_dirs,
-                    keep_temp_files=keep_temp_files,
-                    anki_latex_math=True,
-                    render_to_html=True,
-                ),
-            ],
+            fields=[f"{question_field_str}\n\n{answer_field_str}"]
+            if merge_fields
+            else [question_field_str, answer_field_str],
             tags=list(self.get_used_md2anki_tags().union(self.tags)),
         )
 

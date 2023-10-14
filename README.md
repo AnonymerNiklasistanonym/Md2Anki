@@ -148,7 +148,7 @@ Answer
 
 Answer
 
-### Subdeck: Subdeck Heading 3 (406641128)
+### Subdeck: Subdeck Heading 3 with escaped :​: double colon (406641128)
 
 All notes of the level 4 will be added to this subdeck.
 
@@ -178,90 +178,73 @@ python -m examples
 [//]: <> (BEGIN: USAGE)
 
 ```text
-usage: md2anki [-h] [-v] [--lexers] [-d [{DEBUG,INFO,WARNING,ERROR,CRITICAL}]]
-               [-e] [--evaluate-code-ignore-cache]
-               [--evaluate-code-delete-cache] [-k] [-anki-model MODEL_ID]
-               [-o-anki APKG_FILE] [-o-md MD_FILE] [-o-md-dir MD_DIR]
-               [-o-backup-dir BACKUP_DIR] [-o-pdf PDF_FILE]
-               [-evaluate-code-cache-dir CACHE_DIR] [-log-file LOG_FILE]
-               [-file-dir [FILE_DIR ...]] [-md-heading-depth HEADING_DEPTH]
-               [-custom-program language program]
-               [-custom-program-args language program-args]
+usage: md2anki [-h] [-v] [--lexers] [-d [{DEBUG,INFO,WARNING,ERROR,CRITICAL}]] [-e]
+               [--evaluate-code-ignore-cache] [--evaluate-code-delete-cache] [-k]
+               [-anki-model MODEL_ID] [-o-anki APKG_FILE] [-o-md MD_FILE] [-o-md-dir MD_DIR]
+               [-o-backup-dir BACKUP_DIR] [-o-pdf PDF_FILE] [-evaluate-code-cache-dir CACHE_DIR]
+               [-log-file LOG_FILE] [-file-dir [FILE_DIR ...]] [-md-heading-depth HEADING_DEPTH]
+               [-custom-program language program] [-custom-program-args language program-args]
                MD_INPUT_FILE [MD_INPUT_FILE ...]
 
-Create an anki deck file (.apkg) from one or more Markdown documents. If no
-custom output path is given the file name of the document (+ .apkg) is used.
+Create an anki deck file (.apkg) from one or more Markdown documents. If no custom output path is
+given the file name of the document (+ .apkg) is used.
 
 positional arguments:
-  MD_INPUT_FILE         Markdown (.md) input file that contains anki deck
-                        notes
+  MD_INPUT_FILE         Markdown (.md) input file that contains anki deck notes
 
 options:
   --evaluate-code-delete-cache
-                        delete all cached files from previous code evaluations
-                        (default: False)
+                        delete all cached files from previous code evaluations (default: False)
   --evaluate-code-ignore-cache
-                        ignore the cached files from previous code evaluations
-                        (default: False)
-  --lexers              print a list of all supported lexer languages and
-                        their aliases
-  -anki-model MODEL_ID  custom anki card model (md2anki_default,
-                        md2anki_type_answer) (default: md2anki_default)
+                        ignore the cached files from previous code evaluations (default: False)
+  --lexers              print a list of all supported lexer languages and their aliases
+  -anki-model MODEL_ID  custom anki card model (md2anki_default, md2anki_type_answer,
+                        md2anki_type_cloze) (default: md2anki_default)
   -custom-program language program
-                        use custom program for code evaluation [i.e. "py"
-                        "python3.11"] (default: [('py', 'python'), ('js',
-                        'node'), ('ts', 'ts-node'), ('pl', 'swipl'), ('latex',
-                        'latexmk'), ('latex', 'inkscape'), ('cpp', 'clang++'),
-                        ('cpp', 'main.exe'), ('c', 'clang'), ('c',
-                        'main.exe'), ('pandoc_pdf', 'pandoc')])
+                        use custom program for code evaluation [i.e. "py" "python3.11"] (default:
+                        [('py', 'python'), ('js', 'node'), ('ts', 'ts-node'), ('pl', 'swipl'),
+                        ('latex', 'latexmk'), ('latex', 'inkscape'), ('cpp', 'clang++'), ('cpp',
+                        'main.exe'), ('c', 'clang'), ('c', 'main.exe'), ('pandoc_pdf', 'pandoc')])
   -custom-program-args language program-args
                         use custom program args for code evaluation [i.e. "py"
-                        "[\"-c\",\"MD2ANKI_CODE\"]"] (default: [('py', '["-c",
-                        "MD2ANKI_CODE"]'), ('js', '["-e", "MD2ANKI_CODE"]'),
-                        ('ts', '["MD2ANKI_CODE_FILE=code.ts"]'), ('pl',
-                        '["-O", "-s", "MD2ANKI_CODE_FILE=code.pl", "-g",
-                        "true", "-t", "halt."]'), ('latex', '["-shell-escape",
-                        "-pdf", "MD2ANKI_CODE_FILE=code.tex"]'), ('latex', '["
-                        --export-filename=code.svg", "code.pdf"]'), ('cpp',
-                        '["-Wall", "-std=c++20", "MD2ANKI_CODE_FILE=main.cpp",
-                        "-o", "main.exe"]'), ('cpp', '[]'), ('c',
-                        '["-std=c17", "MD2ANKI_CODE_FILE=main.c", "-o",
-                        "main.exe"]'), ('c', '[]'), ('pandoc_pdf', '["--from",
-                        "markdown", "--to", "pdf", "--table-of-contents",
-                        "-V", "geometry:a4paper", "-V", "geometry:margin=2cm",
-                        "--pdf-engine=xelatex", "--pdf-engine-opt=-shell-
-                        escape"]')])
+                        "[\"-c\",\"MD2ANKI_CODE\"]"] (default: [('py', '["-c", "MD2ANKI_CODE"]'),
+                        ('js', '["-e", "MD2ANKI_CODE"]'), ('ts', '["MD2ANKI_CODE_FILE=code.ts"]'),
+                        ('pl', '["-O", "-s", "MD2ANKI_CODE_FILE=code.pl", "-g", "true", "-t",
+                        "halt."]'), ('latex', '["-shell-escape", "-pdf",
+                        "MD2ANKI_CODE_FILE=code.tex"]'), ('latex', '["--export-filename=code.svg",
+                        "code.pdf"]'), ('cpp', '["-Wall", "-std=c++20",
+                        "MD2ANKI_CODE_FILE=main.cpp", "-o", "main.exe"]'), ('cpp', '[]'), ('c',
+                        '["-std=c17", "MD2ANKI_CODE_FILE=main.c", "-o", "main.exe"]'), ('c',
+                        '[]'), ('pandoc_pdf', '["--from", "markdown", "--to", "pdf", "--table-of-
+                        contents", "-V", "geometry:a4paper", "-V", "geometry:margin=2cm", "--pdf-
+                        engine=xelatex", "--pdf-engine-opt=-shell-escape"]')])
   -d [{DEBUG,INFO,WARNING,ERROR,CRITICAL}], --debug [{DEBUG,INFO,WARNING,ERROR,CRITICAL}]
                         custom log level to the console (default: INFO)
-  -e, --evaluate-code   evaluate markdown inline code/code blocks with the
-                        language prefix '=' i.e. '`print(1+1)`{=python}' or
-                        '```{=python} [newline] print(1+1) [newline] ```'
-                        (default: False)
+  -e, --evaluate-code   evaluate markdown inline code/code blocks with the language prefix '='
+                        i.e. '`print(1+1)`{=python}' or '```{=python} [newline] print(1+1)
+                        [newline] ```' (default: False)
   -evaluate-code-cache-dir CACHE_DIR
-                        use a custom cache dir for code evaluations (default:
-                        None)
+                        use a custom cache dir for code evaluations (default: None)
   -file-dir [FILE_DIR ...]
-                        add directories that should be checked for referenced
-                        files (like relative path images) (default: [])
+                        add directories that should be checked for referenced files (like relative
+                        path images) (default: [])
   -h, --help            show this help message and exit
   -k, --keep-temp-files
                         keep temporary files (default: False)
   -log-file LOG_FILE    log all messages to a text file (.log) (default: None)
   -md-heading-depth HEADING_DEPTH
                         use a custom Markdown heading depth (>=1) (default: 1)
-  -o-anki APKG_FILE     custom anki deck (.apkg) output file path [if not
-                        given: md input file name + .apkg] (default: None)
+  -o-anki APKG_FILE     custom anki deck (.apkg) output file path [if not given: md input file
+                        name + .apkg] (default: None)
   -o-backup-dir BACKUP_DIR
-                        create a backup of the anki deck (i.e. merges input
-                        files and copies external files) in a directory
+                        create a backup of the anki deck (i.e. merges input files and copies
+                        external files) in a directory (default: None)
+  -o-md MD_FILE         custom updated (and merged if multiple input files) Markdown (.md) output
+                        file path for all input files (default: None)
+  -o-md-dir MD_DIR      custom output directory for all updated Markdown (.md) input files
                         (default: None)
-  -o-md MD_FILE         custom updated (and merged if multiple input files)
-                        Markdown (.md) output file path for all input files
-                        (default: None)
-  -o-md-dir MD_DIR      custom output directory for all updated Markdown (.md)
-                        input files (default: None)
-  -o-pdf PDF_FILE       create a PDF (.pdf) file of the anki deck (i.e. merges
-                        input files and removes IDs) (default: None)
+  -o-pdf PDF_FILE       create a PDF (.pdf) file of the anki deck (i.e. merges input files and
+                        removes IDs) (default: None)
   -v, --version         show program's version number and exit
 ```
 

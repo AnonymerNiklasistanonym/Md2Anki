@@ -114,7 +114,8 @@ if __name__ == "__main__":
     # Make it easy to only run a small subset of examples
     toggle_multi_part_examples = True
     toggle_single_part_examples = True
-    toggle_pdf_examples = True
+    # Off because of very slow CI/CD
+    toggle_pdf_examples = False
     toggle_evaluate_code = True
     toggle_keep_temporary_files = debug_examples
 
@@ -166,6 +167,15 @@ if __name__ == "__main__":
             file_dirs=example_file_dirs,
             keep_temporary_files=toggle_keep_temporary_files,
         )
+        run_example_glob(
+            EXAMPLE_DIR,
+            "*_example_type_cloze.md",
+            anki_model=AnkiCardModelId.TYPE_CLOZE,
+            debug=debug_examples,
+            evaluate_code=toggle_evaluate_code,
+            file_dirs=example_file_dirs,
+            keep_temporary_files=toggle_keep_temporary_files,
+        )
 
         # Rerun all created backups
         for backup_dir in EXAMPLE_DIR.glob("backup_*"):
@@ -173,6 +183,8 @@ if __name__ == "__main__":
                 list(backup_dir.glob("*.md")),
                 anki_model=AnkiCardModelId.TYPE_ANSWER
                 if backup_dir.stem.endswith("_type_answer")
+                else AnkiCardModelId.TYPE_CLOZE
+                if backup_dir.stem.endswith("_type_cloze")
                 else None,
                 debug=debug_examples,
                 evaluate_code=toggle_evaluate_code,
@@ -180,7 +192,9 @@ if __name__ == "__main__":
                 keep_temporary_files=toggle_keep_temporary_files,
                 log_file=backup_dir.joinpath(f"{backup_dir.stem}.log"),
                 o_anki=backup_dir.joinpath(f"{backup_dir.stem}.apkg"),
-                o_md=backup_dir.joinpath("document.md") if len(list(backup_dir.glob("*.md"))) == 1 else None,
+                o_md=backup_dir.joinpath("document.md")
+                if len(list(backup_dir.glob("*.md"))) == 1
+                else None,
             )
 
     if toggle_pdf_examples:

@@ -10,6 +10,7 @@ from md2anki.anki_deck import AnkiModel
 from md2anki.info.files import (
     RELATIVE_RES_CSS_FILE_PATH,
     RELATIVE_RES_CSS_FILE_PATH_TYPE_ANSWER,
+    RELATIVE_RES_CSS_FILE_PATH_TYPE_CLOZE,
 )
 from md2anki.info.general import MD2ANKI_NAME
 
@@ -18,11 +19,15 @@ CSS_FILE_PATH: Final = CURRENT_DIR.joinpath(RELATIVE_RES_CSS_FILE_PATH)
 CSS_FILE_PATH_TYPE_ANSWER: Final = CURRENT_DIR.joinpath(
     RELATIVE_RES_CSS_FILE_PATH_TYPE_ANSWER
 )
+CSS_FILE_PATH_TYPE_CLOZE: Final = CURRENT_DIR.joinpath(
+    RELATIVE_RES_CSS_FILE_PATH_TYPE_CLOZE
+)
 
 
 class AnkiCardModelId(Enum):
     DEFAULT = f"{MD2ANKI_NAME}_default"
     TYPE_ANSWER = f"{MD2ANKI_NAME}_type_answer"
+    TYPE_CLOZE = f"{MD2ANKI_NAME}_type_cloze"
 
     def __str__(self):
         return self.value
@@ -42,6 +47,26 @@ def create_type_answer_anki_deck_model() -> AnkiModel:
         template_card_question_surround=("", ""),
         template_card_answer_front_side='<div class="card card_question">{{Question}}</div>\n\n<hr id="answer">\n\n',
         template_card_answer="{{type:Answer}}",
+    )
+
+
+def create_type_cloze_anki_deck_model() -> AnkiModel:
+    with open(CSS_FILE_PATH, "r") as file:
+        css_data = file.read()
+    with open(CSS_FILE_PATH_TYPE_CLOZE, "r") as file:
+        css_data += file.read()
+    return AnkiModel(
+        guid=396500301,
+        name=f"{MD2ANKI_NAME} {AnkiCardModelId.TYPE_CLOZE.value} (v1)",
+        description=f"{MD2ANKI_NAME} (type cloze)",
+        fields=["Text"],
+        css=css_data,
+        cloze=True,
+        template_card_question="{{cloze:Text}}",
+        template_card_question_surround=("", ""),
+        template_card_answer="{{cloze:Text}}",
+        template_card_answer_surround=("", ""),
+        template_card_answer_front_side="",
     )
 
 

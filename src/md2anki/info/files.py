@@ -10,3 +10,6 @@ RELATIVE_RES_CSS_FILE_PATH: Final = RELATIVE_RES_DIR.joinpath("stylesheet.css")
 RELATIVE_RES_CSS_FILE_PATH_TYPE_ANSWER: Final = RELATIVE_RES_DIR.joinpath(
     "stylesheet_type_answer.css"
 )
+RELATIVE_RES_CSS_FILE_PATH_TYPE_CLOZE: Final = RELATIVE_RES_DIR.joinpath(
+    "stylesheet_type_cloze.css"
+)

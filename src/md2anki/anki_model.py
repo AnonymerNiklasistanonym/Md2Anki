@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 # Internal packages
-from dataclasses import dataclass
-from typing import Optional, Tuple
+from dataclasses import dataclass, field
+from typing import List, Optional, Tuple
 
 # Installed packages
 import genanki
@@ -21,6 +21,10 @@ class AnkiModel:
     """Model name"""
     description: str = ""
     """Model description"""
+    fields: List[str] = field(default_factory=lambda: ["Question", "Answer"])
+    """The content fields"""
+    cloze: bool = False
+    """Use the cloze model type"""
     css: str = ""
     """Style information (CSS code) for each anki note"""
     js: Optional[str] = None
@@ -53,7 +57,7 @@ class AnkiModel:
         return genanki.Model(
             self.guid,
             self.description,
-            fields=[{"name": "Question"}, {"name": "Answer"}],
+            fields=[dict([("name", x)]) for x in self.fields],
             css=self.css,
             templates=[
                 {
@@ -64,4 +68,5 @@ class AnkiModel:
                     f"{self.template_card_answer}\n{self.template_card_answer_surround[1]}",
                 }
             ],
+            model_type=genanki.Model.CLOZE if self.cloze else genanki.Model.FRONT_BACK,
         )
