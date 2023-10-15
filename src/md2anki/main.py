@@ -66,6 +66,8 @@ def main(args: Md2AnkiArgs) -> int:
         anki_deck_model = create_type_answer_anki_deck_model()
     elif args.anki_card_model == AnkiCardModelId.TYPE_CLOZE:
         anki_deck_model = create_type_cloze_anki_deck_model()
+    elif args.anki_card_model == AnkiCardModelId.TYPE_CLOZE_EXTRA:
+        anki_deck_model = create_type_cloze_anki_deck_model(extra=True)
     else:
         raise RuntimeError(f"Unknown anki card model ID '{args.anki_card_model}'")
 

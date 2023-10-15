@@ -176,6 +176,15 @@ if __name__ == "__main__":
             file_dirs=example_file_dirs,
             keep_temporary_files=toggle_keep_temporary_files,
         )
+        run_example_glob(
+            EXAMPLE_DIR,
+            "*_example_type_cloze_extra.md",
+            anki_model=AnkiCardModelId.TYPE_CLOZE_EXTRA,
+            debug=debug_examples,
+            evaluate_code=toggle_evaluate_code,
+            file_dirs=example_file_dirs,
+            keep_temporary_files=toggle_keep_temporary_files,
+        )
 
         # Rerun all created backups
         for backup_dir in EXAMPLE_DIR.glob("backup_*"):

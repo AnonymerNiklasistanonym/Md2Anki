@@ -199,7 +199,7 @@ options:
                         ignore the cached files from previous code evaluations (default: False)
   --lexers              print a list of all supported lexer languages and their aliases
   -anki-model MODEL_ID  custom anki card model (md2anki_default, md2anki_type_answer,
-                        md2anki_type_cloze) (default: md2anki_default)
+                        md2anki_type_cloze, md2anki_type_cloze_extra) (default: md2anki_default)
   -custom-program language program
                         use custom program for code evaluation [i.e. "py" "python3.11"] (default:
                         [('py', 'python'), ('js', 'node'), ('ts', 'ts-node'), ('pl', 'swipl'),
