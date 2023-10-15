@@ -16,6 +16,8 @@ This text is [a custom hint] and [...]
 This text is boring and a placeholder
 ```
 
+## One line {{c1::cloze}} question (8d93bcdc-cbd9-4209-b7ae-0c9cafdb9d4e)
+
 ## Fill in the blank LaTeX math (c686c799-b625-4a76-88e2-fc1a7fd3e5c6)
 
 - $1 + 1 =$ {{c1::$\Omega$::$\Sigma$}}
@@ -24,6 +26,11 @@ This text is boring and a placeholder
 ## Fill in the blank source code (7c4ef35d-4eb1-4a86-955c-84fd7d1d506d)
 
 - To write hello world in C++ you need {{c1::std:&#8203;:iostream::the C++ standard library...}}
+- To write hello world in C++ you need {{c1:: `#include <std::iostream>`{.cpp} ::the C++ standard library...}}
+
+```python
+print("hello world") {{c1::source code comment}}
+```
 
 ## Multiple fill the blanks (7e0c3a24-a542-4b53-84c2-0481caa86ab4)
 

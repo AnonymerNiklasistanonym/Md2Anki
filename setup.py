@@ -25,6 +25,7 @@ from info.general import (
 from info.files import (
     RELATIVE_RES_CSS_FILE_PATH,
     RELATIVE_RES_CSS_FILE_PATH_TYPE_ANSWER,
+    RELATIVE_RES_CSS_FILE_PATH_TYPE_CLOZE,
 )
 
 
@@ -53,6 +54,7 @@ setup(
         MD2ANKI_NAME: [
             str(RELATIVE_RES_CSS_FILE_PATH),
             str(RELATIVE_RES_CSS_FILE_PATH_TYPE_ANSWER),
+            str(RELATIVE_RES_CSS_FILE_PATH_TYPE_CLOZE),
         ],
     },
     entry_points={
