@@ -19,6 +19,7 @@ from pygments.util import ClassNotFound
 # Local modules
 from md2anki.create_id import create_unique_id
 from md2anki.html_util import fix_inline_code_p_tags
+from md2anki.info.anki import ANKI_CLOZE_SYNTAX_SYMBOLS
 from md2anki.info.general import (
     MD2ANKI_MD_PP_EVALUATE_CODE_LANGUAGE_PREFIX,
     MD2ANKI_EVALUATE_CODE_ENV_NAME_ANKI_HTML_BOOL,
@@ -222,6 +223,11 @@ def md_preprocessor_md2anki(
         pygments_html_output = highlight(code, language_lexer, html_formatter).replace(
             "background: #f8f8f8", ""
         )
+        # Temporary fix for code parts in cloze syntax
+        if "{{c" not in pygments_html_output:
+            pygments_html_output = pygments_html_output.replace(
+                rf"{ANKI_CLOZE_SYNTAX_SYMBOLS[1]}", ":\u200B:"
+            )
         if code_block:
             code_section = textwrap.indent(
                 pygments_html_output.replace(
