@@ -5,6 +5,7 @@ from __future__ import annotations
 
 # Internal modules
 import sys
+import re
 from pathlib import Path
 from setuptools import setup, find_packages
 from typing import Final
@@ -21,6 +22,7 @@ from info.general import (
     MD2ANKI_DESCRIPTION,
     MD2ANKI_URL,
     MD2ANKI_URL_BUG_TRACKER,
+    MD2ANKI_URL_SOURCE_CODE,
 )
 from info.files import (
     RELATIVE_RES_CSS_FILE_PATH,
@@ -30,7 +32,10 @@ from info.files import (
 
 
 with open("README.md", "r", encoding="utf-8") as f:
-    long_description: Final = f.read()
+    # Replace all relative URLs with the repository url
+    long_description: Final = re.sub(
+        r"\[(.*?)\]\((?!http)(.*?)\)", rf"[\1]({MD2ANKI_URL_SOURCE_CODE}/\2)", f.read()
+    )
 
 
 setup(
