@@ -7,6 +7,8 @@ import unittest
 from pathlib import Path
 from typing import List, Tuple, Optional
 
+from md2anki.note_models import AnkiCardModelId
+
 # Append the module path for md2anki
 sys.path.append(str(Path(__file__).parent.parent.joinpath("src")))
 
@@ -124,11 +126,21 @@ class TestParsePossibleAnkiNoteQuestionHeader(unittest.TestCase):
             ("", False, None),
             ("just text", False, None),
             ("# Heading", False, None),
-            ("## Heading", False, (AnkiNote(question="Heading"), 2)),
+            (
+                "## Heading",
+                False,
+                (AnkiNote(question="Heading"), 2),
+            ),
             (
                 "## Heading (abcsdeef)",
                 True,
-                (AnkiNote(question="Heading", guid="abcsdeef"), 2),
+                (
+                    AnkiNote(
+                        question="Heading",
+                        guid="abcsdeef",
+                    ),
+                    2,
+                ),
             ),
         ]
 
@@ -222,7 +234,9 @@ class TestParseMdContentToAnkiDeckList(unittest.TestCase):
                         guid=1234,
                         notes=[
                             AnkiNote(
-                                question="Question", answer="Answer", guid="abcdef"
+                                question="Question",
+                                answer="Answer",
+                                guid="abcdef",
                             )
                         ],
                     )
@@ -239,7 +253,9 @@ class TestParseMdContentToAnkiDeckList(unittest.TestCase):
                         guid=12349,
                         notes=[
                             AnkiNote(
-                                question="Question 1", answer="Answer 1", guid="abcdef"
+                                question="Question 1",
+                                answer="Answer 1",
+                                guid="abcdef",
                             ),
                             AnkiNote(
                                 question="Question 2\n\nMore question",
@@ -263,7 +279,9 @@ class TestParseMdContentToAnkiDeckList(unittest.TestCase):
                         guid=1234,
                         notes=[
                             AnkiNote(
-                                question="Question 1", answer="Answer 1", guid="abcdef"
+                                question="Question 1",
+                                answer="Answer 1",
+                                guid="abcdef",
                             ),
                         ],
                     ),
@@ -272,7 +290,9 @@ class TestParseMdContentToAnkiDeckList(unittest.TestCase):
                         guid=12345,
                         notes=[
                             AnkiNote(
-                                question="Question 2", answer="Answer 2", guid="abcdefg"
+                                question="Question 2",
+                                answer="Answer 2",
+                                guid="abcdefg",
                             ),
                         ],
                     ),

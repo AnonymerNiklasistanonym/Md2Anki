@@ -198,8 +198,9 @@ options:
   --evaluate-code-ignore-cache
                         ignore the cached files from previous code evaluations (default: False)
   --lexers              print a list of all supported lexer languages and their aliases
-  -anki-model MODEL_ID  custom anki card model (md2anki_default, md2anki_type_answer,
-                        md2anki_type_cloze, md2anki_type_cloze_extra) (default: md2anki_default)
+  -anki-model MODEL_ID  custom anki card model (md2anki_type_default, md2anki_type_answer,
+                        md2anki_type_cloze, md2anki_type_cloze_extra) (default:
+                        md2anki_type_default)
   -custom-program language program
                         use custom program for code evaluation [i.e. "py" "python3.11"] (default:
                         [('py', 'python'), ('js', 'node'), ('ts', 'ts-node'), ('pl', 'swipl'),
@@ -379,7 +380,7 @@ Python files can be checked for type errors (to some extent) using the commands:
 
 ```sh
 python -m pip install --upgrade mypy types-beautifulsoup4 types-Markdown types-Pygments
-python -m mypy src setup.py examples tests clean.py main.py update_readme.py
+python -m mypy src setup.py examples tests clean.py main.py update_readme.py update_pkgbuild.py format.py
 ```
 
 ### Tests

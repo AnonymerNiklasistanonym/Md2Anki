@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Final
 
 # Local modules
-from md2anki.anki_deck import AnkiModel
+from md2anki.anki_model import AnkiModel
 from md2anki.info.files import (
     RELATIVE_RES_CSS_FILE_PATH,
     RELATIVE_RES_CSS_FILE_PATH_TYPE_ANSWER,
@@ -25,7 +25,7 @@ CSS_FILE_PATH_TYPE_CLOZE: Final = CURRENT_DIR.joinpath(
 
 
 class AnkiCardModelId(Enum):
-    DEFAULT = f"{MD2ANKI_NAME}_default"
+    DEFAULT = f"{MD2ANKI_NAME}_type_default"
     TYPE_ANSWER = f"{MD2ANKI_NAME}_type_answer"
     TYPE_CLOZE = f"{MD2ANKI_NAME}_type_cloze"
     TYPE_CLOZE_EXTRA = f"{MD2ANKI_NAME}_type_cloze_extra"

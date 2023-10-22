@@ -46,6 +46,7 @@ def update_pkgbuild_key(
             return f"{key}=({' '.join(sorted(value))})\n"
         else:
             return f"{key}={value}\n"
+    return None
 
 
 def update_pkgbuild_content(pkgbuild_content: list[str]) -> str:

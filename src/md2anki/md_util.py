@@ -8,13 +8,15 @@ import logging
 import re
 from pathlib import Path
 from re import Match
-from typing import Callable, Final, Optional, Set, Tuple
+from typing import Callable, Final, List, Optional, Set, Tuple
 from urllib.parse import urlparse, ParseResult
 
 # Local modules
 from md2anki.info.general import (
     MD2ANKI_MD_PP_MD2ANKI_TAG_PREFIX,
     MD2ANKI_MD_PP_MD2ANKI_TAG_SUFFIX,
+    MD2ANKI_MD_PP_MD2ANKI_MODEL_PREFIX,
+    MD2ANKI_MD_PP_MD2ANKI_MODEL_SUFFIX,
 )
 
 # Logger
@@ -22,11 +24,19 @@ log = logging.getLogger(__name__)
 
 # Constants
 REGEX_MD_TAG: Final = re.compile(
-    rf"`{MD2ANKI_MD_PP_MD2ANKI_TAG_PREFIX}(.*?){MD2ANKI_MD_PP_MD2ANKI_TAG_SUFFIX}`"
+    rf"`{MD2ANKI_MD_PP_MD2ANKI_TAG_PREFIX}\s*(.*?)\s*{MD2ANKI_MD_PP_MD2ANKI_TAG_SUFFIX}`"
 )
 """
 Regex expression to parse a markdown tag notation: '`{=:tag list string:=}`'
 The first group is the 'tag list string'.
+"""
+
+REGEX_MD_MODEL: Final = re.compile(
+    rf"`{MD2ANKI_MD_PP_MD2ANKI_MODEL_PREFIX}\s*(\S+?)\s*{MD2ANKI_MD_PP_MD2ANKI_MODEL_SUFFIX}`"
+)
+"""
+Regex expression to parse a markdown model notation: '`{=<anki_model>=}`'
+The first group is the 'anki_model'.
 """
 
 REGEX_MD_IMAGE_FILE: Final = re.compile(
@@ -160,13 +170,32 @@ def md_get_used_md2anki_tags(md_content: str) -> Set[str]:
             if " " in tag:
                 old_tag = tag
                 tag = tag.replace(" ", "_")
-                log.warning(f"A tag with spaces {old_tag!r} was rewritten to {tag!r}")
+                log.warning(
+                    f"A tag with spaces {old_tag!r} was rewritten to {tag!r} ({md_content!r})"
+                )
             if len(tag) > 0:
                 tags.add(tag)
         return ""
 
     re.sub(REGEX_MD_TAG, add_used_tags, md_content)
     return tags
+
+
+def md_get_md2anki_model(md_content: str) -> Optional[str]:
+    """Get the md2anki model of a Markdown text"""
+    model: Final[Set[str]] = set()
+
+    def get_model(regex_group_match: Match) -> str:
+        """Detect and add all local found tags to the created set"""
+        model.add(regex_group_match.group(1))
+        return ""
+
+    re.sub(REGEX_MD_MODEL, get_model, md_content)
+    if len(model) > 1:
+        raise RuntimeError(
+            f"Found multiple/different models: {model!r} ({md_content!r})"
+        )
+    return model.pop() if len(model) == 1 else None
 
 
 def md_update_math_sections(md_content: str, replacer: Callable[[str, bool], str]):

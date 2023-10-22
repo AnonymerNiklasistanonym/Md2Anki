@@ -28,6 +28,8 @@ from md2anki.info.general import (
     MD2ANKI_NAME,
     MD2ANKI_MD_PP_MD2ANKI_TAG_PREFIX,
     MD2ANKI_MD_PP_MD2ANKI_TAG_SUFFIX,
+    MD2ANKI_MD_PP_MD2ANKI_MODEL_PREFIX,
+    MD2ANKI_MD_PP_MD2ANKI_MODEL_SUFFIX,
 )
 from md2anki.md_util import (
     md_update_local_filepaths,
@@ -148,8 +150,16 @@ def md_preprocessor_md2anki(
         if (
             code_block is False
             and language is None
-            and code.startswith(MD2ANKI_MD_PP_MD2ANKI_TAG_PREFIX)
-            and code.endswith(MD2ANKI_MD_PP_MD2ANKI_TAG_SUFFIX)
+            and (
+                (
+                    code.startswith(MD2ANKI_MD_PP_MD2ANKI_TAG_PREFIX)
+                    and code.endswith(MD2ANKI_MD_PP_MD2ANKI_TAG_SUFFIX)
+                )
+                or (
+                    code.startswith(MD2ANKI_MD_PP_MD2ANKI_MODEL_PREFIX)
+                    and code.endswith(MD2ANKI_MD_PP_MD2ANKI_MODEL_SUFFIX)
+                )
+            )
         ):
             return ""
         # Fix pandoc inline notation for language formatting

@@ -18,7 +18,7 @@ from md2anki.cli import (
     json_str_to_str_list,
     DEFAULT_CUSTOM_PROGRAM_ARGS,
 )
-from md2anki.note_models import create_default_anki_deck_model
+from md2anki.note_models import AnkiCardModelId
 
 
 class TestAnkiNoteGeneric(unittest.TestCase):
@@ -33,7 +33,6 @@ class TestAnkiNoteGeneric(unittest.TestCase):
         self.results_md_sections: List[Tuple[MdSection, MdSection]] = list()
         self.results_anki_output: List[Tuple[str, str]] = list()
 
-        anki_card_model = create_default_anki_deck_model()
         dir_dynamic_files = Path(__file__).parent.joinpath("dynamic_files")
         local_asset_dir = Path("assets")
 
@@ -110,7 +109,7 @@ class TestAnkiNoteGeneric(unittest.TestCase):
                 tuple(
                     # type: ignore
                     test_input.genanki_create_note(
-                        anki_card_model=anki_card_model,
+                        default_anki_card_model=f"{AnkiCardModelId.DEFAULT}",
                         dir_dynamic_files=dir_dynamic_files,
                         custom_program=convert_list_to_dict_merged(
                             DEFAULT_CUSTOM_PROGRAMS, str_to_str

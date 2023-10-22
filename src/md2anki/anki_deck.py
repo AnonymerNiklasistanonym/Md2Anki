@@ -11,7 +11,6 @@ from typing import Set, Optional, List, Tuple, Dict, Final
 import genanki
 
 # Local modules
-from md2anki.anki_model import AnkiModel
 from md2anki.anki_note import AnkiNote, MdSection
 from md2anki.create_id import create_unique_id_int
 from md2anki.info.anki import ANKI_SUBDECK_SEPARATOR, ANKI_SUPPORTED_FILE_FORMATS
@@ -21,7 +20,7 @@ from md2anki.info.general import (
     MD2ANKI_VERSION,
     MD2ANKI_MD_PP_ANKI_DECK_HEADING_SUBDECK_PREFIX,
 )
-from md2anki.md_util import md_get_used_md2anki_tags
+from md2anki.md_util import md_get_used_md2anki_tags, md_get_md2anki_model
 
 # Logger
 log = logging.getLogger(__name__)
@@ -35,8 +34,6 @@ class AnkiDeck:
 
     name: str = "No name"
     """Name of the deck"""
-    model: AnkiModel = field(default_factory=lambda: AnkiModel())
-    """Model of cards of anki deck"""
     guid: int = create_unique_id_int()
     """Unique id of anki deck"""
     description: str = ""
@@ -52,7 +49,7 @@ class AnkiDeck:
 
     def genanki_create_deck(
         self,
-        anki_card_model: genanki.Model,
+        default_anki_card_model: str,
         dir_dynamic_files: Path,
         custom_program: Dict[str, List[str]],
         custom_program_args: Dict[str, List[List[str]]],
@@ -65,7 +62,9 @@ class AnkiDeck:
         for note in self.notes:
             tmp_anki_deck.add_note(
                 note.genanki_create_note(
-                    anki_card_model=anki_card_model,
+                    # Overwrite default anki card model if the deck has a custom one
+                    default_anki_card_model=self.get_global_md2anki_model()
+                    or default_anki_card_model,
                     dir_dynamic_files=dir_dynamic_files,
                     custom_program=custom_program,
                     custom_program_args=custom_program_args,
@@ -73,7 +72,6 @@ class AnkiDeck:
                     evaluate_code_cache_dir=evaluate_code_cache_dir,
                     external_file_dirs=external_file_dirs,
                     keep_temp_files=keep_temp_files,
-                    merge_fields=len(self.model.fields) == 1,
                 )
             )
         return tmp_anki_deck
@@ -81,6 +79,10 @@ class AnkiDeck:
     def get_used_global_tags(self) -> Set[str]:
         """Get the used global tags of the anki deck"""
         return self.tags.union(md_get_used_md2anki_tags(self.description))
+
+    def get_global_md2anki_model(self) -> Optional[str]:
+        """Get the custom global anki deck if found"""
+        return md_get_md2anki_model(self.description)
 
     def get_local_files_from_notes(self) -> List[Path]:
         files: Set[Path] = set()
@@ -109,6 +111,7 @@ class AnkiDeck:
 
     def genanki_create_anki_deck(
         self,
+        default_anki_card_model: str,
         dir_dynamic_files: Path,
         custom_program: Dict[str, List[str]],
         custom_program_args: Dict[str, List[List[str]]],
@@ -119,7 +122,7 @@ class AnkiDeck:
     ) -> Tuple[genanki.Deck, List[Path]]:
         """Return anki deck and a list of all media files."""
         genanki_anki_deck = self.genanki_create_deck(
-            self.model.genanki_create_model(),
+            default_anki_card_model=default_anki_card_model,
             dir_dynamic_files=dir_dynamic_files,
             custom_program=custom_program,
             custom_program_args=custom_program_args,

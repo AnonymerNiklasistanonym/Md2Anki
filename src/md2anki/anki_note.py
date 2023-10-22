@@ -4,16 +4,24 @@
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Set, Optional, Dict, List
+from typing import Set, Optional, Dict, List, Union
 from urllib.parse import ParseResult
 
 # Installed packages
 import genanki
 
 # Local modules
+from md2anki.anki_model import AnkiModel
 from md2anki.create_id import create_unique_id
+from md2anki.note_models import (
+    AnkiCardModelId,
+    create_default_anki_deck_model,
+    create_type_answer_anki_deck_model,
+    create_type_cloze_anki_deck_model,
+)
 from md2anki.preprocessor import md_preprocessor_md2anki
 from md2anki.md_util import (
+    md_get_md2anki_model,
     md_get_used_files,
     md_get_used_md2anki_tags,
     md_update_local_filepaths,
@@ -53,7 +61,7 @@ class AnkiNote:
     Contains all information of an anki deck note.
     """
 
-    question: str = ""
+    question: str
     """Question multi line string"""
     answer: str = ""
     """Answer multi line string"""
@@ -80,9 +88,25 @@ class AnkiNote:
             .union(self.tags)
         )
 
+    def get_md2anki_model(self, default_anki_card_model: str) -> AnkiModel:
+        # Overwrite default anki card model if the note has a custom one
+        model_str = md_get_md2anki_model(self.question)
+        if model_str is None:
+            model_str = default_anki_card_model
+        if model_str == AnkiCardModelId.DEFAULT.value:
+            return create_default_anki_deck_model()
+        elif model_str == AnkiCardModelId.TYPE_ANSWER.value:
+            return create_type_answer_anki_deck_model()
+        elif model_str == AnkiCardModelId.TYPE_CLOZE.value:
+            return create_type_cloze_anki_deck_model()
+        elif model_str == AnkiCardModelId.TYPE_CLOZE_EXTRA.value:
+            return create_type_cloze_anki_deck_model(extra=True)
+        else:
+            raise RuntimeError(f"Unknown anki model ID '{model_str=!r}'")
+
     def genanki_create_note(
         self,
-        anki_card_model: genanki.Model,
+        default_anki_card_model: str,
         dir_dynamic_files: Path,
         custom_program: Dict[str, List[str]],
         custom_program_args: Dict[str, List[List[str]]],
@@ -90,11 +114,10 @@ class AnkiNote:
         evaluate_code: bool = False,
         evaluate_code_cache_dir: Optional[Path] = None,
         keep_temp_files: bool = False,
-        merge_fields: bool = False,
     ) -> genanki.Note:
         """
         Args:
-            @param anki_card_model: The card model
+            @param default_anki_card_model: Default anki card model to use if no custom one is found
             @param dir_dynamic_files: Directory for dynamically created files
             @param custom_program: Custom program commands
             @param custom_program_args: Custom program command arguments
@@ -129,11 +152,13 @@ class AnkiNote:
             anki_latex_math=True,
             render_to_html=True,
         )
+        model = self.get_md2anki_model(default_anki_card_model).genanki_create_model()
         note = genanki.Note(
             guid=self.guid,
-            model=anki_card_model,
+            model=model,
+            # Merge fields when there is only one field in the model (cloze cards without extra content)
             fields=[f"{question_field_str}\n\n{answer_field_str}"]
-            if merge_fields
+            if len(model.fields) == 1
             else [question_field_str, answer_field_str],
             tags=list(self.get_used_md2anki_tags().union(self.tags)),
         )

@@ -127,7 +127,7 @@ jobs:
         python3 -m pip install -r requirements.txt
         python3 -m pip install --upgrade mypy types-beautifulsoup4 types-Markdown types-Pygments
     - name: Check if type checks can be ran without errors
-      run: python3 -m mypy src examples tests clean.py main.py setup.py update_readme.py
+      run: python3 -m mypy src examples tests clean.py main.py setup.py update_readme.py update_pkgbuild.py format.py
 
 
   package:

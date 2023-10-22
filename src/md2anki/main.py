@@ -60,18 +60,6 @@ def main(args: Md2AnkiArgs) -> int:
         log.warning("Stop parsing because no outputs are specified!")
         return 0
 
-    # Create the Anki card model
-    if args.anki_card_model == AnkiCardModelId.DEFAULT:
-        anki_deck_model = create_default_anki_deck_model()
-    elif args.anki_card_model == AnkiCardModelId.TYPE_ANSWER:
-        anki_deck_model = create_type_answer_anki_deck_model()
-    elif args.anki_card_model == AnkiCardModelId.TYPE_CLOZE:
-        anki_deck_model = create_type_cloze_anki_deck_model()
-    elif args.anki_card_model == AnkiCardModelId.TYPE_CLOZE_EXTRA:
-        anki_deck_model = create_type_cloze_anki_deck_model(extra=True)
-    else:
-        raise RuntimeError(f"Unknown anki card model ID '{args.anki_card_model}'")
-
     # Parse all Markdown input files to Anki decks
     anki_decks: Final[List[List[AnkiDeck]]] = []
     for md_input_file_path in args.md_input_file_paths:
@@ -84,7 +72,6 @@ def main(args: Md2AnkiArgs) -> int:
             )
             for anki_deck in anki_deck_list:
                 anki_deck.additional_file_dirs.extend(args.additional_file_dirs)
-                anki_deck.model = anki_deck_model
             anki_decks.append(anki_deck_list)
 
     anki_decks_flat: Final[List[AnkiDeck]] = [
@@ -123,6 +110,7 @@ def main(args: Md2AnkiArgs) -> int:
             genanki_package_anki_decks_to_file(
                 [
                     anki_deck.genanki_create_anki_deck(
+                        default_anki_card_model=f"{args.anki_card_model}",
                         dir_dynamic_files=tmp_dir_dynamic_files_anki,
                         custom_program=args.custom_program,
                         custom_program_args=args.custom_program_args,
