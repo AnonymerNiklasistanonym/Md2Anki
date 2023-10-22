@@ -129,7 +129,7 @@ class AnkiNote:
             anki_latex_math=True,
             render_to_html=True,
         )
-        return genanki.Note(
+        note = genanki.Note(
             guid=self.guid,
             model=anki_card_model,
             fields=[f"{question_field_str}\n\n{answer_field_str}"]
@@ -137,6 +137,11 @@ class AnkiNote:
             else [question_field_str, answer_field_str],
             tags=list(self.get_used_md2anki_tags().union(self.tags)),
         )
+        if len(list(card.ord for card in note.cards)) < 1:
+            log.error(
+                f"the anki card {self.question!r} ({self.guid}) generated 0 cards!"
+            )
+        return note
 
     def create_md_section(
         self, local_asset_dir_path: Optional[Path] = None
