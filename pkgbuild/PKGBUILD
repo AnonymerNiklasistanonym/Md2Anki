@@ -1,0 +1,22 @@
+pkgname=python-md2anki
+_name=Md2Anki
+pkgver=3.0.18b
+pkgrel=1
+pkgdesc='Convert Markdown formatted documents to anki decks'
+arch=('any')
+url='https://github.com/AnonymerNiklasistanonym/Md2Anki'
+license=('Apache')
+depends=('python' 'python-beautifulsoup4' 'python-genanki-git' 'python-markdown' 'python-pygments')
+makedepends=('python-build' 'python-installer')
+source=("$_name-$pkgver.tar.gz::https://github.com/AnonymerNiklasistanonym/Md2Anki/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "$_name-$pkgver"
+  python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "$_name-$pkgver"
+  python -m installer --destdir="$pkgdir" dist/*.whl
+}

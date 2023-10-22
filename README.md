@@ -293,6 +293,20 @@ pip uninstall md2anki
    pip uninstall md2anki
    ```
 
+### Pacman
+
+```sh
+mkdir -p pkgbuild
+cd pkgbuild
+# Build package and then install it via pacman
+makepkg -p ../PKGBUILD --syncdeps --rmdeps --clean
+pacman -S python-md2anki-3.0.18b-1-any.pkg.tar.zst
+# Or build and install package
+makepkg -p ../PKGBUILD --syncdeps --rmdeps --clean --install
+# Remove package
+pacman -R python-md2anki
+```
+
 ### Build
 
 Via the file [`setup.py`](setup.py) the package can be built:

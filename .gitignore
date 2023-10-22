@@ -144,3 +144,9 @@ temp
 .vscode/settings.json
 package-lock.json
 package.json
+
+# PKGBUILD files
+pkgbuild/pkg
+pkgbuild/src
+*.tar.gz
+*.pkg.tar.zst

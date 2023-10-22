@@ -22,9 +22,10 @@ class ProgramVersion:
 
 # md2anki general information
 MD2ANKI_NAME: Final = "md2anki"
+MD2ANKI_NAME_GIT: Final = "Md2Anki"
 MD2ANKI_AUTHOR: Final = "AnonymerNiklasistanonym"
 MD2ANKI_DESCRIPTION: Final = "Convert Markdown formatted documents to anki decks"
-MD2ANKI_URL: Final = "https://github.com/AnonymerNiklasistanonym/Md2Anki"
+MD2ANKI_URL: Final = f"https://github.com/AnonymerNiklasistanonym/{MD2ANKI_NAME_GIT}"
 MD2ANKI_URL_SOURCE_CODE: Final = MD2ANKI_URL
 MD2ANKI_URL_GIT: Final = f"{MD2ANKI_URL}.git"
 MD2ANKI_URL_BUG_TRACKER: Final = f"{MD2ANKI_URL}/issues"
