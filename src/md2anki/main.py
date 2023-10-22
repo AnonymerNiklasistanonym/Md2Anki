@@ -5,11 +5,12 @@ import logging
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Final, List
+from typing import Dict, Final, List, Tuple
 
 # Local modules
 from md2anki.anki_deck import (
     AnkiDeck,
+    AnkiNote,
     genanki_package_anki_decks_to_file,
     md_merge_anki_decks_to_md_file,
     backup_anki_decks_to_dir,
@@ -89,6 +90,27 @@ def main(args: Md2AnkiArgs) -> int:
     anki_decks_flat: Final[List[AnkiDeck]] = [
         item for sublist in anki_decks for item in sublist
     ]
+
+    guids: Dict[str, Tuple[AnkiDeck, AnkiNote]] = dict()
+    guids_deck: Dict[int, AnkiDeck] = dict()
+    for anki_deck in anki_decks_flat:
+        if (
+            anki_deck.guid in guids_deck
+            and guids_deck[anki_deck.guid].name != anki_deck.name
+        ):
+            log.warning(
+                f"Found a duplicated deck guid with different name ({anki_deck.guid}): "
+                f"{guids_deck[anki_deck.guid].name!r} <-> {anki_deck.name!r}"
+            )
+        guids_deck[anki_deck.guid] = anki_deck
+        for anki_deck_note in anki_deck.notes:
+            if anki_deck_note.guid in guids:
+                log.warning(
+                    f"Found a duplicated note guid ({anki_deck_note.guid}): "
+                    f"{guids[anki_deck_note.guid][0].name!r}>{guids[anki_deck_note.guid][1].question!r} <-> "
+                    f"{anki_deck.name!r}>{anki_deck_note.question!r}"
+                )
+            guids[anki_deck_note.guid] = (anki_deck, anki_deck_note)
 
     if args.anki_output_file_path is not None:
         log.debug(f"Create anki deck file {args.anki_output_file_path!r}...")
