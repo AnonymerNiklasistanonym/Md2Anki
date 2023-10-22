@@ -1,6 +1,6 @@
 pkgname=python-md2anki
 _name=Md2Anki
-pkgver=3.0.18b
+pkgver=3.0.19b
 pkgrel=1
 pkgdesc='Convert Markdown formatted documents to anki decks'
 arch=('any')
