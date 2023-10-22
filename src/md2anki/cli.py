@@ -368,7 +368,6 @@ def parse_cli_args(cli_args: List[str]) -> Md2AnkiArgs:
     parsed_args.md_heading_depth = args.md_heading_depth
     parsed_args.md_input_file_paths = args.md_input_files
     parsed_args.backup_output_dir_path = args.o_backup_dir
-    parsed_args.pdf_output_file_path = args.o_pdf
     parsed_args.evaluate_code = args.evaluate_code
     parsed_args.evaluate_code_ignore_cache = args.evaluate_code_ignore_cache
     parsed_args.evaluate_code_delete_cache = args.evaluate_code_delete_cache
@@ -422,7 +421,7 @@ def parse_cli_args(cli_args: List[str]) -> Md2AnkiArgs:
             )
             parsed_args.additional_file_dirs.remove(additional_file_dir)
 
-    if args.o_anki is not None:
+    if args.o_anki is not None and len(args.o_anki.name) > 0:
         # Only automatically create an anki output file path if it was not none
         parsed_args.anki_output_file_path = (
             args.o_anki if f"{args.o_anki.name}".lower() != "none" else None
@@ -432,13 +431,16 @@ def parse_cli_args(cli_args: List[str]) -> Md2AnkiArgs:
             0
         ].parent.joinpath(f"{parsed_args.md_input_file_paths[0].stem}.apkg")
 
-    if args.o_md is not None:
+    if args.o_md is not None and len(args.o_md.name) > 0:
         parsed_args.md_output_file_paths = (
             [args.o_md] if f"{args.o_md.name}".lower() != "none" else None
         )
-    elif args.o_md_dir:
+    elif args.o_md_dir and len(args.o_md_dir.name) > 0:
         parsed_args.md_output_dir_path = args.o_md_dir
     else:
         parsed_args.md_output_file_paths = parsed_args.md_input_file_paths.copy()
+
+    if args.o_pdf is not None and len(args.o_pdf.name) > 0:
+        parsed_args.pdf_output_file_path = args.o_pdf
 
     return parsed_args
