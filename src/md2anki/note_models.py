@@ -40,9 +40,8 @@ def create_type_answer_anki_deck_model() -> AnkiModel:
     with open(CSS_FILE_PATH_TYPE_ANSWER, "r") as file:
         css_data += file.read()
     return AnkiModel(
-        guid=396500203,
-        name=f"{MD2ANKI_NAME} {AnkiCardModelId.TYPE_ANSWER.value} (v3)",
-        description=f"{MD2ANKI_NAME} (type answer)",
+        guid=396500204,
+        name=f"{MD2ANKI_NAME} {AnkiCardModelId.TYPE_ANSWER.value} (v4)",
         css=css_data,
         template_card_question='<div class="card card_question">{{Question}}</div>\n\n{{type:Answer}}',
         template_card_question_surround=("", ""),
@@ -57,9 +56,8 @@ def create_type_cloze_anki_deck_model(extra=False) -> AnkiModel:
     with open(CSS_FILE_PATH_TYPE_CLOZE, "r") as file:
         css_data += file.read()
     return AnkiModel(
-        guid=396500402 if extra else 396500302,
-        name=f"{MD2ANKI_NAME} {AnkiCardModelId.TYPE_CLOZE_EXTRA.value if extra else AnkiCardModelId.TYPE_CLOZE.value} (v2)",
-        description=f"{MD2ANKI_NAME} (type cloze{' extra' if extra else ''})",
+        guid=396500404 if extra else 396500304,
+        name=f"{MD2ANKI_NAME} {AnkiCardModelId.TYPE_CLOZE_EXTRA.value if extra else AnkiCardModelId.TYPE_CLOZE.value} (v4)",
         fields=["Text", "Extra"] if extra else ["Text"],
         css=css_data,
         cloze=True,
@@ -75,8 +73,7 @@ def create_default_anki_deck_model() -> AnkiModel:
     with open(CSS_FILE_PATH, "r") as file:
         css_data = file.read()
     return AnkiModel(
-        guid=396500103,
-        name=f"{MD2ANKI_NAME} {AnkiCardModelId.DEFAULT.value} (v3)",
-        description=f"{MD2ANKI_NAME} (default)",
+        guid=396500104,
+        name=f"{MD2ANKI_NAME} {AnkiCardModelId.DEFAULT.value} (v4)",
         css=css_data,
     )

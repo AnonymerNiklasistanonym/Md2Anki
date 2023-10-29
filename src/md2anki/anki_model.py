@@ -19,8 +19,6 @@ class AnkiModel:
 
     name: str = ""
     """Model name"""
-    description: str = ""
-    """Model description"""
     fields: List[str] = field(default_factory=lambda: ["Question", "Answer"])
     """The content fields"""
     cloze: bool = False
@@ -56,9 +54,8 @@ class AnkiModel:
         )
         return genanki.Model(
             self.guid,
-            self.description,
+            self.name,
             fields=[dict([("name", x)]) for x in self.fields],
-            css=self.css,
             templates=[
                 {
                     "name": self.name,
@@ -68,5 +65,6 @@ class AnkiModel:
                     f"{self.template_card_answer}\n{self.template_card_answer_surround[1]}",
                 }
             ],
+            css=self.css,
             model_type=genanki.Model.CLOZE if self.cloze else genanki.Model.FRONT_BACK,
         )
