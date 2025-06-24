@@ -62,9 +62,9 @@ def create_type_cloze_anki_deck_model(extra=False) -> AnkiModel:
         css=css_data,
         cloze=True,
         template_card_question="{{cloze:Text}}",
-        template_card_answer='{{cloze:Text}}<hr id="answer">{{Extra}}'
-        if extra
-        else "{{cloze:Text}}",
+        template_card_answer=(
+            '{{cloze:Text}}<hr id="answer">{{Extra}}' if extra else "{{cloze:Text}}"
+        ),
         template_card_answer_front_side="",
     )
 

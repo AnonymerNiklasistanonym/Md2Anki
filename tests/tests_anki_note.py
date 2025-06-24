@@ -107,7 +107,6 @@ class TestAnkiNoteGeneric(unittest.TestCase):
             )
             self.results_anki_output.append(
                 tuple(
-                    # type: ignore
                     test_input.genanki_create_note(
                         default_anki_card_model=f"{AnkiCardModelId.DEFAULT}",
                         dir_dynamic_files=dir_dynamic_files,

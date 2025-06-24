@@ -70,7 +70,7 @@ class AnkiNote:
     guid: str = create_unique_id()
     """Unique id"""
 
-    def get_used_local_files(self) -> Set[Path]:
+    def get_used_local_files(self) -> set[Path]:
         return set(
             [
                 file
@@ -157,9 +157,11 @@ class AnkiNote:
             guid=self.guid,
             model=model,
             # Merge fields when there is only one field in the model (cloze cards without extra content)
-            fields=[f"{question_field_str}\n\n{answer_field_str}"]
-            if len(model.fields) == 1
-            else [question_field_str, answer_field_str],
+            fields=(
+                [f"{question_field_str}\n\n{answer_field_str}"]
+                if len(model.fields) == 1
+                else [question_field_str, answer_field_str]
+            ),
             tags=list(self.get_used_md2anki_tags().union(self.tags)),
         )
         if len(list(card.ord for card in note.cards)) < 1:

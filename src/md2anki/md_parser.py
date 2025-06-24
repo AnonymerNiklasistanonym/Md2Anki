@@ -118,7 +118,7 @@ def parse_possible_anki_deck_heading(
                 f"heading structure using {MD2ANKI_MD_PP_ANKI_DECK_HEADING_SUBDECK_PREFIX!r} instead"
             )
             anki_deck_name = anki_deck_name.replace(
-                rf"{ANKI_SUBDECK_SEPARATOR}", ":\u200B:"
+                rf"{ANKI_SUBDECK_SEPARATOR}", ":\u200b:"
             )
         if parent_deck_name is not None:
             anki_deck_name = (
@@ -144,9 +144,11 @@ def parse_possible_anki_note_heading(
     if regex_match is not None:
         return AnkiNote(
             question=regex_match.group(2),
-            guid=regex_match.group(3)
-            if regex_match.group(3) is not None
-            else create_unique_id(),
+            guid=(
+                regex_match.group(3)
+                if regex_match.group(3) is not None
+                else create_unique_id()
+            ),
         ), len(regex_match.group(1))
     return None
 
@@ -231,7 +233,7 @@ def parse_md_content_to_anki_deck_list(
                 if len(anki_decks_stack) > (heading_depth - initial_heading_depth):
                     deck_was_moved = False
                     # Store the old anki deck name before updating it
-                    old_anki_parentdeck_name = anki_decks_stack[-1].name
+                    old_anki_parent_deck_name = anki_decks_stack[-1].name
                     # While the anki deck stack has more decks than the heading depth of the found subdeck indicated
                     while len(anki_decks_stack) > (
                         heading_depth - initial_heading_depth
@@ -245,10 +247,10 @@ def parse_md_content_to_anki_deck_list(
                     # Refresh sub deck name in case that the previous parent deck was removed from the stack
                     if deck_was_moved:
                         anki_subdeck.name = anki_subdeck.name.replace(
-                            old_anki_parentdeck_name, anki_decks_stack[-1].name, 1
+                            old_anki_parent_deck_name, anki_decks_stack[-1].name, 1
                         )
                         log.debug(
-                            f">> Update {anki_subdeck.name=} ({old_anki_parentdeck_name=} was removed from the stack)"
+                            f">> Update {anki_subdeck.name=} ({old_anki_parent_deck_name=} was removed from the stack)"
                         )
                 # Check if the subdeck heading depth is at the expected depth
                 if len(anki_decks_stack) != (heading_depth - initial_heading_depth):

@@ -130,7 +130,19 @@ def evaluate_code_in_subprocess(
     cache_dir: Optional[Path] = None,
     additional_env: Optional[Dict[str, str]] = None,
 ) -> Tuple[List[str], List[Path]]:
-    """Return the command outputs and the found images."""
+    """
+    Return the command outputs and the found images.
+
+    :param program: The name of the program
+    :param code: The code that should be run
+    :param custom_program: All custom programs
+    :param custom_program_args: All custom program arguments
+    :param dir_dynamic_files: A directory to which supported files (images) should be copied to that are created during the subprocess run
+    :param keep_temp_files: Keep the temporary files created by the subprocess run
+    :param cache_dir: A cache directory to only run subprocess if values have changed
+    :param additional_env: Additional environment variables
+    :return: Tuple which consists of the list of outputs and the list of created images
+    """
     log.debug(f"Evaluate code ({program=},{code=})")
 
     dir_path_temp = Path(tempfile.mkdtemp(prefix=f"{MD2ANKI_NAME}_evaluate_code_"))
