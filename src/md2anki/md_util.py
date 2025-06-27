@@ -8,11 +8,12 @@ import logging
 import re
 from pathlib import Path
 from re import Match
-from typing import Callable, Final, List, Optional, Set, Tuple
+from typing import Callable, Final, Optional, Set, Tuple
 from urllib.parse import urlparse, ParseResult
 
 # Local modules
 from md2anki.info.general import (
+    MD2ANKI_NAME,
     MD2ANKI_MD_PP_MD2ANKI_TAG_PREFIX,
     MD2ANKI_MD_PP_MD2ANKI_TAG_SUFFIX,
     MD2ANKI_MD_PP_MD2ANKI_MODEL_PREFIX,
@@ -75,7 +76,9 @@ that checks if it was escaped and then moves on to the next $ symbol.
 """
 Regex to match: <name>_md2anki_<ext>.svg
 """
-SVG_UNSUPPORTED_IMAGES_PATTERN = re.compile(r"^(.*)_md2anki_([a-zA-Z0-9]+)\.svg$")
+SVG_UNSUPPORTED_IMAGES_PATTERN = re.compile(
+    rf"^(.*)_{MD2ANKI_NAME.lower()}_([a-zA-Z0-9]+)\.svg$"
+)
 
 # TODO Add update local files method
 # TODO Add update (inline) code blocks method
@@ -93,8 +96,10 @@ def md_get_used_files(md_content: str) -> Set[Path | ParseResult]:
             files.add(possible_url)
         else:
             if filepath.endswith(".pdf") or filepath.endswith(".xopp"):
-                filepath = filepath.replace(".pdf", f"_md2anki_pdf.svg")
-                filepath = filepath.replace(".xopp", f"_md2anki_xopp.svg")
+                filepath = filepath.replace(".pdf", f"_{MD2ANKI_NAME.lower()}_pdf.svg")
+                filepath = filepath.replace(
+                    ".xopp", f"_{MD2ANKI_NAME.lower()}_xopp.svg"
+                )
             files.add(Path(filepath))
         return ""
 
@@ -141,7 +146,7 @@ def recognize_image_path_of_unsupported_images_to_svg(
 def update_image_path_of_unsupported_images_to_svg(original_path: Path) -> Path | None:
     if original_path.suffix == ".pdf" or original_path.suffix == ".xopp":
         return original_path.with_name(
-            f"{original_path.stem}_md2anki_{original_path.suffix.lstrip(".")}.svg"
+            f"{original_path.stem}_{MD2ANKI_NAME.lower()}_{original_path.suffix.lstrip(".")}.svg"
         )
     return None
 

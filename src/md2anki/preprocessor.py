@@ -34,6 +34,7 @@ from md2anki.info.general import (
     MD2ANKI_MD_PP_MD2ANKI_TAG_SUFFIX,
     MD2ANKI_MD_PP_MD2ANKI_MODEL_PREFIX,
     MD2ANKI_MD_PP_MD2ANKI_MODEL_SUFFIX,
+    MD2ANKI_VERSION,
 )
 from md2anki.md_util import (
     md_update_local_filepaths,
@@ -286,39 +287,48 @@ def md_preprocessor_md2anki(
         try:
             if output_path.is_file():
                 output_path.unlink()
+            commands: list[list[str | Path]] = []
+            inkscape_commands: list[str | Path] = [
+                "inkscape",
+                "--export-type=svg",
+                "--export-filename",
+                output_path,
+            ]
             if original_path.name.endswith(".pdf"):
                 # Inkscape command to convert PDF to SVG
-                subprocess.run(
-                    [
-                        "inkscape",
-                        "--export-type=svg",
-                        "--export-filename",
-                        output_path,
-                        original_path,
-                    ],
-                    check=True,
-                )
+                inkscape_commands.append(original_path)
+                commands.append(inkscape_commands)
+                subprocess.run(inkscape_commands, check=True)
             elif original_path.name.endswith(".xopp"):
                 temp_pdf = output_path.with_suffix(".pdf")
                 # Xournal++ command to export XOPP to SVG
-                subprocess.run(["xournalpp", original_path, "-p", temp_pdf], check=True)
+                xournalpp_commands: list[str | Path] = [
+                    "xournalpp",
+                    original_path,
+                    "-p",
+                    temp_pdf,
+                ]
+                commands.append(xournalpp_commands)
+                subprocess.run(xournalpp_commands, check=True)
                 # Inkscape command to convert PDF to SVG
-                subprocess.run(
-                    [
-                        "inkscape",
-                        "--export-type=svg",
-                        "--export-filename",
-                        output_path,
-                        temp_pdf,
-                    ],
-                    check=True,
-                )
+                inkscape_commands.append(temp_pdf)
+                commands.append(inkscape_commands)
+                subprocess.run(inkscape_commands, check=True)
                 if temp_pdf.is_file():
                     temp_pdf.unlink()
             # Add metadata to SVG
             add_svg_metadata(
                 output_path,
                 {
+                    "program": MD2ANKI_NAME,
+                    "version": str(MD2ANKI_VERSION),
+                    "commands": [
+                        [
+                            str(item) if isinstance(item, Path) else item
+                            for item in sublist
+                        ]
+                        for sublist in commands
+                    ],
                     "source": original_path.name,
                     "hash": get_short_file_hash(original_path),
                 },
@@ -338,12 +348,12 @@ def md_preprocessor_md2anki(
                     file_hash = get_short_file_hash(original_image_path)
                     metadata = read_svg_metadata(output_svg_path)
                     if metadata is None or metadata["hash"] != file_hash:
-                        log.error(
+                        log.debug(
                             f"Update {output_svg_path=} from {original_image_path=} {metadata=} {file_hash=}"
                         )
                         convert_to_svg(original_image_path, output_svg_path)
                 else:
-                    log.error(f"Create {output_svg_path=} from {original_image_path=}")
+                    log.debug(f"Create {output_svg_path=} from {original_image_path=}")
                     convert_to_svg(original_image_path, output_svg_path)
             else:
                 log.error(f"Could not find file: {image_path=}")
