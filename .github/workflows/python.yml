@@ -251,7 +251,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Download all workflow run artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
     - name: Create automatic GitHub release
       uses: marvinpinto/action-automatic-releases@v1.2.1
       with:
