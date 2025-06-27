@@ -163,6 +163,82 @@ Answer
 Answer
 ```
 
+To create *Fill in the blanks* Anki cards you need to change the anki model:
+
+```sh
+md2anki document.md -o-anki anki_deck.apkg -anki-model md2anki_type_cloze
+```
+
+If you select the **md2anki_type_cloze_extra** model the "extra" part below "---" will also be displayed only on the answer page while on the **md2anki_type_cloze** model it will just show it on the question and answer part:
+
+```sh
+md2anki document.md -o-anki anki_deck.apkg -anki-model md2anki_type_cloze_extra
+```
+
+```markdown
+# Example 'Fill in the Blank' (3083273130)
+
+## Basic fill in the blank (5afd1da8-f5af-4abd-8809-6e3e47d164eb)
+
+This text is {{c1::boring::a custom hint}} and {{c1::a placeholder}}
+
+---
+
+This will create be displayed as:
+
+- This text is [a custom hint] and [...]
+- This text is boring and a placeholder
+
+## Multiple fill the blanks (7e0c3a24-a542-4b53-84c2-0481caa86ab4)
+
+{{c1::Mitochondria}} are the {{c2::powerhouses}} of the cell
+
+---
+
+This will create 2 cards and be displayed as:
+
+- [...] are the powerhouses of the cell
+- Mitochondria are the [...] of the cell
+
+which both become:
+
+- Mitochondria are the powerhouses of the cell
+```
+
+The anki models can be mixed together and even specified on the card:
+
+```sh
+# Global model md2anki_type_cloze
+# - contains one md2anki_type_cloze (global override)
+# - contains one md2anki_type_default (override on card)
+# - contains one md2anki_type_cloze_extra (override on card)
+md2anki document.md -o-anki anki_deck.apkg
+```
+
+```markdown
+# Example 'Multiple card types' (2303117446)
+
+Global card type:
+
+`{=<md2anki_type_cloze>=}`
+
+## Card with global {{c1::card type}} (680d8091-21fb-40e0-9b9b-314b93baafcf)
+
+Answer
+
+## Card with custom card type `{=<md2anki_type_default>=}` (888ca2b8-9191-49fb-9681-bd5d818b5749)
+
+Answer
+
+## {{c1::Multi}} line card with custom card type (0834581b-ad90-47c1-b6ba-fc884e582d87)
+
+`{=<md2anki_type_cloze_extra>=}`
+
+---
+
+Answer
+```
+
 [//]: <> (END: EXAMPLES)
 
 Checkout the [`examples`](examples) directory for more examples.
