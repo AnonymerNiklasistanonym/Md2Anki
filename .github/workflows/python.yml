@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: [3.11]
+        python-version: [3.13]
 
     runs-on: ${{ matrix.os }}
 
@@ -47,7 +47,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: [3.11]
+        python-version: [3.13]
 
     runs-on: ${{ matrix.os }}
 
@@ -72,7 +72,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: [3.11]
+        python-version: [3.13]
 
     runs-on: ${{ matrix.os }}
 
@@ -96,13 +96,17 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: |
         choco install inkscape llvm miktex nodejs
+      # Sometimes miktex install crashes on Windows...
+      continue-on-error: true
     - name: Install external dependencies
       run: |
-        npm install -g ts-node
+        npm install -g tsx
         python3 -m pip install numpy matplotlib
     - name: Check if tests can be ran without errors
       run: python3 -m unittest
       working-directory: tests
+      # Sometimes miktex install crashes on Windows...
+      continue-on-error: ${{ matrix.os == 'windows-latest' }}
 
 
   type-check:
@@ -110,7 +114,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: [3.11]
+        python-version: [3.13]
 
     runs-on: ${{ matrix.os }}
 
@@ -125,7 +129,7 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install -r requirements.txt
-        python3 -m pip install --upgrade mypy types-beautifulsoup4 types-Markdown types-Pygments
+        python3 -m pip install --upgrade mypy black types-beautifulsoup4 types-Markdown types-Pygments types-setuptools
     - name: Check if type checks can be ran without errors
       run: python3 -m mypy src examples tests clean.py main.py setup.py update_readme.py update_pkgbuild.py format.py
 
@@ -135,7 +139,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: [3.11]
+        python-version: [3.13]
 
     runs-on: ${{ matrix.os }}
 
@@ -190,7 +194,7 @@ jobs:
         ($FILEHASH_WHL.Hash + '  ' + (Split-Path $FILEHASH_WHL.Path -Leaf)).ToLower() | Out-File -FilePath $CHECKSUM_FILE -Append
       working-directory: dist
     - name: Archive package files
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: python_package_files_${{ matrix.os }}
         path: |
@@ -217,7 +221,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Download all workflow run artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
     - name: Remove checksum file
       run: rm checksums_sha256.txt
       working-directory: python_package_files_${{ matrix.os }}

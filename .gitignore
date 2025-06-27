@@ -138,9 +138,12 @@ venv_*
 *.apkg
 backup_*
 
-# Temp directories
+# Temp files
 temp
 *.pdf
+!examples/res/example.pdf
+*_md2anki_xopp*
+*_md2anki_pdf*
 .vscode/settings.json
 package-lock.json
 package.json

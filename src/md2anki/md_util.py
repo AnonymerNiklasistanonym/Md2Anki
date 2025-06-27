@@ -72,6 +72,11 @@ sections. To have the option to escape the $ symbol there is a negative lookbehi
 that checks if it was escaped and then moves on to the next $ symbol.
 """
 
+"""
+Regex to match: <name>_md2anki_<ext>.svg
+"""
+SVG_UNSUPPORTED_IMAGES_PATTERN = re.compile(r"^(.*)_md2anki_([a-zA-Z0-9]+)\.svg$")
+
 # TODO Add update local files method
 # TODO Add update (inline) code blocks method
 
@@ -87,10 +92,14 @@ def md_get_used_files(md_content: str) -> Set[Path | ParseResult]:
         if possible_url.scheme == "http" or possible_url.scheme == "https":
             files.add(possible_url)
         else:
+            if filepath.endswith(".pdf") or filepath.endswith(".xopp"):
+                filepath = filepath.replace(".pdf", f"_md2anki_pdf.svg")
+                filepath = filepath.replace(".xopp", f"_md2anki_xopp.svg")
             files.add(Path(filepath))
         return ""
 
     re.sub(REGEX_MD_IMAGE_FILE, add_used_files, md_content)
+    log.debug(f"Found the following files: {files=}")
     return files
 
 
@@ -107,12 +116,34 @@ def md_update_local_filepaths(
         file_name = Path(filepath).name
         return regex_group_match[0].replace(
             filepath,
-            file_name
-            if new_directory is None
-            else str(new_directory.joinpath(file_name)),
+            (
+                file_name
+                if new_directory is None
+                else str(new_directory.joinpath(file_name))
+            ),
         )
 
     return re.sub(REGEX_MD_IMAGE_FILE, update_local_filepath, md_content)
+
+
+def recognize_image_path_of_unsupported_images_to_svg(
+    file_path: Path,
+) -> Optional[Path]:
+    match = SVG_UNSUPPORTED_IMAGES_PATTERN.match(file_path.name)
+    if match:
+        base_name = match.group(1)
+        original_ext = match.group(2)
+        new_name = f"{base_name}.{original_ext}"
+        return file_path.with_name(new_name)
+    return None
+
+
+def update_image_path_of_unsupported_images_to_svg(original_path: Path) -> Path | None:
+    if original_path.suffix == ".pdf" or original_path.suffix == ".xopp":
+        return original_path.with_name(
+            f"{original_path.stem}_md2anki_{original_path.suffix.lstrip(".")}.svg"
+        )
+    return None
 
 
 def md_update_images(
@@ -129,6 +160,23 @@ def md_update_images(
         )
 
     return re.sub(REGEX_MD_IMAGE_FILE, update_image, md_content)
+
+
+def md_update_image_sources_only(
+    md_content: str,
+    source_replacer: Callable[[str], str],
+) -> str:
+    def replacer(match: Match[str]) -> str:
+        full = match.group(0)
+        old_path = match.group(2)
+        new_path = source_replacer(old_path)
+
+        # Locate and replace path text inside the full match string
+        before = full[: full.find(old_path)]
+        after = full[full.find(old_path) + len(old_path) :]
+        return before + new_path + after
+
+    return re.sub(REGEX_MD_IMAGE_FILE, replacer, md_content)
 
 
 def md_update_code_parts(

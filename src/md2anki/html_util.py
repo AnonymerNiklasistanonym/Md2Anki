@@ -11,7 +11,7 @@ def fix_inline_code_p_tags(html_content: str) -> str:
     @return: updated HTML content string
     """
     soup = BeautifulSoup(html_content, "html.parser")
-    for inline_code_div in soup.findAll("div", {"class": "highlight_inline"}):
+    for inline_code_div in soup.find_all("div", {"class": "highlight_inline"}):
         for inline_code_div_prev in inline_code_div.previous_elements:
             if inline_code_div_prev.name == "p":
                 inline_code_div_prev["class"] = inline_code_div_prev.get(

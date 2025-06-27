@@ -215,9 +215,11 @@ def md_merge_anki_decks_to_md_file(
                 file.write(
                     anki_deck_heading.create_string(
                         depth=heading_depth + initial_heading_depth - 1,
-                        heading_prefix=MD2ANKI_MD_PP_ANKI_DECK_HEADING_SUBDECK_PREFIX
-                        if heading_depth > 1
-                        else "",
+                        heading_prefix=(
+                            MD2ANKI_MD_PP_ANKI_DECK_HEADING_SUBDECK_PREFIX
+                            if heading_depth > 1
+                            else ""
+                        ),
                         with_heading_id=not remove_ids,
                     )
                 )

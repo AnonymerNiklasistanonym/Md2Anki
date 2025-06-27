@@ -115,9 +115,11 @@ def main(args: Md2AnkiArgs) -> int:
                         custom_program=args.custom_program,
                         custom_program_args=args.custom_program_args,
                         evaluate_code=args.evaluate_code,
-                        evaluate_code_cache_dir=None
-                        if args.evaluate_code_ignore_cache
-                        else args.evaluate_code_cache_dir_path,
+                        evaluate_code_cache_dir=(
+                            None
+                            if args.evaluate_code_ignore_cache
+                            else args.evaluate_code_cache_dir_path
+                        ),
                         external_file_dirs=args.additional_file_dirs,
                         keep_temp_files=args.keep_temp_files,
                     )
@@ -203,9 +205,11 @@ def main(args: Md2AnkiArgs) -> int:
                     custom_program_args=args.custom_program_args,
                     dir_dynamic_files=tmp_dir_dynamic_files_pdf,
                     evaluate_code=args.evaluate_code,
-                    evaluate_code_cache_dir=None
-                    if args.evaluate_code_ignore_cache
-                    else args.evaluate_code_cache_dir_path,
+                    evaluate_code_cache_dir=(
+                        None
+                        if args.evaluate_code_ignore_cache
+                        else args.evaluate_code_cache_dir_path
+                    ),
                     external_file_dirs=args.additional_file_dirs,
                     keep_temp_files=args.keep_temp_files,
                 )

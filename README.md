@@ -379,7 +379,7 @@ python -m twine upload --skip-existing dist/*
 Python files can be checked for type errors (to some extent) using the commands:
 
 ```sh
-python -m pip install --upgrade mypy types-beautifulsoup4 types-Markdown types-Pygments
+python -m pip install --upgrade mypy types-beautifulsoup4 types-Markdown types-Pygments types-setuptools
 python -m mypy src setup.py examples tests clean.py main.py update_readme.py update_pkgbuild.py format.py
 ```
 

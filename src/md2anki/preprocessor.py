@@ -2,9 +2,13 @@
 
 # Internal packages
 import logging
+import hashlib
 import html
 import re
+import shutil
+import subprocess
 import textwrap
+from os import path
 from pathlib import Path
 from re import Match
 from typing import Optional, Dict, List, Final
@@ -37,11 +41,14 @@ from md2anki.md_util import (
     md_update_images,
     md_update_math_sections,
     md_update_generic_id_sections,
+    md_update_image_sources_only,
+    update_image_path_of_unsupported_images_to_svg,
 )
 from md2anki.evaluate_code import (
     evaluate_code_in_subprocess,
     UnableToEvaluateCodeException,
 )
+from md2anki.svg_metadata import add_svg_metadata, read_svg_metadata
 
 # Logger
 log = logging.getLogger(__name__)
@@ -67,6 +74,7 @@ def update_md_image_to_html(
     height: Optional[str],
 ) -> str:
     style = ""
+    # Add style information if a width or height is found
     if width is not None:
         style += f"width: {width};"
     if height is not None:
@@ -215,7 +223,7 @@ def md_preprocessor_md2anki(
 
         if language is None:
             language = "text"
-        if render_to_html is False:
+        if not render_to_html:
             if code_block:
                 return prefix + f"{indent}```{language}\n{code}```\n"
             else:
@@ -236,7 +244,7 @@ def md_preprocessor_md2anki(
         # Temporary fix for code parts in cloze syntax
         if "{{c" not in pygments_html_output:
             pygments_html_output = pygments_html_output.replace(
-                rf"{ANKI_CLOZE_SYNTAX_SYMBOLS[1]}", ":\u200B:"
+                rf"{ANKI_CLOZE_SYNTAX_SYMBOLS[1]}", ":\u200b:"
             )
         if code_block:
             code_section = textwrap.indent(
@@ -264,6 +272,94 @@ def md_preprocessor_md2anki(
     log.debug(f">> Updated code sections with images or placeholders({code_sections=})")
     log.debug(f"   > {md_content=}")
 
+    # 3. Find all local images that are not normally supported and convert/replace them
+
+    def get_short_file_hash(file_path: Path, length: int = 8) -> str:
+        """Returns a short hex hash of the file contents."""
+        hasher = hashlib.sha256()
+        with file_path.open("rb") as f:
+            while chunk := f.read(8192):
+                hasher.update(chunk)
+        return hasher.hexdigest()[:length]
+
+    def convert_to_svg(original_path: Path, output_path: Path) -> None:
+        try:
+            if output_path.is_file():
+                output_path.unlink()
+            if original_path.name.endswith(".pdf"):
+                # Inkscape command to convert PDF to SVG
+                subprocess.run(
+                    [
+                        "inkscape",
+                        "--export-type=svg",
+                        "--export-filename",
+                        output_path,
+                        original_path,
+                    ],
+                    check=True,
+                )
+            elif original_path.name.endswith(".xopp"):
+                temp_pdf = output_path.with_suffix(".pdf")
+                # Xournal++ command to export XOPP to SVG
+                subprocess.run(["xournalpp", original_path, "-p", temp_pdf], check=True)
+                # Inkscape command to convert PDF to SVG
+                subprocess.run(
+                    [
+                        "inkscape",
+                        "--export-type=svg",
+                        "--export-filename",
+                        output_path,
+                        temp_pdf,
+                    ],
+                    check=True,
+                )
+                if temp_pdf.is_file():
+                    temp_pdf.unlink()
+            # Add metadata to SVG
+            add_svg_metadata(
+                output_path,
+                {
+                    "source": original_path.name,
+                    "hash": get_short_file_hash(original_path),
+                },
+            )
+        except subprocess.CalledProcessError as e:
+            log.error(f"Conversion failed for {original_path} -> {output_path}: {e}")
+
+    def update_unsupported_images_with_supported_images(image_path: str) -> str:
+        # Update file path to svg in case it's a .pdf/.xopp
+        original_image_path = Path(image_path)
+        output_svg_path = update_image_path_of_unsupported_images_to_svg(
+            original_image_path
+        )
+        if output_svg_path is not None:
+            if path.isfile(image_path):
+                if path.isfile(output_svg_path):
+                    file_hash = get_short_file_hash(original_image_path)
+                    metadata = read_svg_metadata(output_svg_path)
+                    if metadata is None or metadata["hash"] != file_hash:
+                        log.error(
+                            f"Update {output_svg_path=} from {original_image_path=} {metadata=} {file_hash=}"
+                        )
+                        convert_to_svg(original_image_path, output_svg_path)
+                else:
+                    log.error(f"Create {output_svg_path=} from {original_image_path=}")
+                    convert_to_svg(original_image_path, output_svg_path)
+            else:
+                log.error(f"Could not find file: {image_path=}")
+            return output_svg_path.as_posix()
+        # Not an unsupported image, ignore
+        return image_path
+
+    md_content = md_update_image_sources_only(
+        md_content, update_unsupported_images_with_supported_images
+    )
+
+    log.debug(f">> Updated code sections with images or placeholders({code_sections=})")
+    log.debug(f"   > {md_content=}")
+
+    # 4. Update math sections
+
     md_content = re.sub(
         REGEX_MATH_BLOCK, multi_line_math_block_to_single_line, md_content
     )
@@ -275,14 +371,14 @@ def md_preprocessor_md2anki(
         f"{MD2ANKI_NAME}_placeholder_end_math_{create_unique_id()}",
     )
 
-    if anki_latex_math is True:
+    if anki_latex_math:
 
         def update_math_section_with_placeholder(math_section: str, block: bool) -> str:
             math_section_index = len(math_sections)
             math_fence = ("\\[", "\\]") if block else (f"\\(", "\\)")
-            math_sections[
-                math_section_index
-            ] = f"{math_fence[0]}{html.escape(math_section)}{math_fence[1]}"
+            math_sections[math_section_index] = (
+                f"{math_fence[0]}{html.escape(math_section)}{math_fence[1]}"
+            )
             return f"{placeholder_math_section[0]}{math_section_index}{placeholder_math_section[1]}"
 
         md_content = md_update_math_sections(
@@ -298,7 +394,7 @@ def md_preprocessor_md2anki(
     log.debug(f">> Reset local filepaths")
     log.debug(f"   > {md_content=}")
 
-    if render_to_html is True:
+    if render_to_html:
         # Extract files that this card requests and update paths
         md_content = md_update_images(md_content, update_md_image_to_html)
 
@@ -315,7 +411,7 @@ def md_preprocessor_md2anki(
         log.debug(">> Render markdown to HTML")
         log.debug(f"   > {md_content=}")
 
-    if anki_latex_math is True:
+    if anki_latex_math:
         # Insert all math sections again
         def update_math_section_placeholder_with_value(placeholder_index: str) -> str:
             return math_sections.pop(int(placeholder_index))
@@ -352,7 +448,7 @@ def md_preprocessor_md2anki(
             f"Not all code sections were inserted back! ({code_sections=})"
         )
 
-    if render_to_html is True:
+    if render_to_html:
         # Postfix for HTML p tags in front of inline code
         md_content = fix_inline_code_p_tags(md_content)
 

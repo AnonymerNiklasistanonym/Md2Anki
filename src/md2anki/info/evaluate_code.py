@@ -27,8 +27,8 @@ EVALUATE_CODE_DEFAULT_COMMANDS: Final[EvaluateCodeInfo] = {
     "js": [("node", ["-e", EVALUATE_CODE_MD2ANKI_PLACEHOLDER_CODE_STRING])],
     "ts": [
         (
-            "ts-node" + (".cmd" if os.name == "nt" else ""),
-            [f"{EVALUATE_CODE_MD2ANKI_PREFIX_CODE_FILE_NAME}code.ts"],
+            "npx",
+            ["tsx", f"{EVALUATE_CODE_MD2ANKI_PREFIX_CODE_FILE_NAME}code.ts"],
         )
     ],
     "pl": [

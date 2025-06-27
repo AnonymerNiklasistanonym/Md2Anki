@@ -28,11 +28,11 @@ def run_example(
     o_pdf: Optional[Path] = None,
 ):
     args: List[str] = [str(input_file) for input_file in input_files]
-    if debug is True:
+    if debug is not None and debug:
         args.append("--debug")
-    if evaluate_code is True:
+    if evaluate_code is not None and evaluate_code:
         args.append("--evaluate-code")
-    if keep_temporary_files is True:
+    if keep_temporary_files is not None and keep_temporary_files:
         args.append("--keep-temp-files")
     if log_file is not None:
         args.extend(["-log-file", str(log_file)])
@@ -190,20 +190,26 @@ if __name__ == "__main__":
         for backup_dir in EXAMPLE_DIR.glob("backup_*"):
             run_example(
                 list(backup_dir.glob("*.md")),
-                anki_model=AnkiCardModelId.TYPE_ANSWER
-                if backup_dir.stem.endswith("_type_answer")
-                else AnkiCardModelId.TYPE_CLOZE
-                if backup_dir.stem.endswith("_type_cloze")
-                else None,
+                anki_model=(
+                    AnkiCardModelId.TYPE_ANSWER
+                    if backup_dir.stem.endswith("_type_answer")
+                    else (
+                        AnkiCardModelId.TYPE_CLOZE
+                        if backup_dir.stem.endswith("_type_cloze")
+                        else None
+                    )
+                ),
                 debug=debug_examples,
                 evaluate_code=toggle_evaluate_code,
                 file_dirs=[backup_dir.joinpath("assets")],
                 keep_temporary_files=toggle_keep_temporary_files,
                 log_file=backup_dir.joinpath(f"{backup_dir.stem}.log"),
                 o_anki=backup_dir.joinpath(f"{backup_dir.stem}.apkg"),
-                o_md=backup_dir.joinpath("document.md")
-                if len(list(backup_dir.glob("*.md"))) == 1
-                else None,
+                o_md=(
+                    backup_dir.joinpath("document.md")
+                    if len(list(backup_dir.glob("*.md"))) == 1
+                    else None
+                ),
             )
 
     if toggle_pdf_examples:
