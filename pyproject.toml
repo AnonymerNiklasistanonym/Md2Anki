@@ -1,0 +1,37 @@
+[build-system]
+requires = ['setuptools>=61', 'wheel']
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "md2anki" # Automatically generated from md2anki.info.general.MD2ANKI_NAME
+version = "3.2.0b" # Automatically generated from md2anki.info.general.MD2ANKI_VERSION
+description = "Convert Markdown formatted documents to anki decks" # Automatically generated from md2anki.info.general.MD2ANKI_DESCRIPTION
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["beautifulsoup4>=4.13.4", "genanki>=0.13.1", "Markdown>=3.8.2", "Pygments>=2.19.2"] # Automatically generated from requirements.txt
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Topic :: Utilities",
+]
+
+license = "MIT"
+[[project.authors]]
+name = "AnonymerNiklasistanonym"
+[project.urls]
+Homepage = "https://github.com/AnonymerNiklasistanonym/Md2Anki" # Automatically generated from md2anki.info.general.MD2ANKI_URL
+"Bug Tracker" = "https://github.com/AnonymerNiklasistanonym/Md2Anki/issues" # Automatically generated from md2anki.info.general.MD2ANKI_URL_BUG_TRACKER
+Source = "https://github.com/AnonymerNiklasistanonym/Md2Anki" # Automatically generated from md2anki.info.general.MD2ANKI_URL_SOURCE_CODE
+
+[project.scripts]
+md2anki = "md2anki:_main" # Automatically generated from md2anki.info.general.MD2ANKI_NAME
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages]
+find = {where = ["src"]}
+
+[tool.setuptools.package-data]
+md2anki = ["res/stylesheet.css", "res/stylesheet_type_answer.css", "res/stylesheet_type_cloze.css"] # Automatically generated from md2anki.info.files.*

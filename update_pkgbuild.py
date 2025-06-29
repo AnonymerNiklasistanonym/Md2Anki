@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sys
 from pathlib import Path
 from typing import Final, Optional, Union
@@ -24,7 +26,12 @@ UPDATE_KEYS: Final[dict[str, Union[str, list[str]]]] = {
         "'python-markdown'",
         "'python-pygments'",
     ],
-    "makedepends": ["'python-build'", "'python-installer'"],
+    "makedepends": [
+        "'python-build'",
+        "'python-installer'",
+        "'python-wheel'",
+        "'python-setuptools'",
+    ],
     "optdepends": ["'pandoc-cli: export to pdf files'"],
     "pkgdesc": f"'{MD2ANKI_DESCRIPTION}'",
     "pkgname": f"python-{MD2ANKI_NAME}",

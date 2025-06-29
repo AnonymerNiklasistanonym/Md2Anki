@@ -12,6 +12,10 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  LOCAL_PYTHON_FILES: "src examples tests clean.py format.py main.py update_pkgbuild.py update_pyproject.py update_readme.py"
+  MYPY_PACKAGES: "mypy black tomlkit types-beautifulsoup4 types-Markdown types-Pygments types-setuptools"
+
 jobs:
   run:
 
@@ -64,7 +68,9 @@ jobs:
         python3 -m pip install black
     - name: Check formatting
       continue-on-error: true
-      run: python3 -m black --check src setup.py examples tests clean.py main.py update_readme.py
+      run: python3 -m black --check $LOCAL_PYTHON_FILES
+      # For compatibility with Windows
+      shell: bash
 
 
   test:
@@ -129,9 +135,13 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install -r requirements.txt
-        python3 -m pip install --upgrade mypy black types-beautifulsoup4 types-Markdown types-Pygments types-setuptools
+        python3 -m pip install --upgrade $MYPY_PACKAGES
+      # For compatibility with Windows
+      shell: bash
     - name: Check if type checks can be ran without errors
-      run: python3 -m mypy src examples tests clean.py main.py setup.py update_readme.py update_pkgbuild.py format.py
+      run: python -m mypy $LOCAL_PYTHON_FILES
+      # For compatibility with Windows
+      shell: bash
 
 
   package:

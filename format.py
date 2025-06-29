@@ -16,8 +16,8 @@ python_source_code_files = [
     dir_path.joinpath("clean.py"),
     dir_path.joinpath("format.py"),
     dir_path.joinpath("main.py"),
-    dir_path.joinpath("setup.py"),
     dir_path.joinpath("update_pkgbuild.py"),
+    dir_path.joinpath("update_pyproject.py"),
     dir_path.joinpath("update_readme.py"),
 ]
 

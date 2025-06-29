@@ -163,6 +163,10 @@ Answer
 Answer
 ```
 
+[//]: <> (END: EXAMPLES)
+
+[//]: <> (TODO: Update this later to be automatically generated [BEGIN])
+
 To create *Fill in the blanks* Anki cards you need to change the anki model:
 
 ```sh
@@ -239,7 +243,7 @@ Answer
 Answer
 ```
 
-[//]: <> (END: EXAMPLES)
+[//]: <> (TODO: Update this later to be automatically generated [END])
 
 Checkout the [`examples`](examples) directory for more examples.
 
@@ -375,7 +379,7 @@ pip uninstall md2anki
 cd pkgbuild
 # Build package and then install it via pacman
 makepkg -p PKGBUILD --syncdeps --rmdeps --clean
-pacman -S python-md2anki-3.0.19b-1-any.pkg.tar.zst
+pacman -S python-md2anki-$CURRENT_VERSION-1-any.pkg.tar.zst
 # Or build and install package
 makepkg -p PKGBUILD --syncdeps --rmdeps --clean --install
 # Remove package
@@ -384,9 +388,13 @@ pacman -R python-md2anki
 
 ### Build
 
-Via the file [`setup.py`](setup.py) the package can be built:
+Via the file [`pyproject.toml`](pyproject.toml) the package can be built:
 
-#### Create package files
+```sh
+# Some values in this config (e.g. version, dependencies) are auto generated using
+python -m pip install tomlkit
+python -m update_pyproject
+```
 
 The following commands create the package files in a new directory called `dist`:
 
@@ -404,7 +412,7 @@ The wheel (`.whl`) file can be installed and uninstalled via `pip`:
 
 ```sh
 # Install
-python -m pip install dist/md2anki-$CURRENT_VERSION-py3-none-any.whl
+python -m pip install "dist/md2anki-$CURRENT_VERSION-py3-none-any.whl"
 # Uninstall
 python -m pip uninstall md2anki
 ```
@@ -454,8 +462,8 @@ python -m twine upload --skip-existing dist/*
 Python files can be checked for type errors (to some extent) using the commands:
 
 ```sh
-python -m pip install --upgrade mypy types-beautifulsoup4 types-Markdown types-Pygments types-setuptools
-python -m mypy src setup.py examples tests clean.py main.py update_readme.py update_pkgbuild.py format.py
+python -m pip install --upgrade mypy tomlkit types-beautifulsoup4 types-Markdown types-Pygments types-setuptools
+python -m mypy src examples tests clean.py format.py main.py update_pkgbuild.py update_pyproject.py update_readme.py
 ```
 
 ### Tests
@@ -473,7 +481,7 @@ Python files can be formatted using the commands:
 ```sh
 python -m pip install --upgrade black
 # Add the option --check to only check if its already in the correct format
-python -m black src setup.py examples tests clean.py main.py update_readme.py
+python -m black src examples tests clean.py format.py main.py update_pkgbuild.py update_pyproject.py update_readme.py
 ```
 
 ### Code editors
