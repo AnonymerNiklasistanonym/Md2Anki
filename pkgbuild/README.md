@@ -16,3 +16,12 @@ makepkg -p PKGBUILD --clean --syncdeps --rmdeps
 
 - You can add `--install` to install the built package right after building it
 - Otherwise you can install the package using `pacman -U /folder/package.tar.zst`
+
+## Unofficial/AUR packages
+
+In case there were AUR updates/mismatches update all AUR dependencies (e.g. with `yay`):
+
+```sh
+# python-cached-property python-chevron are AUR dependencies of python-genanki-git
+yay -S --rebuildtree python-genanki-git python-cached-property python-chevron
+```
