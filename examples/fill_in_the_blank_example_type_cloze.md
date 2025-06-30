@@ -6,15 +6,13 @@ This text is {{c1::boring::a custom hint}} and {{c1::a placeholder}}
 
 ---
 
-This will create be displayed as:
+This will create a card and be displayed as question:
 
-```text
-This text is [a custom hint] and [...]
-```
+- This text is [a custom hint] and [...]
 
-```text
-This text is boring and a placeholder
-```
+which becomes the answer:
+
+- This text is boring and a placeholder
 
 ## One line {{c1::cloze}} question (8d93bcdc-cbd9-4209-b7ae-0c9cafdb9d4e)
 
@@ -38,18 +36,11 @@ print("hello world") {{c1::source code comment}}
 
 ---
 
-This will create 2 cards and be displayed as:
+This will create 2 cards and be displayed as question:
 
-```text
-[...] are the powerhouses of the cell
-```
+1. [...] are the powerhouses of the cell
+2. Mitochondria are the [...] of the cell
 
-```text
-Mitochondria are the [...] of the cell
-```
+which both become the answer:
 
-which both become:
-
-```text
-Mitochondria are the powerhouses of the cell
-```
+- Mitochondria are the powerhouses of the cell

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import shutil
 import sys
 import tempfile
 from pathlib import Path
@@ -16,7 +17,7 @@ from md2anki.info.general import (
 
 md_comment: Final = ("[//]: <> (", ")")
 md_comment_begin_end: Final = ("BEGIN: ", "END: ")
-md_code_block: Final = ("```", "```")
+md_code_block: Final = ("````", "````")
 
 ROOT_DIR_FILE_PATH: Final = Path(__file__).parent
 README_FILE_PATH: Final = ROOT_DIR_FILE_PATH.joinpath("README.md")
@@ -25,6 +26,12 @@ EXAMPLE_BASIC_FILE_PATH: Final = ROOT_DIR_FILE_PATH.joinpath(
 )
 EXAMPLE_SUBDECK_FILE_PATH: Final = ROOT_DIR_FILE_PATH.joinpath(
     "examples", "subdeck_example.md"
+)
+EXAMPLE_FILL_IN_THE_BLANK_FILE_PATH: Final = ROOT_DIR_FILE_PATH.joinpath(
+    "examples", "fill_in_the_blank_example_type_cloze.md"
+)
+EXAMPLE_MULTIPLE_TYPES_FILE_PATH: Final = ROOT_DIR_FILE_PATH.joinpath(
+    "examples", "multiple_card_types_example.md"
 )
 
 
@@ -42,6 +49,16 @@ def create_md_content(section_id: str, old_content: str) -> str:
         out += f"{md_code_block[0]}markdown\n"
         with open(EXAMPLE_SUBDECK_FILE_PATH, "r") as example_subdeck:
             out += example_subdeck.read()
+        out += f"{md_code_block[1]}\n"
+    elif section_id == "EXAMPLE_CLOZE":
+        out += f"{md_code_block[0]}markdown\n"
+        with open(EXAMPLE_FILL_IN_THE_BLANK_FILE_PATH, "r") as example_cloze:
+            out += example_cloze.read()
+        out += f"{md_code_block[1]}\n"
+    elif section_id == "EXAMPLE_MULTIPLE_TYPES":
+        out += f"{md_code_block[0]}markdown\n"
+        with open(EXAMPLE_MULTIPLE_TYPES_FILE_PATH, "r") as example_multi_types:
+            out += example_multi_types.read()
         out += f"{md_code_block[1]}\n"
     elif section_id == "USAGE":
         out += f"{md_code_block[0]}text\n"
@@ -106,6 +123,9 @@ def update_md_content(md_content: List[str]) -> str:
 
 # Main method
 if __name__ == "__main__":
+    columns = shutil.get_terminal_size().columns
+    print(f"Terminal width: {columns} columns (recommended 90)")
+
     with open(README_FILE_PATH, "r") as input_file:
         md_content_input = input_file.readlines()
     md_content_output = update_md_content(md_content_input)
