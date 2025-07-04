@@ -19,11 +19,6 @@ from md2anki.cli import Md2AnkiArgs, AnkiCardModelId
 from md2anki.info.general import MD2ANKI_NAME
 from md2anki.md_parser import parse_md_content_to_anki_deck_list
 from md2anki.md_to_pdf import create_pdf_from_md_content
-from md2anki.note_models import (
-    create_default_anki_deck_model,
-    create_type_answer_anki_deck_model,
-    create_type_cloze_anki_deck_model,
-)
 
 log = logging.getLogger(__name__)
 

@@ -29,10 +29,7 @@ def add_svg_metadata(svg_path: Path, metadata: Dict) -> None:
 
 def read_svg_metadata(svg_path: Path) -> Optional[Dict]:
     """Reads JSON-encoded metadata from <metadata> tag in an SVG file, if present."""
-    tree = ET.parse(svg_path)
-    root = tree.getroot()
-
-    metadata_elem = root.find(f"{{{SVG_NS}}}metadata")
+    metadata_elem = ET.parse(svg_path).getroot().find(f"{{{SVG_NS}}}metadata")
     if metadata_elem is not None and metadata_elem.text:
         try:
             data = json.loads(metadata_elem.text.strip())
@@ -40,6 +37,6 @@ def read_svg_metadata(svg_path: Path) -> Optional[Dict]:
                 return data
             # Not a dict
         except json.JSONDecodeError:
-            pass  # Invalid JSON metadata
-
+            # Invalid JSON metadata
+            pass
     return None

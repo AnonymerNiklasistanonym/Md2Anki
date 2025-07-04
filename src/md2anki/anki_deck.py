@@ -58,6 +58,19 @@ class AnkiDeck:
         evaluate_code_cache_dir: Optional[Path] = None,
         keep_temp_files: bool = False,
     ) -> genanki.Deck:
+        """
+        Generate an anki deck
+
+        :param default_anki_card_model: The default anki card model (fallback if no card model is specified)
+        :param dir_dynamic_files: The directory for dynamic files (e.g. generated during code evaluation)
+        :param custom_program: A dictionary for all custom program mappings of the Markdown code evaluation blocks
+        :param custom_program_args: A dictionary for all custom program argument mappings of the Markdown code evaluation blocks
+        :param external_file_dirs: A list of other directories that contain files referenced in the Markdown
+        :param evaluate_code: Should Markdown code blocks be evaluated
+        :param evaluate_code_cache_dir: A custom code evaluation cache directory
+        :param keep_temp_files: Should temporary files be kept instead of deleted
+        :return: anki deck
+        """
         tmp_anki_deck = genanki.Deck(self.guid, self.name)
         for note in self.notes:
             tmp_anki_deck.add_note(
@@ -81,18 +94,19 @@ class AnkiDeck:
         return self.tags.union(md_get_used_md2anki_tags(self.description))
 
     def get_global_md2anki_model(self) -> Optional[str]:
-        """Get the custom global anki deck if found"""
+        """Get the custom global anki deck model if found"""
         return md_get_md2anki_model(self.description)
 
     def get_local_files_from_notes(self) -> List[Path]:
-        files: Set[Path] = set()
+        """Get the paths to all local files referenced in all notes"""
+        files: set[Path] = set()
         for note in self.notes:
             files.update(note.get_used_local_files())
-        file_list: List[Path] = list()
+        file_list: Set[Path] = set()
         for file in files:
             # Check if every file can be found
             if file.is_file():
-                file_list.append(file)
+                file_list.add(file)
             else:
                 file_found = False
                 # Check if file is located in one of the additional file dirs
@@ -102,12 +116,13 @@ class AnkiDeck:
                         f"{file=} not found check in {additional_file_dir=}: {file_path=}"
                     )
                     if file_path.is_file():
-                        file_list.append(file_path)
+                        file_list.add(file_path)
                         file_found = True
                         break
+                # If the file cannot be found in any known directory raise an exception
                 if not file_found:
                     raise Exception(f"{file=} not found ({self.additional_file_dirs=})")
-        return file_list
+        return list(file_list)
 
     def genanki_create_anki_deck(
         self,
