@@ -5,8 +5,6 @@ import logging
 import hashlib
 import html
 import re
-import shutil
-import subprocess
 import textwrap
 from os import path
 from pathlib import Path
@@ -48,6 +46,11 @@ from md2anki.md_util import (
 from md2anki.evaluate_code import (
     evaluate_code_in_subprocess,
     UnableToEvaluateCodeException,
+)
+from md2anki.subprocess import (
+    run_subprocess,
+    ProgramNotFoundException,
+    ProgramExitedWithWarningsException,
 )
 from md2anki.svg_metadata import add_svg_metadata, read_svg_metadata
 
@@ -287,33 +290,33 @@ def md_preprocessor_md2anki(
         try:
             if output_path.is_file():
                 output_path.unlink()
-            commands: list[list[str | Path]] = []
-            inkscape_commands: list[str | Path] = [
-                "inkscape",
+            commands: list[list[str]] = []
+            inkscape_command: str = "inkscape"
+            inkscape_args: list[str] = [
                 "--export-type=svg",
                 "--export-filename",
-                output_path,
+                str(output_path),
             ]
             if original_path.name.endswith(".pdf"):
                 # Inkscape command to convert PDF to SVG
-                inkscape_commands.append(original_path)
-                commands.append(inkscape_commands)
-                subprocess.run(inkscape_commands, check=True)
+                inkscape_args.append(str(original_path))
+                commands.append([inkscape_command, *inkscape_args])
+                run_subprocess(inkscape_command, inkscape_args)
             elif original_path.name.endswith(".xopp"):
                 temp_pdf = output_path.with_suffix(".pdf")
                 # Xournal++ command to export XOPP to SVG
-                xournalpp_commands: list[str | Path] = [
-                    "xournalpp",
-                    original_path,
+                xournalpp_command: str = "xournalpp"
+                xournalpp_args: list[str] = [
+                    str(original_path),
                     "-p",
-                    temp_pdf,
+                    str(temp_pdf),
                 ]
-                commands.append(xournalpp_commands)
-                subprocess.run(xournalpp_commands, check=True)
+                commands.append([xournalpp_command, *xournalpp_args])
+                run_subprocess(xournalpp_command, xournalpp_args)
                 # Inkscape command to convert PDF to SVG
-                inkscape_commands.append(temp_pdf)
-                commands.append(inkscape_commands)
-                subprocess.run(inkscape_commands, check=True)
+                inkscape_args.append(str(temp_pdf))
+                commands.append([inkscape_command, *inkscape_args])
+                run_subprocess(inkscape_command, inkscape_args)
                 if temp_pdf.is_file():
                     temp_pdf.unlink()
             # Add metadata to SVG
@@ -333,8 +336,12 @@ def md_preprocessor_md2anki(
                     "hash": get_short_file_hash(original_path),
                 },
             )
-        except subprocess.CalledProcessError as e:
+        except ProgramNotFoundException as e:
             log.error(f"Conversion failed for {original_path} -> {output_path}: {e}")
+        except ProgramExitedWithWarningsException as e:
+            log.warning(
+                f"Conversion exited with warnings for {original_path} -> {output_path}: {e}"
+            )
 
     def update_unsupported_images_with_supported_images(image_path: str) -> str:
         # Update file path to svg in case it's a .pdf/.xopp
