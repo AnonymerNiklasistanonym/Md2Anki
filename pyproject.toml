@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "md2anki" # Automatically generated from md2anki.info.general.MD2ANKI_NAME
-version = "3.2.0b" # Automatically generated from md2anki.info.general.MD2ANKI_VERSION
+version = "3.2.2b" # Automatically generated from md2anki.info.general.MD2ANKI_VERSION
 description = "Convert Markdown formatted documents to anki decks" # Automatically generated from md2anki.info.general.MD2ANKI_DESCRIPTION
 readme = "README.md"
 requires-python = ">=3.9"
