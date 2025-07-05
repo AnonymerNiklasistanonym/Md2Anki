@@ -57,7 +57,7 @@ choco install miktex pandoc rsvg-convert
 
 ```sh
 # Linux + Windows
-npm install -g ts-node
+npm install -g tsx
 # > For matplotlib python graphs (used in some examples):
 python -m pip install numpy matplotlib
 ```
