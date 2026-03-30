@@ -4,6 +4,6 @@ chevron==0.14.0
 frozendict==2.4.6
 genanki==0.13.1
 Markdown==3.8.2
-Pygments==2.19.2
+Pygments==2.20.0
 PyYAML==6.0.2
 soupsieve==2.7
